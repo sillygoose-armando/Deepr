@@ -1,0 +1,161 @@
+ALTER TABLE Deepr ADD COLUMN syncId TEXT;
+
+UPDATE Deepr SET syncId = lower(hex(randomblob(16))) WHERE syncId IS NULL;
+
+-- P2P sync (see docs/p2p-sync/PLAN.md). SQL must stay compatible with SQLite 3.9 (Android API 24):
+-- no UPSERT, no window functions. Meta rows are never updated in place: a change INSERTs a new row
+-- (fresh AUTOINCREMENT seq) and then deletes the superseded rows of the same key.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_deepr_syncId ON Deepr(syncId);
+
+CREATE TABLE SyncDevice (
+id INTEGER PRIMARY KEY NOT NULL CHECK (id = 1),
+deviceId TEXT NOT NULL,
+deviceName TEXT NOT NULL DEFAULT '',
+hlc INTEGER NOT NULL DEFAULT 0,
+applying INTEGER NOT NULL DEFAULT 0,
+maxPeers INTEGER NOT NULL DEFAULT 5
+);
+
+INSERT INTO SyncDevice (id, deviceId) VALUES (1, lower(hex(randomblob(16))));
+
+CREATE TABLE SyncShare (
+shareId TEXT PRIMARY KEY NOT NULL,
+profileId INTEGER NOT NULL UNIQUE,
+createdAt INTEGER NOT NULL,
+FOREIGN KEY (profileId) REFERENCES Profile(id) ON DELETE CASCADE
+);
+
+CREATE TABLE SyncMeta (
+seq INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+shareId TEXT NOT NULL,
+syncId TEXT NOT NULL,
+tagName TEXT NOT NULL DEFAULT '',
+hlc INTEGER NOT NULL,
+origin TEXT NOT NULL,
+deleted INTEGER NOT NULL DEFAULT 0,
+FOREIGN KEY (shareId) REFERENCES SyncShare(shareId) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_syncmeta_key ON SyncMeta(shareId, syncId, tagName);
+CREATE INDEX IF NOT EXISTS idx_syncmeta_syncId ON SyncMeta(syncId);
+CREATE INDEX IF NOT EXISTS idx_syncmeta_tagName ON SyncMeta(tagName);
+
+CREATE TABLE SyncPeer (
+peerId TEXT PRIMARY KEY NOT NULL,
+name TEXT NOT NULL,
+keyEnc BLOB NOT NULL,
+lastHost TEXT NOT NULL DEFAULT '',
+lastPort INTEGER NOT NULL DEFAULT 0,
+addedAt INTEGER NOT NULL,
+lastSyncAt INTEGER NOT NULL DEFAULT 0,
+lastError TEXT NOT NULL DEFAULT '',
+needsRepair INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE SyncPeerShare (
+peerId TEXT NOT NULL,
+shareId TEXT NOT NULL,
+pushedUpTo INTEGER NOT NULL DEFAULT 0,
+pulledUpTo INTEGER NOT NULL DEFAULT 0,
+PRIMARY KEY (peerId, shareId),
+FOREIGN KEY (peerId) REFERENCES SyncPeer(peerId) ON DELETE CASCADE,
+FOREIGN KEY (shareId) REFERENCES SyncShare(shareId) ON DELETE CASCADE
+);
+
+-- Deleting a profile detaches its share first, so its rows emit no tombstones (peers keep their data).
+CREATE TRIGGER sync_profile_bd BEFORE DELETE ON Profile
+BEGIN
+DELETE FROM SyncShare WHERE profileId = old.id;
+END;
+
+CREATE TRIGGER sync_deepr_ai AFTER INSERT ON Deepr
+WHEN (SELECT applying FROM SyncDevice WHERE id = 1) = 0
+BEGIN
+UPDATE Deepr SET syncId = lower(hex(randomblob(16))) WHERE id = new.id AND syncId IS NULL;
+UPDATE SyncDevice SET hlc = MAX(hlc + 1, CAST((julianday('now') - 2440587.5) * 86400000.0 AS INTEGER) * 65536) WHERE id = 1;
+INSERT INTO SyncMeta (shareId, syncId, tagName, hlc, origin, deleted)
+SELECT s.shareId, x.syncId, '', d.hlc, d.deviceId, 0 FROM SyncShare s, SyncDevice d, Deepr x
+WHERE s.profileId = new.profileId AND d.id = 1 AND x.id = new.id;
+DELETE FROM SyncMeta WHERE syncId = (SELECT syncId FROM Deepr WHERE id = new.id)
+AND EXISTS (SELECT 1 FROM SyncMeta n WHERE n.shareId = SyncMeta.shareId AND n.syncId = SyncMeta.syncId AND n.tagName = SyncMeta.tagName AND n.seq > SyncMeta.seq);
+END;
+
+-- Moving a link to another profile = tombstone in the old share + a new identity (syncId) in the new one.
+CREATE TRIGGER sync_deepr_au AFTER UPDATE OF link, name, notes, profileId ON Deepr
+WHEN (SELECT applying FROM SyncDevice WHERE id = 1) = 0
+AND (old.link IS NOT new.link OR old.name IS NOT new.name OR old.notes IS NOT new.notes OR old.profileId IS NOT new.profileId)
+BEGIN
+UPDATE SyncDevice SET hlc = MAX(hlc + 1, CAST((julianday('now') - 2440587.5) * 86400000.0 AS INTEGER) * 65536) WHERE id = 1;
+INSERT INTO SyncMeta (shareId, syncId, tagName, hlc, origin, deleted)
+SELECT m.shareId, m.syncId, m.tagName, d.hlc, d.deviceId, 1 FROM SyncMeta m, SyncDevice d, SyncShare s
+WHERE old.profileId IS NOT new.profileId AND d.id = 1 AND s.profileId = old.profileId
+AND m.shareId = s.shareId AND m.syncId = old.syncId AND m.deleted = 0;
+UPDATE Deepr SET syncId = lower(hex(randomblob(16))) WHERE id = new.id AND old.profileId IS NOT new.profileId;
+INSERT INTO SyncMeta (shareId, syncId, tagName, hlc, origin, deleted)
+SELECT s.shareId, x.syncId, '', d.hlc, d.deviceId, 0 FROM SyncShare s, SyncDevice d, Deepr x
+WHERE s.profileId = new.profileId AND d.id = 1 AND x.id = new.id;
+INSERT INTO SyncMeta (shareId, syncId, tagName, hlc, origin, deleted)
+SELECT s.shareId, x.syncId, t.name, d.hlc, d.deviceId, 0 FROM SyncShare s, SyncDevice d, Deepr x, LinkTags lt, Tags t
+WHERE old.profileId IS NOT new.profileId AND s.profileId = new.profileId AND d.id = 1 AND x.id = new.id
+AND lt.linkId = new.id AND t.id = lt.tagId;
+DELETE FROM SyncMeta WHERE syncId IN (old.syncId, (SELECT syncId FROM Deepr WHERE id = new.id))
+AND EXISTS (SELECT 1 FROM SyncMeta n WHERE n.shareId = SyncMeta.shareId AND n.syncId = SyncMeta.syncId AND n.tagName = SyncMeta.tagName AND n.seq > SyncMeta.seq);
+END;
+
+CREATE TRIGGER sync_deepr_bd BEFORE DELETE ON Deepr
+WHEN (SELECT applying FROM SyncDevice WHERE id = 1) = 0
+BEGIN
+UPDATE SyncDevice SET hlc = MAX(hlc + 1, CAST((julianday('now') - 2440587.5) * 86400000.0 AS INTEGER) * 65536) WHERE id = 1;
+INSERT INTO SyncMeta (shareId, syncId, tagName, hlc, origin, deleted)
+SELECT m.shareId, m.syncId, m.tagName, d.hlc, d.deviceId, 1 FROM SyncMeta m, SyncDevice d, SyncShare s
+WHERE d.id = 1 AND s.profileId = old.profileId AND m.shareId = s.shareId AND m.syncId = old.syncId AND m.deleted = 0;
+DELETE FROM SyncMeta WHERE syncId = old.syncId
+AND EXISTS (SELECT 1 FROM SyncMeta n WHERE n.shareId = SyncMeta.shareId AND n.syncId = SyncMeta.syncId AND n.tagName = SyncMeta.tagName AND n.seq > SyncMeta.seq);
+END;
+
+CREATE TRIGGER sync_linktags_ai AFTER INSERT ON LinkTags
+WHEN (SELECT applying FROM SyncDevice WHERE id = 1) = 0
+BEGIN
+UPDATE SyncDevice SET hlc = MAX(hlc + 1, CAST((julianday('now') - 2440587.5) * 86400000.0 AS INTEGER) * 65536) WHERE id = 1;
+INSERT INTO SyncMeta (shareId, syncId, tagName, hlc, origin, deleted)
+SELECT s.shareId, x.syncId, t.name, d.hlc, d.deviceId, 0 FROM Deepr x, SyncShare s, SyncDevice d, Tags t
+WHERE x.id = new.linkId AND s.profileId = x.profileId AND d.id = 1 AND t.id = new.tagId;
+DELETE FROM SyncMeta WHERE syncId = (SELECT syncId FROM Deepr WHERE id = new.linkId)
+AND EXISTS (SELECT 1 FROM SyncMeta n WHERE n.shareId = SyncMeta.shareId AND n.syncId = SyncMeta.syncId AND n.tagName = SyncMeta.tagName AND n.seq > SyncMeta.seq);
+END;
+
+CREATE TRIGGER sync_linktags_ad AFTER DELETE ON LinkTags
+WHEN (SELECT applying FROM SyncDevice WHERE id = 1) = 0
+BEGIN
+UPDATE SyncDevice SET hlc = MAX(hlc + 1, CAST((julianday('now') - 2440587.5) * 86400000.0 AS INTEGER) * 65536) WHERE id = 1;
+INSERT INTO SyncMeta (shareId, syncId, tagName, hlc, origin, deleted)
+SELECT s.shareId, x.syncId, t.name, d.hlc, d.deviceId, 1 FROM Deepr x, SyncShare s, SyncDevice d, Tags t
+WHERE x.id = old.linkId AND s.profileId = x.profileId AND d.id = 1 AND t.id = old.tagId;
+DELETE FROM SyncMeta WHERE syncId = (SELECT syncId FROM Deepr WHERE id = old.linkId)
+AND EXISTS (SELECT 1 FROM SyncMeta n WHERE n.shareId = SyncMeta.shareId AND n.syncId = SyncMeta.syncId AND n.tagName = SyncMeta.tagName AND n.seq > SyncMeta.seq);
+END;
+
+CREATE TRIGGER sync_tags_bd BEFORE DELETE ON Tags
+WHEN (SELECT applying FROM SyncDevice WHERE id = 1) = 0
+BEGIN
+UPDATE SyncDevice SET hlc = MAX(hlc + 1, CAST((julianday('now') - 2440587.5) * 86400000.0 AS INTEGER) * 65536) WHERE id = 1;
+INSERT INTO SyncMeta (shareId, syncId, tagName, hlc, origin, deleted)
+SELECT s.shareId, x.syncId, old.name, d.hlc, d.deviceId, 1 FROM LinkTags lt, Deepr x, SyncShare s, SyncDevice d
+WHERE lt.tagId = old.id AND x.id = lt.linkId AND s.profileId = x.profileId AND d.id = 1;
+DELETE FROM SyncMeta WHERE tagName = old.name
+AND EXISTS (SELECT 1 FROM SyncMeta n WHERE n.shareId = SyncMeta.shareId AND n.syncId = SyncMeta.syncId AND n.tagName = SyncMeta.tagName AND n.seq > SyncMeta.seq);
+END;
+
+CREATE TRIGGER sync_tags_au AFTER UPDATE OF name ON Tags
+WHEN (SELECT applying FROM SyncDevice WHERE id = 1) = 0 AND old.name IS NOT new.name
+BEGIN
+UPDATE SyncDevice SET hlc = MAX(hlc + 1, CAST((julianday('now') - 2440587.5) * 86400000.0 AS INTEGER) * 65536) WHERE id = 1;
+INSERT INTO SyncMeta (shareId, syncId, tagName, hlc, origin, deleted)
+SELECT s.shareId, x.syncId, old.name, d.hlc, d.deviceId, 1 FROM LinkTags lt, Deepr x, SyncShare s, SyncDevice d
+WHERE lt.tagId = new.id AND x.id = lt.linkId AND s.profileId = x.profileId AND d.id = 1;
+INSERT INTO SyncMeta (shareId, syncId, tagName, hlc, origin, deleted)
+SELECT s.shareId, x.syncId, new.name, d.hlc, d.deviceId, 0 FROM LinkTags lt, Deepr x, SyncShare s, SyncDevice d
+WHERE lt.tagId = new.id AND x.id = lt.linkId AND s.profileId = x.profileId AND d.id = 1;
+DELETE FROM SyncMeta WHERE tagName IN (old.name, new.name)
+AND EXISTS (SELECT 1 FROM SyncMeta n WHERE n.shareId = SyncMeta.shareId AND n.syncId = SyncMeta.syncId AND n.tagName = SyncMeta.tagName AND n.seq > SyncMeta.seq);
+END;

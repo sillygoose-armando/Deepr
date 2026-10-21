@@ -1,0 +1,47 @@
+name: P2P Sync Build
+
+on:
+  push:
+    branches: [ 'feature/p2p-sync' ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'jetbrains'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Sync core tests (JVM harness)
+        working-directory: tools/sync-harness
+        run: bash ../../gradlew -p . test
+
+      - name: Lint
+        run: bash ./gradlew lintKotlin
+
+      - name: Unit tests
+        run: bash ./gradlew testGithubDebugUnitTest
+
+      - name: Build Github debug APK
+        run: bash ./gradlew assembleGithubDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: deepr-p2p-debug-apk
+          path: app/build/outputs/apk/github/debug/*.apk
+          retention-days: 14
