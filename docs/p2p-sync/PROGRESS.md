@@ -29,14 +29,14 @@ Code navigation: `codegraph` CLI is indexed for this repo (`codegraph sync .` af
 - [x] URL dedupe rule
 - [x] SyncEngine (Mutex per share, push+pull round, paging)
 - [x] Convergence fuzz test passing (≥ 2,000 random rounds)
-- [ ] Real-thread concurrency test (parallel handle()+syncWith()+local edits on a file DB) — fuzz runs sequentially today
+- [x] Real-thread concurrency test (ConcurrencyTest: Android-like single-connection driver, parallel handle/syncWith/local edits, 5 rounds)
 - [ ] Golden vectors exported to docs/p2p-sync/vectors/ (merge scenarios)
 
 ### P3 Crypto / pairing
-- [ ] Invite codec (QR/text string), expiry
-- [ ] ECDH + HKDF + HMAC transcript + SAS
-- [ ] AES-GCM envelope + replay window
-- [ ] Tests
+- [x] Invite codec (QR/text string), expiry
+- [x] ECDH + HKDF + HMAC transcript + SAS
+- [x] AES-GCM envelope + replay window
+- [x] Tests
 
 ### P4/P5 → multiplatform track (docs/cross-platform/)
 - [ ] Multiplatform M1 `:shared` exists (prerequisite for wiring sync into any app)
@@ -49,6 +49,7 @@ Code navigation: `codegraph` CLI is indexed for this repo (`codegraph sync .` af
 - [ ] README section
 
 ## Log
+- 2026-10-21: P3 delegated to opencode (deepseek-v4.1-flash-free) from docs/p2p-sync/tasks/P3-crypto.md; reviewed. Fixed `BigInteger.TWO` (Java 9+, crashes on old Android). ConcurrencyTest found 3 real bugs, all fixed: (1) **distributed deadlock**: SyncEngine held the share lock across the network; (2) read→write lock upgrade in sync transactions → now write-first; (3) app race: `insertDeepr` + `lastInsertRowId` were separate calls, so a concurrent sync insert could attach the new link's tags to the wrong link → `LinkRepository.insertDeepr` now returns the id from one transaction (also `getOrCreateProfileByName`). Test note: SQLDelight's JDBC multi-connection mode isn't representative (it closes connections per statement), so the test uses an Android-like locking driver.
 - 2026-10-21: P2 core done (shared/src/commonMain/.../p2p/core). Fuzz: 2000 seeds × 3 replicas, 15% dropped requests/responses, random page sizes → converged; mutation check (dropping one tag) fails the test as it should. `FUZZ_SEEDS=n` env sets the seed count (default 300 in CI). Fixed: deltaPage join is now scoped to the share's profile.
 - 2026-10-21: The user wants ONE multiplatform codebase (Android/iOS/Desktop). The core moves to `shared/src/commonMain` paths; migration brief at docs/cross-platform/AGENT_PROMPT.md. P1 done. SQLDelight needs lowercase `new.`/`old.` in triggers.
 - 2026-10-19: Plan written. Decisions recorded in PLAN.md. JDK 17 installed. The user asked for APK builds via GitHub Actions.

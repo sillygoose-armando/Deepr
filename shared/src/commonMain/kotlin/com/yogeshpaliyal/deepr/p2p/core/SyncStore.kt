@@ -52,8 +52,10 @@ class SyncStore(private val db: DeeprDB) {
         validateEntries(entries)
         val touched = mutableSetOf<String>()
         db.transaction {
-            val profileId = (q.getShareById(shareId).executeAsOneOrNull() ?: throw SyncProtocolException("unknown share")).profileId
+            // Write first: takes the write lock up front. A deferred transaction that reads and then upgrades
+            // fails with SQLITE_BUSY when another connection wrote in between (busy_timeout doesn't help).
             q.setSyncApplying(1)
+            val profileId = (q.getShareById(shareId).executeAsOneOrNull() ?: throw SyncProtocolException("unknown share")).profileId
             for (e in entries) {
                 val existing = q.getDeeprBySyncId(e.syncId).executeAsOneOrNull()
                 if (existing != null && existing.profileId != profileId) continue
@@ -100,6 +102,7 @@ class SyncStore(private val db: DeeprDB) {
     private fun dedupe(shareId: String, syncIds: Set<String>) {
         if (syncIds.isEmpty()) return
         db.transaction {
+            q.setSyncApplying(0) // no-op write: takes the write lock first (see apply)
             val profileId = q.getShareById(shareId).executeAsOneOrNull()?.profileId ?: return@transaction
             for (syncId in syncIds) {
                 val row = q.getDeeprBySyncId(syncId).executeAsOneOrNull() ?: continue

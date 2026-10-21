@@ -389,8 +389,7 @@ class AccountViewModel(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val targetProfileId = profileId ?: selectedProfileId.first()
-            linkRepository.insertDeepr(link = link, name, if (executed) 1 else 0, notes, thumbnail, targetProfileId)
-            linkRepository.lastInsertRowId()?.let {
+            linkRepository.insertDeepr(link = link, name, if (executed) 1 else 0, notes, thumbnail, targetProfileId).let {
                 modifyTagsForLink(it, tagsList)
                 analyticsManager.logEvent(
                     com.yogeshpaliyal.deepr.analytics.AnalyticsEvents.ADD_LINK,

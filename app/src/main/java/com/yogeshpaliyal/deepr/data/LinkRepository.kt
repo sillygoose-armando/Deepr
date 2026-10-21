@@ -104,6 +104,7 @@ interface LinkRepository {
 
     fun countOfFavouriteLinks(profileId: Long): Flow<Long>
 
+    /** Returns the new link's id (insert and id lookup run in one transaction). */
     suspend fun insertDeepr(
         link: String,
         name: String,
@@ -111,9 +112,7 @@ interface LinkRepository {
         notes: String,
         thumbnail: String,
         profileId: Long,
-    )
-
-    suspend fun lastInsertRowId(): Long?
+    ): Long
 
     suspend fun updateDeeplink(
         newLink: String,

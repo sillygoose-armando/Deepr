@@ -221,17 +221,18 @@ class LinkRepositoryImpl(
         notes: String,
         thumbnail: String,
         profileId: Long,
-    ) {
-        withContext(Dispatchers.IO) {
-            deeprQueries.insertDeepr(link, name, openedCount, notes, thumbnail, profileId)
-        }
+    ): Long {
+        // One transaction: a concurrent writer (P2P sync, LAN import) must not change last_insert_rowid in between.
+        val id =
+            withContext(Dispatchers.IO) {
+                deeprQueries.transactionWithResult {
+                    deeprQueries.insertDeepr(link, name, openedCount, notes, thumbnail, profileId)
+                    deeprQueries.lastInsertRowId().executeAsOne()
+                }
+            }
         scheduleAutoBackup()
+        return id
     }
-
-    override suspend fun lastInsertRowId(): Long? =
-        withContext(Dispatchers.IO) {
-            deeprQueries.lastInsertRowId().executeAsOneOrNull()
-        }
 
     override suspend fun updateDeeplink(
         newLink: String,
@@ -348,9 +349,11 @@ class LinkRepositoryImpl(
 
     override suspend fun getOrCreateProfileByName(name: String): Long =
         withContext(Dispatchers.IO) {
-            deeprQueries.getProfileByName(name).executeAsOneOrNull()?.id ?: run {
-                deeprQueries.insertProfile(name)
-                deeprQueries.lastInsertRowId().executeAsOne()
+            deeprQueries.transactionWithResult {
+                deeprQueries.getProfileByName(name).executeAsOneOrNull()?.id ?: run {
+                    deeprQueries.insertProfile(name)
+                    deeprQueries.lastInsertRowId().executeAsOne()
+                }
             }
         }
 

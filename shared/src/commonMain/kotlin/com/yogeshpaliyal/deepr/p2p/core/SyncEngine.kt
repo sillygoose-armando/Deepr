@@ -14,8 +14,12 @@ fun interface SyncTransport {
 }
 
 /**
- * Runs sync rounds. One instance per process: the per-share [Mutex] serializes incoming ([handle]) and
- * outgoing ([syncWith]) sessions for the same share, and every apply is a single DB transaction.
+ * Runs sync rounds. One instance per process.
+ * - Local DB work for a share is serialized by a per-share [Mutex]; every apply is one transaction that also
+ *   moves the cursors, so a crash or dropped message only causes harmless re-sends (LWW is idempotent).
+ * - No lock is ever held across [SyncTransport.exchange]: two devices syncing each other at the same time
+ *   would otherwise deadlock (each holding its lock while waiting for the other's).
+ * - At most one outgoing session per (peer, share); a concurrent request for the same pair is skipped.
  */
 class SyncEngine(
     private val db: DeeprDB,
@@ -28,27 +32,38 @@ class SyncEngine(
     private val locksGuard = Mutex()
     private val locks = mutableMapOf<String, Mutex>()
 
-    private suspend fun lockFor(shareId: String) = locksGuard.withLock { locks.getOrPut(shareId) { Mutex() } }
+    private suspend fun lockFor(key: String) = locksGuard.withLock { locks.getOrPut(key) { Mutex() } }
 
-    /** Pushes and pulls until both sides are drained. */
-    suspend fun syncWith(peerId: String, shareId: String, maxRounds: Int = 1000) =
-        lockFor(shareId).withLock {
+    /** Pushes and pulls until both sides are drained. Returns false if a session for this peer/share was already running. */
+    suspend fun syncWith(peerId: String, shareId: String, maxRounds: Int = 1000): Boolean {
+        val session = lockFor("out|$peerId|$shareId")
+        if (!session.tryLock()) return false
+        try {
+            val shareLock = lockFor(shareId)
             repeat(maxRounds) {
-                val (request, out) =
-                    withContext(io) {
-                        val ps = q.getPeerShare(peerId, shareId).executeAsOneOrNull() ?: throw SyncProtocolException("share not linked to peer")
-                        val out = store.readDelta(shareId, ps.pushedUpTo, peerId, pageSize)
-                        SyncRequest(shareId, ps.pulledUpTo, out.upTo, out.entries) to out
+                val (request, more) =
+                    shareLock.withLock {
+                        withContext(io) {
+                            val ps = q.getPeerShare(peerId, shareId).executeAsOneOrNull() ?: throw SyncProtocolException("share not linked to peer")
+                            val out = store.readDelta(shareId, ps.pushedUpTo, peerId, pageSize)
+                            SyncRequest(shareId, ps.pulledUpTo, out.upTo, out.entries) to out.more
+                        }
                     }
                 val response = transport.exchange(peerId, request)
-                withContext(io) {
-                    store.apply(shareId, response.entries) {
-                        q.setCursors(request.upTo, response.upTo, peerId, shareId)
+                shareLock.withLock {
+                    withContext(io) {
+                        store.apply(shareId, response.entries) {
+                            q.setCursors(request.upTo, response.upTo, peerId, shareId)
+                        }
                     }
                 }
-                if (!out.more && !response.more) return@withLock
+                if (!more && !response.more) return true
             }
+            return true
+        } finally {
+            session.unlock()
         }
+    }
 
     /** Server side of [syncWith]; [peerId] is already authenticated by the transport. */
     suspend fun handle(peerId: String, request: SyncRequest): SyncResponse =
