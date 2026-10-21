@@ -1,71 +1,96 @@
-# Agent brief: Deepr for iOS (wire-compatible P2P sync)
+# Agent brief: make Deepr one Kotlin Multiplatform codebase (Android · iOS · Desktop)
 
-You are a senior iOS + Kotlin Multiplatform engineer working **autonomously over many sessions**. You may be interrupted at any time. Read **§9 (Persistence of progress)** before doing anything else, and follow it on every step.
+You are a senior Kotlin Multiplatform (KMP) + Compose Multiplatform (CMP) engineer working **autonomously over many sessions**. You will be interrupted. Read **§10 (Persistence of progress)** first, and follow it on every step.
 
-## 1. Context
-- Repo: the team's fork of `yogeshpaliyal/Deepr` (Android link/bookmark manager: links, tags ("labels"), profiles). Work on branch `feature/ios` cut from `feature/p2p-sync`.
-- The Android fork is adding **peer-to-peer, per-profile sync** over the local network. Read these first, in order:
-  1. `docs/p2p-sync/PLAN.md` — design, protocol v1, schema, decisions. **This is your source of truth for the wire protocol and merge semantics.**
-  2. `docs/p2p-sync/PROGRESS.md` — what is already built on Android.
-  3. `app/src/main/sqldelight/com/yogeshpaliyal/deepr/Deepr.sq` and `migrations/` — the schema, including the sync triggers.
-  4. `app/src/main/java/com/yogeshpaliyal/deepr/p2p/core/` — the pure-Kotlin sync core (HLC, LWW merge, delta/apply, pairing, envelope).
-  5. `docs/p2p-sync/vectors/` — golden test vectors produced by the Android core.
-- Code navigation: run `codegraph init .` once, then `codegraph explore "<topic>"`, `codegraph callers <symbol>`, `codegraph impact <symbol>`.
-- **Prerequisite gate:** do not start M1 until PROGRESS.md of p2p-sync shows P2 (core) and P3 (crypto) ticked. Until then, do only M0.
+## 1. Goal
+Turn the team's fork of `yogeshpaliyal/Deepr` (an Android link manager: links, tags/"labels", profiles) into **one codebase** that ships on:
+- **Android** — the existing app keeps working, with the same applicationId, flavors (`github`, `free`, `pro`), DB and user data;
+- **iOS** (iPhone, iOS 16+);
+- **Desktop** — Windows, macOS, Linux (Compose Desktop on the JVM).
 
-## 2. Goal
-An iOS app that lets team members keep Deepr **links + tags inside shared profiles** in sync with Android devices (and other iPhones) over the same local network. It must use the **identical protocol v1, merge rules and validation limits**. An iPhone must be indistinguishable from an Android peer.
+No platform gets a separately maintained copy of business logic or UI. Platform code is limited to thin `expect`/`actual` (or interface + DI) adapters.
+**Web is out of scope:** browsers cannot run a LAN server or mDNS, which the P2P sync needs. Record this in DECISIONS.md.
 
-## 3. Architecture (decided — record any deviation in DECISIONS.md with a reason)
-- **Option chosen: SwiftUI app + Kotlin Multiplatform `:shared` module.**
-  - `:shared` (KMP: `androidTarget`, `iosArm64`, `iosSimulatorArm64`, `jvm` for tests) contains the SQLDelight schema (`Deepr.sq` + migrations, **moved, not copied**), `p2p/core`, wire models, and validation. Platform crypto goes behind `expect`/interfaces. Use CryptoKit via a Swift-provided implementation, or `dev.whyoleg.cryptography` (`-provider-apple`/`-provider-jdk`) after checking its version supports P-256 ECDH + HKDF + AES-GCM + HMAC.
-  - The Android `:app` then depends on `:shared`. Extracting must be **behavior-neutral**: the `tools/sync-harness` tests and Android unit tests must pass unchanged (adapt only paths).
-  - `iosApp/` is SwiftUI, iOS 16+. Generate the Xcode project with **XcodeGen** (`project.yml` committed, `.xcodeproj` gitignored) so CI is reproducible.
-- Rejected alternatives (don't revisit without a new reason):
-  - Compose Multiplatform for the whole UI: a huge refactor of the upstream Android UI and painful upstream merges.
-  - A pure-Swift re-implementation: protocol/merge drift risk, and the merge core gets written twice.
+## 2. Context — read in this order
+1. `docs/p2p-sync/PLAN.md` — the **P2P per-profile sync** being built in parallel (protocol v1, schema, merge rules, decisions). It is the source of truth for sync.
+2. `docs/p2p-sync/PROGRESS.md` — what's done on the sync track.
+3. `app/build.gradle.kts`, `gradle/libs.versions.toml`, `app/src/main/sqldelight/**` (schema + migrations + sync triggers).
+4. The current app: `app/src/main/java/com/yogeshpaliyal/deepr/**` (UI in Jetpack Compose + Material3, Koin DI, SQLDelight, Ktor, DataStore, Coil, Navigation3 alpha).
+- Code navigation: `codegraph init .` once; then `codegraph explore "<topic>"`, `codegraph callers <symbol>`, `codegraph impact <symbol>`. Use `impact` before moving any symbol.
+- Branch: `feature/kmp`, cut from `feature/p2p-sync`. Rebase on it at least at the start of every milestone.
 
-## 4. MVP scope
-**In:** profiles (list/create/rename/delete), links (add/edit/delete, name, notes), tags (add/remove/rename), search + tag filter + sort (local UI state, never synced), P2P sync (pair by QR scan or pasted text code, SAS confirm, per-profile share/unshare, peers list, remove peer, remove all, max-peers setting, "sync now", last sync/error), a **Share Extension** to save a URL from Safari/other apps into a chosen profile.
-**Out (list them in README as not supported on iOS):** Google Drive backup, the local HTTP "transfer" server, CSV/HTML/Chrome/Mozilla importers, home-screen shortcuts, app lock, thumbnails fetching (optional stretch), Firebase/analytics.
+## 3. Target architecture (decided — deviations go in DECISIONS.md with a reason)
+```
+shared/      KMP library. commonMain: SQLDelight DB (Deepr.sq + migrations, moved here), repositories,
+             p2p sync core (shared/src/commonMain/kotlin/com/yogeshpaliyal/deepr/p2p/**), wire models,
+             ViewModels/state holders, preferences (DataStore KMP). Platform actuals in androidMain/iosMain/jvmMain.
+ui/          KMP library with Compose Multiplatform: all screens, theme, navigation, strings (compose resources).
+app/         Android application (kept as the module name for CI/fastlane/applicationId). Owns flavors,
+             Firebase/Play/Drive (pro/free), Android-only integrations (share-target Activity, shortcuts,
+             WorkManager, foreground LocalServerService, app lock). Thin: wires DI and hosts `ui`.
+desktopApp/  JVM application: main(), window, tray, packaging (msi/dmg/deb via Compose Desktop).
+iosApp/      Xcode project generated by XcodeGen (`project.yml` committed): hosts ComposeUIViewController
+             + a Share Extension. Consumes `shared`/`ui` as an XCFramework.
+```
+Why not a single `composeApp` module: AGP product flavors (github/free/pro) and Play/Firebase deps don't fit a KMP module. Keeping `:app` as a thin Android shell preserves them.
+Rejected: Flutter/React Native rewrite (throws away all Kotlin, including the sync core), and native UI per platform (that is the "two versions" the user wants to avoid).
 
-## 5. iOS platform requirements & pitfalls (must be handled)
-1. **Local network:** `NSLocalNetworkUsageDescription` and `NSBonjourServices = ["_deepr._tcp"]` in Info.plist. The first connection triggers a permission prompt: handle denial with a clear UI state.
-2. **Server side on iOS:** use `Network.framework` (`NWListener` for the server, `NWBrowser` for discovery, Bonjour TXT as in the PLAN). First check whether `ktor-server-cio` supports iOS targets at the pinned Ktor version. If not, write a minimal HTTP/1.1 handler (POST only, `Content-Length` bodies ≤ 4 MB, the endpoints in PLAN.md, strict parsing, timeouts). The client side can be `URLSession` or Ktor `Darwin` engine.
-3. **No background server on iOS.** Listen only in the foreground. Use `BGAppRefreshTask` for best-effort client-only syncs. Document that an iPhone receives changes when it's opened.
-4. **Secrets:** Keychain with `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`. Per-peer keys in the DB are encrypted with a Keychain-held key. That key does not survive an iCloud/device-migration restore, so **clone detection** works the same as Android's Keystore design: decryption fails → new deviceId, peers marked "re-pair".
-5. **SQLite shared between app and Share Extension:** DB in the **App Group** container, WAL mode, `foreign_keys=ON`, short transactions. Wrap writes in `beginBackgroundTask` so the app is never suspended while holding a lock (avoids the `0xdead10cc` termination). Use the SQLDelight native driver. The triggers in `Deepr.sq` already capture changes from any writer, including the extension.
-6. **QR:** render with CoreImage `CIQRCodeGenerator`; scan with VisionKit `DataScannerViewController` (fallback AVFoundation). `NSCameraUsageDescription` required. Text code: paste from clipboard and the share sheet.
-7. **SQLite version:** iOS ships a modern SQLite, but the shared schema must stay **SQLite 3.9-compatible** for Android API 24 (no UPSERT, no window functions, no RETURNING).
+## 4. Constraints
+- **Android must never regress.** Every milestone ends with `./gradlew lintKotlin testGithubDebugUnitTest assembleGithubDebug` green on CI, and the existing DB upgrades in place (SQLDelight migrations unchanged, `DeeprDB` name and package unchanged).
+- **Schema** stays SQLite 3.9-compatible (Android API 24): no UPSERT, window functions or RETURNING. Triggers use lowercase `new.`/`old.` (SQLDelight's parser requires it).
+- **The sync track owns** `shared/src/commonMain/kotlin/com/yogeshpaliyal/deepr/p2p/**`, `app/src/main/sqldelight/**` (until you move it in M1) and `tools/sync-harness/**`. Move these, don't rewrite them. When you move them, update the harness paths in `tools/sync-harness/build.gradle.kts` in the same commit and keep `tools/sync-harness` tests green.
+- Prefer KMP versions of what's already used: SQLDelight (native + JVM drivers), Ktor (client: OkHttp/Darwin/CIO; server: CIO on Android/JVM), Koin, kotlinx.serialization, DataStore, Coil 3, coroutines. Check Navigation3's multiplatform status at the pinned version. If it isn't multiplatform, use JetBrains' `navigation-compose` and record the decision. New dependency → DECISIONS.md entry.
+- Android-only libraries need a common abstraction or a per-platform replacement:
 
-## 6. Milestones (each ends with green tests + a commit)
-- **M0 Feasibility & environment** — confirm with the user: (a) Apple Developer Program account (needed for TestFlight distribution to teammates; free provisioning only lasts 7 days and needs a Mac), (b) GitHub Actions macOS runner budget. Check the Ktor-on-iOS-server question (§5.2) and the crypto library choice. Write DECISIONS.md. *Stop and ask if (a) is unavailable.*
-- **M1 Extract `:shared`** — move schema + `p2p/core` into KMP; Android and harness tests green; CI updated.
-- **M2 iOS shell** — XcodeGen project, `:shared` XCFramework built via Gradle, DB opens in the App Group, profiles/links/tags CRUD in SwiftUI.
-- **M3 Browse UX** — search, tag filter, sort (UserDefaults, never synced).
-- **M4 Pairing** — invite (QR + text code, 10 min expiry), join (scan/paste, new-or-merge profile mapping), SAS confirm, peer limit; vectors pass.
-- **M5 Sync transport** — server + client + Bonjour, envelope + replay window, push+pull rounds, Mutex per share, foreground triggers, BGAppRefreshTask, peers screen (sync now, remove, remove all, unshare).
-- **M6 Share Extension** — save URL + optional name/tags into a chosen profile.
-- **M7 CI & distribution** — GitHub Actions `macos-latest`: Gradle shared tests, `xcodebuild test` on the simulator, unsigned archive artifact. TestFlight upload job enabled only when the App Store Connect API key secrets exist.
-- **M8 Interop proof** — in CI on macOS: start a JVM peer (from `tools/sync-harness`, serving the real protocol on localhost) and run an XCTest that pairs (test hook bypasses the camera), syncs, and asserts convergence both ways. Plus the manual Android↔iPhone checklist in PROGRESS.md.
+| Today (Android) | Common abstraction | iOS | Desktop |
+|---|---|---|---|
+| jsoup (HTML title/thumbnail) | `LinkMetadataFetcher` | Ktor + a small regex/`<title>` parser, or skip | jsoup (JVM) |
+| zxing scanner | `QrScanner` (optional) | VisionKit `DataScannerViewController` | none: paste the text code |
+| compose-qr-code | `QrImage` | CoreImage `CIQRCodeGenerator` | ZXing core (JVM) or the same lib if KMP |
+| WorkManager | `BackgroundScheduler` | `BGAppRefreshTask` (client-only) | coroutine timer while running/tray |
+| NSD (mDNS) | `PeerDiscovery` | `NWBrowser`/`NWListener` Bonjour | JmDNS |
+| Keystore | `SecretStore` | Keychain `…ThisDeviceOnly` | OS keychain (e.g. java-keyring) or an AES key in a 0600 file + DECISIONS note |
+| Ktor CIO server | `SyncServer` | check ktor-server-cio for iOS; else a minimal `NWListener` HTTP/1.1 handler (POST + Content-Length ≤ 4 MB, timeouts) | Ktor CIO |
+| javax.crypto | `P2pCrypto` (P-256 ECDH, HKDF-SHA256, HMAC-SHA256, AES-256-GCM) | CryptoKit (via cryptography-kotlin's CryptoKit provider if it covers ECDH, else a Swift shim) | javax.crypto |
+| SilentSaveActivity (share target) | `SaveLinkUseCase` in shared | Share Extension (App Group DB) | drag & drop / paste |
 
-## 7. Definition of done for any task
-- Golden vectors (`docs/p2p-sync/vectors/*.json`) pass on iOS: pairing transcript/HKDF/SAS, envelope encrypt/decrypt, merge scenarios.
-- Convergence: the harness fuzz test, extended with an iOS-equivalent replica when possible, passes.
-- No secrets in logs. Validation limits identical to PLAN.md. Accessibility labels on all controls; Dynamic Type works.
+## 5. Platform pitfalls you must handle
+- **iOS local network:** `NSLocalNetworkUsageDescription` and `NSBonjourServices = ["_deepr._tcp"]` in Info.plist; handle permission denial in the UI. `NSCameraUsageDescription` for QR.
+- **iOS has no background server.** Listen only in the foreground; `BGAppRefreshTask` does best-effort client syncs. Document it in the UI ("iPhone syncs when opened").
+- **iOS app + Share Extension share SQLite** in the App Group container: WAL mode, `foreign_keys=ON`, short transactions. Wrap writes in `beginBackgroundTask` to avoid the `0xdead10cc` termination (holding a file lock while suspended).
+- **Clone safety:** secrets live in device-bound storage (Keystore / Keychain `ThisDeviceOnly` / desktop keychain), so a restored or copied DB can't decrypt peer keys. Then sync core regenerates the deviceId and marks peers "re-pair". Desktop: exclude the key from any copied app-data folder.
+- **Desktop is the best always-on peer:** offer "keep syncing in the tray" (opt-in) with a single-instance lock (a second instance must not open the same DB).
+- **Desktop DB location:** OS app-data dir (`%APPDATA%/Deepr`, `~/Library/Application Support/Deepr`, `$XDG_DATA_HOME/deepr`).
 
-## 8. Rules
-- Smallest change that fully works. No new dependency without an entry in DECISIONS.md.
-- Never change protocol v1 semantics. If a change is truly needed, propose `v2` in DECISIONS.md and stop for review: Android peers must keep working.
-- Delegation is allowed: Claude subagents or `opencode run -m opencode/<free-model>` (e.g. `opencode/deepseek-v4.1-flash-free`, `opencode/glm-5.3-flash-free`) for bounded tasks. You review every delegated diff and run the tests before ticking anything.
-- Never push to `master`. Commit on `feature/ios` after each green task; push only if the user authorized it.
+## 6. Milestones (each ends green on CI + a commit; tick in PROGRESS.md)
+- **M0 Decisions & environment** — confirm with the user: (a) Apple Developer Program account (TestFlight is the practical way to give teammates the iOS app), (b) GitHub Actions macOS/Windows runner budget, (c) desktop signing needs (macOS notarization, Windows code signing) or unsigned builds for now. Spike: Navigation3 multiplatform status, ktor-server on iOS, crypto provider for iOS. Write DECISIONS.md. *If (a) is unavailable, iOS still builds for the simulator; mark distribution blocked and continue.*
+- **M1 `:shared`** — create the KMP module (androidTarget, jvm, iosArm64, iosSimulatorArm64). Move the SQLDelight DB, repositories, preferences, the p2p core and the use-cases. `:app` depends on it. Android behavior is identical. Harness and unit tests are green.
+- **M2 `:ui`** — move screens/theme/navigation/strings to Compose Multiplatform `commonMain`. Android-specific UI (permissions, intents, pickers) goes behind interfaces. `:app` becomes the thin host. Android UI is unchanged (screenshot spot-checks in PROGRESS.md).
+- **M3 Desktop** — `desktopApp` runs, with full links/tags/profiles UX on the same DB schema, and `packageDistributionForCurrentOS` works.
+- **M4 iOS** — `iosApp` via XcodeGen, app + Share Extension, DB in the App Group, full UX.
+- **M5 P2P on every platform** — implement each `actual` from §4 for the sync track's interfaces (server, client, discovery, secret store, scheduler). The sync UI (invite QR + text code, join with scan/paste, SAS confirm, per-profile share/unshare, peers list, remove peer / remove all, max-peers setting, sync now) lives **once** in `:ui`. Coordinate with the sync track via PLAN.md.
+- **M6 CI & distribution** — GitHub Actions matrix: ubuntu (Android APK + Linux deb + harness), macos (iOS simulator tests, unsigned iOS archive, dmg), windows (msi). Artifacts uploaded. Signing/TestFlight jobs run only when their secrets exist.
+- **M7 Interop proof** — CI job: JVM peer (harness) ↔ desktop build ↔ iOS simulator XCTest pair, sync and converge. All platforms must pass `docs/p2p-sync/vectors/*.json`. Manual checklist (Android ↔ iPhone ↔ desktop) in PROGRESS.md.
 
-## 9. Persistence of progress (mandatory)
+## 7. Scope notes
+- Feature parity target: everything except Google Drive backup (pro flavor, Android-only for now), Firebase/analytics (Android-only), home-screen shortcuts (Android-only), and the legacy LAN "transfer" server (Android-only; P2P sync supersedes it). List these per platform in README.
+- Settings, sort order, filters and theme stay **local per device** on every platform (never synced).
+
+## 8. Definition of done (any task)
+Tests for new logic; all CI jobs green; Android unchanged for users; no secrets in logs; accessibility labels on controls; strings in compose resources (English required, existing translations migrated).
+
+## 9. Working rules
+- Smallest change that fully works. Move code before rewriting it. One concern per commit.
+- Delegation is allowed: Claude subagents, or `opencode run -m opencode/<free-model> "<task>"` (e.g. `opencode/deepseek-v4.1-flash-free`, `opencode/glm-5.3-flash-free`, `opencode/minimax-m3.1-flash-free`) for bounded, well-specified tasks. You review every delegated diff and run the tests before ticking.
+- Never change sync protocol v1 or merge semantics. Propose changes in `docs/p2p-sync/PLAN.md` under "Proposals" and stop for review.
+- Never push to `master`. Commit on `feature/kmp` after each green step; push when the user has authorized pushing.
+
+## 10. Persistence of progress (mandatory)
 Your memory does not survive interruptions; the repo does.
-1. **On start of every session:** read `docs/ios/PROGRESS.md`, `docs/ios/DECISIONS.md`, then `git log --oneline -20 feature/ios` and `git status`. If PROGRESS.md doesn't exist, create it from §6 as a checkbox list.
-2. **Before starting a task:** mark it `[~] in progress (YYYY-MM-DD)` with a one-line plan, and commit that change (`docs(ios): start <task>`).
-3. **During long tasks:** after each sub-step that compiles, commit (WIP commits are fine) and append one line to the PROGRESS.md log: what changed, what's next, any failing test and its name.
-4. **Finishing:** tick `[x]` only after its tests pass. Note the verifying command(s) and commit hash.
-5. **Blocked:** mark `[!] blocked: <exact question or missing thing>` and continue with the next unblocked task. Never guess at credentials or the user's decisions.
-6. **Uncommitted work found on resume:** inspect `git diff`, decide whether to keep it, and log the decision before continuing.
+1. **Every session starts with:** read `docs/cross-platform/PROGRESS.md` and `docs/cross-platform/DECISIONS.md`, then `git status` and `git log --oneline -20`. If PROGRESS.md doesn't exist, create it from §6 as a checkbox list (one line per sub-task).
+2. **Before a task:** mark it `[~] in progress (YYYY-MM-DD): <one-line plan>`, then commit (`docs(kmp): start <task>`).
+3. **During a task:** commit after every sub-step that compiles (WIP commits are fine). Append one log line: what changed, what's next, any failing test by name.
+4. **Done:** `[x]` only after its tests/CI pass. Note the verifying command or CI run URL and the commit hash.
+5. **Blocked:** `[!] blocked: <exact question / missing credential>`, then continue with the next unblocked task. Never guess the user's decisions or credentials.
+6. **Uncommitted changes found on resume:** inspect `git diff`, keep or discard deliberately, and log which.
 7. Keep PROGRESS.md under ~200 lines: fold old log lines into a "History" summary.

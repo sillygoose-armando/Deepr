@@ -531,7 +531,10 @@ INSERT INTO SyncMeta (shareId, syncId, tagName, hlc, origin, deleted) VALUES (?,
 
 deltaPage:
 SELECT m.seq, m.syncId, m.tagName, m.hlc, m.origin, m.deleted, x.link, x.name, x.notes, x.createdAt
-FROM SyncMeta m LEFT JOIN Deepr x ON m.tagName = '' AND m.deleted = 0 AND x.syncId = m.syncId
+FROM SyncMeta m
+JOIN SyncShare s ON s.shareId = m.shareId
+-- Scoped to the share's profile so a colliding syncId can never leak a row from another profile.
+LEFT JOIN Deepr x ON m.tagName = '' AND m.deleted = 0 AND x.syncId = m.syncId AND x.profileId = s.profileId
 WHERE m.shareId = ? AND m.seq > ?
 ORDER BY m.seq
 LIMIT ?;

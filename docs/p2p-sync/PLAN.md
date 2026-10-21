@@ -21,7 +21,7 @@ Progress log: [PROGRESS.md](PROGRESS.md) — **read it first when resuming.**
 | Change capture | **SQLite triggers** | Writes come from many paths (UI, SilentSaveActivity, importers, LocalServer transfer, restore). Triggers catch all of them atomically within the same transaction. |
 | Max peers | Device-wide setting, default 5, range 1–10 | Keeps the peers list readable. Enforced on both sides at pairing. |
 | Security | One-time pairing token in QR/text → authenticated ECDH P-256 → per-peer 256-bit key; every message is AES-256-GCM encrypted & authenticated; 6-digit SAS confirmation | Platform crypto only (`javax.crypto`, `java.security`, minSdk 24). No new deps. Every primitive also exists in Apple CryptoKit (iOS interop). |
-| iOS-readiness (added 2026-10-19) | `p2p/core` is **multiplatform-ready**: no `java.*`/`android.*` imports. Crypto, clock, randomness and DB transactions sit behind small interfaces; JVM implementations live in `p2p/jvm/`. Wire models use kotlinx.serialization. The harness exports **golden test vectors** to `docs/p2p-sync/vectors/`. | A future iOS app (see `docs/ios/AGENT_PROMPT.md`) can move the core into a KMP `:shared` module unchanged and prove wire compatibility against the vectors. |
+| Multiplatform (user decision, 2026-10-21) | **One KMP codebase for Android, iOS and Desktop.** The sync core is written directly in `shared/src/commonMain` (pure Kotlin, no `java.*`/`android.*`). Crypto, secret storage, server, discovery and scheduling sit behind interfaces with per-platform actuals. Wire models use kotlinx.serialization. The harness exports **golden test vectors** to `docs/p2p-sync/vectors/`. The sync UI is written once in Compose Multiplatform. | No second copy of the logic or UI. The migration itself is a separate track: `docs/cross-platform/AGENT_PROMPT.md`. |
 
 ## Protocol (v1)
 
@@ -98,10 +98,11 @@ All triggers have `WHEN (SELECT applying FROM SyncDevice WHERE id=1) = 0` and on
 Sharing an existing profile for the first time seeds meta rows for all its links and tags in one transaction.
 
 ## Code layout
-- `app/src/main/java/com/yogeshpaliyal/deepr/p2p/core/` — **pure Kotlin, no `android.*` imports**: HLC, Entry model, validation, delta reader, applier, SyncEngine (Mutex), pairing crypto, envelope codec. Unit-tested on the JVM.
-- `app/src/main/java/com/yogeshpaliyal/deepr/p2p/android/` — Keystore wrapper, Ktor server routes + client transport, NSD, lifecycle/WorkManager coordinator, Koin wiring.
-- `app/src/main/java/com/yogeshpaliyal/deepr/ui/screens/sync/` — UI.
-- `tools/sync-harness/` — standalone Gradle JVM project that compiles `Deepr.sq` + migrations + `p2p/core` with the SQLDelight JDBC driver. It runs the core tests on hosts without an Android SDK (this one).
+- `shared/src/commonMain/kotlin/com/yogeshpaliyal/deepr/p2p/core/` — **pure Kotlin**: HLC, Entry model, validation, delta reader, applier, SyncEngine (Mutex), pairing protocol, envelope codec. Crypto goes through the `P2pCrypto` interface.
+- `shared/src/jvmShared/kotlin/com/yogeshpaliyal/deepr/p2p/jvm/` — `javax.crypto` implementation of `P2pCrypto`, used by Android + Desktop. The iOS actual is done by the multiplatform track.
+- Until the `:shared` Gradle module exists (cross-platform M1), these directories are compiled only by `tools/sync-harness`. Android wiring (P4) waits for M1.
+- Platform adapters (server, client, discovery, secret store, scheduler) and the sync UI are built in the multiplatform track's modules (`shared/*Main`, `ui/`).
+- `tools/sync-harness/` — standalone Gradle JVM build compiling `Deepr.sq` + migrations + the sync core with the SQLDelight JDBC driver. Runs everywhere, including this aarch64 host.
 
 ## Verification strategy
 1. **Convergence fuzz test** (harness): 3 replicas, random local ops (add/edit/delete link, add/remove/rename/delete tag, move between profiles, delete profile), random pairwise syncs with random page sizes, dropped and duplicated messages, and injected exceptions mid-apply. Assert that all replicas end with identical `(link, name, notes, tags)` per share and that `PRAGMA integrity_check` and `foreign_key_check` pass.
@@ -111,14 +112,21 @@ Sharing an existing profile for the first time seeds meta rows for all its links
 5. Manual checklist on two real devices (see the end of PROGRESS.md).
 
 ## Phases & ownership
-Executors: **Claude (lead)** owns the design, schema/triggers, merge core and all reviews. Bounded, well-specified tasks go to **opencode free models**, and their output is reviewed and tested by the lead before it is checked off.
+Two tracks share this repo. **Sync track** (this plan, lead: Claude) and **multiplatform track** (`docs/cross-platform/AGENT_PROMPT.md`, own PROGRESS/DECISIONS, branch `feature/kmp`).
+Bounded tasks may be delegated to opencode free models. The lead reviews and tests every delegated diff before ticking it.
 
-| # | Phase | Owner |
-|---|---|---|
-| P0 | Setup: branch, plan, harness, CI workflow, fork remote | Claude |
-| P1 | Schema + migration 11 + triggers + migration test | Claude |
-| P2 | Core: HLC, Entry, validation, delta reader, applier, dedupe, SyncEngine + fuzz test | Claude (tests: opencode) |
-| P3 | Pairing crypto + envelope + invite codec + tests | opencode → Claude review |
-| P4 | Android: Keystore, Ktor server/client transport, NSD, coordinator, WorkManager, Koin | opencode → Claude review |
-| P5 | UI: share/invite (QR + text), join (scan/paste, profile mapping, SAS), peers list (remove / remove all), max-peers setting, status; strings | opencode → Claude review |
-| P6 | CI green, manual two-device checklist, README section | Claude |
+| # | Phase | Owner | Depends on |
+|---|---|---|---|
+| P0 | Setup: branch, plan, harness, CI workflow, fork remote | Claude | — |
+| P1 | Schema + migration 11 + triggers + tests | Claude | — |
+| P2 | Core: HLC, Entry, validation, delta reader, applier, dedupe, SyncEngine + convergence fuzz test | Claude | P1 |
+| P3 | Pairing protocol + `P2pCrypto` (JVM impl) + envelope + invite codec + golden vectors | Claude / opencode | P2 interfaces |
+| P4 | Platform adapters (server, client, discovery, secret store, scheduler) per platform | multiplatform track M5 | M1, P3 |
+| P5 | Sync UI once in `ui/` (Compose Multiplatform) | multiplatform track M5 (spec here) | M2, P4 |
+| P6 | CI matrix green, multi-device checklist, README | both | all |
+
+### Sync UI spec (for P5)
+- Profile menu → **Share profile…** → Invite: QR + copyable text code + 10 min countdown; then SAS confirm (Accept / Reject).
+- **Join shared profile**: scan QR (where a camera exists) or paste a text code → choose "new profile" (default name from the invite) or "merge into existing profile" → SAS shown → wait for confirmation.
+- **Sync settings**: enable sync, device name, max peers (1–10, default 5), peers list (name, shared profiles, last sync, last error, "needs re-pair"), per peer: Sync now / Unshare profile / Remove peer; **Remove all peers** (confirm dialog). Removing never deletes local links: say so in the confirm text.
+- Restore/"replace all" import detaches shares: warn in the restore confirm dialog when shares exist.
