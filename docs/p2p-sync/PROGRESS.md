@@ -44,7 +44,7 @@ Code navigation: `codegraph` CLI is indexed for this repo (`codegraph sync .` af
 - [ ] Sync UI in `ui/` per the spec in PLAN.md (multiplatform M5)
 
 ### P6 Release
-- [ ] CI green with APK artifact
+- [x] CI green with APK artifact (run 39668710475, artifact deepr-p2p-debug-apk)
 - [ ] Manual two-device checklist
 - [ ] README section
 
