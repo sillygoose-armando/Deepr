@@ -468,7 +468,7 @@ class AccountViewModel(
 
     fun exportCsvData(uri: Uri? = null) {
         viewModelScope.launch(Dispatchers.IO) {
-            when (val result = exportRepository.exportToCsv(uri)) {
+            when (val result = exportRepository.exportToCsv(uri?.toString())) {
                 is RequestResult.Success -> {
                     exportResultChannel.send("Export completed: ${result.data}")
                     analyticsManager.logEvent(
@@ -486,7 +486,7 @@ class AccountViewModel(
     fun importCsvData(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             importResultChannel.send("Importing, please wait...")
-            when (val result = importRepository.importFromCsv(uri)) {
+            when (val result = importRepository.importFromCsv(uri.toString())) {
                 is RequestResult.Success -> {
                     importResultChannel.send(
                         "Import complete! Added: ${result.data.importedCount}, Skipped (duplicates): ${result.data.skippedCount}",
@@ -513,7 +513,7 @@ class AccountViewModel(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             importResultChannel.send("Importing ${importer.getDisplayName()}, please wait...")
-            when (val result = importRepository.importBookmarks(uri, importer)) {
+            when (val result = importRepository.importBookmarks(uri.toString(), importer)) {
                 is RequestResult.Success -> {
                     importResultChannel.send(
                         "Import complete! Added: ${result.data.importedCount}, Skipped (duplicates): ${result.data.skippedCount}",

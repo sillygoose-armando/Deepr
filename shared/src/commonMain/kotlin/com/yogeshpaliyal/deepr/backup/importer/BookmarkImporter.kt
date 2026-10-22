@@ -1,6 +1,5 @@
 package com.yogeshpaliyal.deepr.backup.importer
 
-import android.net.Uri
 import com.yogeshpaliyal.deepr.backup.ImportResult
 import com.yogeshpaliyal.deepr.util.RequestResult
 
@@ -17,7 +16,7 @@ interface BookmarkImporter {
      * @param profileId The ID of the profile to import bookmarks into
      * @return A [RequestResult] containing the [ImportResult] or an error
      */
-    suspend fun import(uri: Uri): RequestResult<ImportResult>
+    suspend fun import(uri: String): RequestResult<ImportResult>
 
     /**
      * Get the display name of this importer.

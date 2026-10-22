@@ -14,12 +14,12 @@ class AutoBackupWorker(
     val context: Context,
     val linkRepository: LinkRepository,
     val preferenceRepository: PreferenceRepository,
-) {
+) : AutoBackupRunner {
     private val csvWriter by lazy {
         CsvWriter()
     }
 
-    suspend fun doWork() {
+    override suspend fun doWork() {
         return withContext(Dispatchers.IO) {
             try {
                 val enabled = preferenceRepository.getAutoBackupEnabled.first()

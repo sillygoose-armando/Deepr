@@ -1,11 +1,10 @@
 package com.yogeshpaliyal.deepr.backup
 
-import android.net.Uri
 import com.yogeshpaliyal.deepr.backup.importer.BookmarkImporter
 import com.yogeshpaliyal.deepr.util.RequestResult
 
 interface ImportRepository {
-    suspend fun importFromCsv(uri: Uri): RequestResult<ImportResult>
+    suspend fun importFromCsv(uri: String): RequestResult<ImportResult>
 
     /**
      * Get all available bookmark importers.
@@ -23,7 +22,7 @@ interface ImportRepository {
      * @return A [RequestResult] containing the [ImportResult] or an error
      */
     suspend fun importBookmarks(
-        uri: Uri,
+        uri: String,
         importer: BookmarkImporter,
     ): RequestResult<ImportResult>
 }

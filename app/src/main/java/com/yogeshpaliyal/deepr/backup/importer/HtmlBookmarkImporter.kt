@@ -1,7 +1,7 @@
 package com.yogeshpaliyal.deepr.backup.importer
 
 import android.content.Context
-import android.net.Uri
+import androidx.core.net.toUri
 import com.yogeshpaliyal.deepr.backup.ImportResult
 import com.yogeshpaliyal.deepr.data.LinkRepository
 import com.yogeshpaliyal.deepr.preference.PreferenceRepository
@@ -21,7 +21,8 @@ abstract class HtmlBookmarkImporter(
     protected val linkRepository: LinkRepository,
     protected val preferenceRepository: PreferenceRepository,
 ) : BookmarkImporter {
-    override suspend fun import(uri: Uri): RequestResult<ImportResult> {
+    override suspend fun import(uriString: String): RequestResult<ImportResult> {
+        val uri = uriString.toUri()
         var importedCount = 0
         var skippedCount = 0
 

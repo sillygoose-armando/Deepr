@@ -2,10 +2,10 @@ package com.yogeshpaliyal.deepr.backup
 
 import android.content.ContentValues
 import android.content.Context
-import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import androidx.core.net.toUri
 import com.yogeshpaliyal.deepr.R
 import com.yogeshpaliyal.deepr.data.LinkRepository
 import com.yogeshpaliyal.deepr.util.RequestResult
@@ -25,7 +25,8 @@ class ExportRepositoryImpl(
         CsvWriter()
     }
 
-    override suspend fun exportToCsv(uri: Uri?): RequestResult<String> {
+    override suspend fun exportToCsv(uriString: String?): RequestResult<String> {
+        val uri = uriString?.toUri()
         val count = linkRepository.countAllLinks()
         if (count == 0L) {
             return RequestResult.Error(context.getString(R.string.no_data_to_export))

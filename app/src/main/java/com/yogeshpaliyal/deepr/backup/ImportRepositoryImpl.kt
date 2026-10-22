@@ -1,7 +1,6 @@
 package com.yogeshpaliyal.deepr.backup
 
 import android.content.Context
-import android.net.Uri
 import com.yogeshpaliyal.deepr.backup.importer.BookmarkImporter
 import com.yogeshpaliyal.deepr.backup.importer.ChromeBookmarkImporter
 import com.yogeshpaliyal.deepr.backup.importer.CsvBookmarkImporter
@@ -19,7 +18,7 @@ class ImportRepositoryImpl(
     private val chromeImporter = ChromeBookmarkImporter(context, linkRepository, preferenceRepository)
     private val mozillaImporter = MozillaBookmarkImporter(context, linkRepository, preferenceRepository)
 
-    override suspend fun importFromCsv(uri: Uri): RequestResult<ImportResult> = csvImporter.import(uri)
+    override suspend fun importFromCsv(uri: String): RequestResult<ImportResult> = csvImporter.import(uri)
 
     override fun getAvailableImporters(): List<BookmarkImporter> =
         listOf(
@@ -29,7 +28,7 @@ class ImportRepositoryImpl(
         )
 
     override suspend fun importBookmarks(
-        uri: Uri,
+        uri: String,
         importer: BookmarkImporter,
     ): RequestResult<ImportResult> = importer.import(uri)
 }

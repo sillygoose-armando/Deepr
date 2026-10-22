@@ -1,6 +1,5 @@
 package com.yogeshpaliyal.deepr.backup.importer
 
-import android.net.Uri
 import com.yogeshpaliyal.deepr.backup.ImportResult
 import com.yogeshpaliyal.deepr.util.RequestResult
 import kotlinx.coroutines.test.runTest
@@ -19,7 +18,7 @@ class BookmarkImporterTest {
         runTest {
             val testImporter =
                 object : BookmarkImporter {
-                    override suspend fun import(uri: Uri): RequestResult<ImportResult> = RequestResult.Success(ImportResult(0, 0))
+                    override suspend fun import(uri: String): RequestResult<ImportResult> = RequestResult.Success(ImportResult(0, 0))
 
                     override fun getDisplayName(): String = "Test"
 
@@ -31,7 +30,7 @@ class BookmarkImporterTest {
             assertEquals("text/plain", testImporter.getSupportedMimeTypes()[0])
 
             // Verify the interface can be called
-            val mockUri = Uri.parse("content://test/file.txt")
+            val mockUri = "content://test/file.txt"
             val result = testImporter.import(mockUri)
             assertNotNull(result)
         }

@@ -1,7 +1,7 @@
 package com.yogeshpaliyal.deepr.backup.importer
 
 import android.content.Context
-import android.net.Uri
+import androidx.core.net.toUri
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReaderBuilder
 import com.opencsv.exceptions.CsvException
@@ -21,7 +21,8 @@ class CsvBookmarkImporter(
     private val linkRepository: LinkRepository,
     private val preferenceRepository: PreferenceRepository,
 ) : BookmarkImporter {
-    override suspend fun import(uri: Uri): RequestResult<ImportResult> {
+    override suspend fun import(uriString: String): RequestResult<ImportResult> {
+        val uri = uriString.toUri()
         var skippedCount = 0
 
         try {
