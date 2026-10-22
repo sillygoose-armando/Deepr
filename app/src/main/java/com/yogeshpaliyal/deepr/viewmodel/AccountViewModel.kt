@@ -1,7 +1,6 @@
 package com.yogeshpaliyal.deepr.viewmodel
 
 import android.net.Uri
-import androidx.annotation.StringDef
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yogeshpaliyal.deepr.GetAllTagsWithCount
@@ -34,35 +33,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-@Retention(AnnotationRetention.SOURCE)
-@Target(
-    AnnotationTarget.TYPE,
-)
-@StringDef(
-    value = [
-        SortType.SORT_CREATED_BY_ASC,
-        SortType.SORT_CREATED_BY_DESC,
-        SortType.SORT_OPENED_ASC,
-        SortType.SORT_OPENED_DESC,
-        SortType.SORT_NAME_ASC,
-        SortType.SORT_NAME_DESC,
-        SortType.SORT_LINK_ASC,
-        SortType.SORT_LINK_DESC,
-    ],
-)
-annotation class SortType {
-    companion object {
-        const val SORT_CREATED_BY_ASC = "createdAt_ASC"
-        const val SORT_CREATED_BY_DESC = "createdAt_DESC"
-        const val SORT_OPENED_ASC = "openedCount_ASC"
-        const val SORT_OPENED_DESC = "openedCount_DESC"
-        const val SORT_NAME_ASC = "name_ASC"
-        const val SORT_NAME_DESC = "name_DESC"
-        const val SORT_LINK_ASC = "link_ASC"
-        const val SORT_LINK_DESC = "link_DESC"
-    }
-}
 
 class AccountViewModel(
     private val linkRepository: LinkRepository,

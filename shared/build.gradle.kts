@@ -35,6 +35,7 @@ kotlin {
         commonMain.dependencies {
             api(libs.sqldelight.runtime)
             api(libs.coroutines.extensions)
+            api(libs.androidx.datastore.preferences.core)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.ktor.client.core)
@@ -44,6 +45,9 @@ kotlin {
         getByName("jvmSharedMain").dependencies {
             implementation(libs.ktor.client.cio)
             implementation(libs.jsoup)
+        }
+        androidMain.dependencies {
+            implementation(libs.androidx.datastore.preferences)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

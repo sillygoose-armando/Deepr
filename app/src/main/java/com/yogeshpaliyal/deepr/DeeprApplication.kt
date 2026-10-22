@@ -24,6 +24,7 @@ import com.yogeshpaliyal.deepr.gdrive.DriveSyncManager
 import com.yogeshpaliyal.deepr.gdrive.DriveSyncManagerFactoryImpl
 import com.yogeshpaliyal.deepr.preference.AppPreferenceDataStore
 import com.yogeshpaliyal.deepr.preference.PreferenceRepository
+import com.yogeshpaliyal.deepr.preference.appDataStore
 import com.yogeshpaliyal.deepr.review.ReviewManager
 import com.yogeshpaliyal.deepr.review.ReviewManagerFactory
 import com.yogeshpaliyal.deepr.security.AppLockState
@@ -94,7 +95,7 @@ class DeeprApplication : Application() {
                     database.deeprQueries
                 }
 
-                single<PreferenceRepository> { AppPreferenceDataStore(androidContext()) }
+                single<PreferenceRepository> { AppPreferenceDataStore(androidContext().appDataStore) }
 
                 single<LinkRepository> {
                     val context = androidContext()
