@@ -28,5 +28,5 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Compile :shared for iOS
-        run: ./gradlew :shared:compileKotlinIosSimulatorArm64 :shared:compileKotlinIosArm64
+      - name: Compile :shared and :ui for iOS
+        run: ./gradlew :shared:compileKotlinIosSimulatorArm64 :shared:compileKotlinIosArm64 :ui:compileKotlinIosSimulatorArm64 :ui:compileKotlinIosArm64
