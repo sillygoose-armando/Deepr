@@ -25,5 +25,6 @@ A partial trial was run before the user stopped it (single task, hidden tests; a
 Sources: benchlm.ai (Terminal-Bench 2.1, SWE-bench Verified, model comparisons), artificialanalysis.ai (model comparisons, changelog), officechai.com (DeepSeek V4.1 Flash 1017 on AA), minimax.io/blog/minimax-m31f, lmmarketcap.com, orcarouter.ai (Beam 1.0 on opencode), opencode.ai/docs/zen.
 
 ## Observed in practice
-- 2026-10-22, **beam**: 2/2 attempts on M2-02 produced no changes (over-exploration, repeated `/tmp` access despite rules). Demoted; don't use.
+- 2026-10-22, **beam**: 2/2 attempts on M2-02 produced no changes. **Correction:** the main cause was opencode ending headless sessions on auto-rejected outside-repo access (since fixed), not necessarily the model. Still slow to start implementing; give it another low-risk task before judging.
 - 2026-10-22, **deepseek-v4.1-flash**: M2-01 done in one attempt, in scope, CI green.
+- 2026-10-22, **glm-5.3-flash**: M2-02 done (after the permission fix), found and handled two real Compose-resources incompatibilities, thorough log.
