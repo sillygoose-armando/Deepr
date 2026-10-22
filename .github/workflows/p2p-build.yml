@@ -2,7 +2,7 @@ name: P2P Sync Build
 
 on:
   push:
-    branches: [ 'feature/p2p-sync' ]
+    branches: [ 'feature/p2p-sync', 'feature/kmp' ]
   workflow_dispatch:
 
 concurrency:
