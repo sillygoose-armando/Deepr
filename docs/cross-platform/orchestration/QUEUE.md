@@ -13,8 +13,9 @@ Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM comp
 | M2-05b | QRCodeDialog: replace `compose-qr-code` (no iOS) with a multiplatform QR library, or expect/actual | 05 | B | todo | | 0 | | |
 | M2-06 | Data layer → `shared`: LinkRepository(+Impl, WorkManager scheduling behind an interface), NetworkRepository/HtmlParser (jsoup → common parser), RequestResult, Constants | 01 | A | ci | deepseek-v4.1-flash | 1 | | |
 | M2-07 | Preferences → `shared` (PreferenceRepository + DataStore KMP; Android file path via expect/actual) | 06 | A | ci | deepseek-v4.1-flash | 1 | | |
-| M2-08 | AccountViewModel (+ small ViewModels, `SortType`, then FilterMenu) → `shared`/`ui` (lifecycle-viewmodel KMP), Android-only calls behind interfaces | 06,07 | A | todo | | 0 | | |
-| M2-09 | Navigation → JetBrains Navigation3 1.1.x (`Navigation.kt` → `ui`), `:app` migrated off alpha09 | 05,08 | A | todo | | 0 | | |
+| M2-08a | AccountViewModel's collaborator interfaces → `shared` (RequestResult, ImportResult, Analytics*, SyncRepository, Export/ImportRepository + BookmarkImporter with `Uri`→`String`, AutoBackupRunner) | 06,07 | A | running | deepseek-v4.1-flash | 1 | | |
+| M2-08b | AccountViewModel → `shared` (lifecycle-viewmodel KMP); `requestReview` moves to Settings' call site; then FilterMenu → `ui` | 08a | A | todo | | 0 | | |
+| M2-09 | Navigation → JetBrains Navigation3 1.1.x (`Navigation.kt` → `ui`), `:app` migrated off alpha09 | 05,08b | A | todo | | 0 | | |
 | M2-10 | Screens: AboutUs, AppLockScreen, Splash, DeeprItem (+`MenuItem`) and the DeeprItemCompact/Grid/Swipable that depend on it (blocked in M2-05), ProfileSelectorMenu | 09 | B | todo | | 0 | | |
 | M2-11 | Screens: TagSelectionScreen, ProfileManagementScreen | 10 | B | todo | | 0 | | |
 | M2-12 | Screen: AddLinkScreen (Android bits behind interfaces) | 10 | A | todo | | 0 | | |
