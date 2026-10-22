@@ -5,7 +5,7 @@ Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM comp
 
 | ID | Task | Deps | Tier | Status | Model | Attempts | Commit | CI run |
 |---|---|---|---|---|---|---|---|---|
-| M2-01 | `:ui` CMP module (android+jvm+iOS), Compose resources, `:app` depends on it, CI compile steps | — | A | todo | | 0 | | |
+| M2-01 | `:ui` CMP module (android+jvm+iOS), Compose resources, `:app` depends on it, CI compile steps | — | A | running | deepseek-v4.1-flash | 1 | | |
 | M2-02 | Strings: copy `app/src/main/res/values*/strings.xml` to `ui` composeResources (all locales) | 01 | C (script) | todo | | 0 | | |
 | M2-03 | Theme (Color, Type, Theme; dynamic colour via expect/actual) → `ui` | 01 | B | todo | | 0 | | |
 | M2-04 | Android-free small components → `ui` (ClearInputIconButton, SettingsComponents, OpenCountAndTags, ViewType, ViewTypeMenu, SaveCompleteDialog, ColorsUtils, GoogleDrivePromoItem) | 03 | B | todo | | 0 | | |
