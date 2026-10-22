@@ -39,7 +39,7 @@ Code navigation: `codegraph` CLI is indexed for this repo (`codegraph sync .` af
 - [x] Tests
 
 ### P4/P5 → multiplatform track (docs/cross-platform/)
-- [ ] Multiplatform M1 `:shared` exists (prerequisite for wiring sync into any app)
+- [x] Multiplatform M1 `:shared` exists on `feature/kmp` (2f95f78; CI runs 39751222857 Android, 39751222843 iOS compile). Reviewed by the sync lead 2026-10-22.
 - [ ] Platform adapters per platform (multiplatform M5)
 - [ ] Sync UI in `ui/` per the spec in PLAN.md (multiplatform M5)
 
