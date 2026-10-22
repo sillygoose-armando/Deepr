@@ -11,7 +11,7 @@ Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM comp
 | M2-04 | Android-free small components → `ui` (ClearInputIconButton, SettingsComponents, OpenCountAndTags, ViewType, ViewTypeMenu, SaveCompleteDialog, ColorsUtils, GoogleDrivePromoItem) | 03 | B | done | glm-5.3-flash | 1 | aa8ee87 | [39764349579](https://github.com/sillygoose-armando/Deepr/actions/runs/39764349579), iOS [39764349486](https://github.com/sillygoose-armando/Deepr/actions/runs/39764349486) |
 | M2-05 | String-using components → `ui` (DeleteConfirmationDialog, ThemeSelectionDialog, ProfileSelectionDialog, ClipboardLinkBanner+ClipboardLink) | 02,04 | B | ci | glm-5.3-flash | 1 | | |
 | M2-05b | QRCodeDialog: replace `compose-qr-code` (no iOS) with a multiplatform QR library, or expect/actual | 05 | B | todo | | 0 | | |
-| M2-06 | Data layer → `shared`: LinkRepository(+Impl, WorkManager scheduling behind an interface), NetworkRepository/HtmlParser (jsoup → common parser), RequestResult, Constants | 01 | A | todo | | 0 | | |
+| M2-06 | Data layer → `shared`: LinkRepository(+Impl, WorkManager scheduling behind an interface), NetworkRepository/HtmlParser (jsoup → common parser), RequestResult, Constants | 01 | A | running | deepseek-v4.1-flash | 1 | | |
 | M2-07 | Preferences → `shared` (PreferenceRepository + DataStore KMP; Android file path via expect/actual) | 06 | A | todo | | 0 | | |
 | M2-08 | AccountViewModel (+ small ViewModels, `SortType`, then FilterMenu) → `shared`/`ui` (lifecycle-viewmodel KMP), Android-only calls behind interfaces | 06,07 | A | todo | | 0 | | |
 | M2-09 | Navigation → JetBrains Navigation3 1.1.x (`Navigation.kt` → `ui`), `:app` migrated off alpha09 | 05,08 | A | todo | | 0 | | |
