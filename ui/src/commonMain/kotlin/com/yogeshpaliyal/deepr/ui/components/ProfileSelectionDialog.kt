@@ -16,10 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.yogeshpaliyal.deepr.Profile
-import com.yogeshpaliyal.deepr.R
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.cancel
+import com.yogeshpaliyal.deepr.ui.resources.select_profile
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ProfileSelectionDialog(
@@ -28,7 +30,7 @@ fun ProfileSelectionDialog(
     onProfileSelect: (Long) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
-    title: String = stringResource(R.string.select_profile),
+    title: String = stringResource(Res.string.select_profile),
 ) {
     AlertDialog(
         modifier = modifier,
@@ -76,7 +78,7 @@ fun ProfileSelectionDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+                Text(stringResource(Res.string.cancel))
             }
         },
     )

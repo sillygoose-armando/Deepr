@@ -25,15 +25,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.yogeshpaliyal.deepr.ClipboardLink
-import com.yogeshpaliyal.deepr.R
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.add
+import com.yogeshpaliyal.deepr.ui.resources.cancel
+import com.yogeshpaliyal.deepr.ui.resources.clipboard_link_detected
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Clipboard
 import compose.icons.tablericons.Plus
 import compose.icons.tablericons.X
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ClipboardLinkBanner(
@@ -81,7 +84,7 @@ fun ClipboardLinkBanner(
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
                         Text(
-                            text = stringResource(R.string.clipboard_link_detected),
+                            text = stringResource(Res.string.clipboard_link_detected),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
@@ -108,13 +111,13 @@ fun ClipboardLinkBanner(
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.add))
+                        Text(stringResource(Res.string.add))
                     }
 
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = TablerIcons.X,
-                            contentDescription = stringResource(R.string.cancel),
+                            contentDescription = stringResource(Res.string.cancel),
                             tint = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
                     }

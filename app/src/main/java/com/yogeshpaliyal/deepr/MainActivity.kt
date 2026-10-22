@@ -71,10 +71,6 @@ data class SharedLink(
     val title: String?,
 )
 
-data class ClipboardLink(
-    val url: String,
-)
-
 class MainActivity : ComponentActivity() {
     val sharingLink = MutableStateFlow<SharedLink?>(null)
 

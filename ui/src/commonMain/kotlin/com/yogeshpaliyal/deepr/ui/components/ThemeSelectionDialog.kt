@@ -13,9 +13,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.yogeshpaliyal.deepr.R
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.close
+import com.yogeshpaliyal.deepr.ui.resources.system_default
+import com.yogeshpaliyal.deepr.ui.resources.theme_dark
+import com.yogeshpaliyal.deepr.ui.resources.theme_dialog_title
+import com.yogeshpaliyal.deepr.ui.resources.theme_light
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ThemeSelectionDialog(
@@ -25,16 +30,16 @@ fun ThemeSelectionDialog(
 ) {
     val themeOptions =
         listOf(
-            "system" to stringResource(R.string.system_default),
-            "light" to stringResource(R.string.theme_light),
-            "dark" to stringResource(R.string.theme_dark),
+            "system" to stringResource(Res.string.system_default),
+            "light" to stringResource(Res.string.theme_light),
+            "dark" to stringResource(Res.string.theme_dark),
         )
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = stringResource(R.string.theme_dialog_title),
+                text = stringResource(Res.string.theme_dialog_title),
                 style = MaterialTheme.typography.headlineSmall,
             )
         },
@@ -64,7 +69,7 @@ fun ThemeSelectionDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.close))
+                Text(stringResource(Res.string.close))
             }
         },
     )
