@@ -3,10 +3,7 @@ package com.yogeshpaliyal.deepr.data
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-/**
- * Parser for extracting metadata (title, description, image) from HTML content.
- */
-class HtmlParser {
+actual class HtmlParser {
     /**
      * Extracts content from a meta tag based on property or name attributes.
      */
@@ -23,9 +20,9 @@ class HtmlParser {
      * Extracts LinkInfo from HTML string.
      * Prioritizes <title> and OpenGraph tags, cleaning up platform-specific clutter.
      */
-    fun getTitleAndImageFromHtml(
+    actual fun getTitleAndImageFromHtml(
         html: String,
-        url: String? = null,
+        url: String?,
     ): LinkInfo {
         val doc = if (url != null) Jsoup.parse(html, url) else Jsoup.parse(html)
 
@@ -87,12 +84,3 @@ class HtmlParser {
         return cleaned.trim()
     }
 }
-
-/**
- * Data class representing extracted link metadata.
- */
-data class LinkInfo(
-    val title: String?,
-    val description: String?,
-    val image: String?,
-)

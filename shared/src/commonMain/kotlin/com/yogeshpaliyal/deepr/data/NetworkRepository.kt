@@ -2,7 +2,6 @@ package com.yogeshpaliyal.deepr.data
 
 import com.yogeshpaliyal.deepr.util.normalizeLink
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
@@ -10,7 +9,7 @@ import io.ktor.http.HttpHeaders
 
 class NetworkRepository(
     val httpParser: HtmlParser,
-    private val httpClient: HttpClient = HttpClient(CIO),
+    private val httpClient: HttpClient = defaultHttpClient(),
 ) {
     suspend fun getLinkInfo(url: String): Result<LinkInfo> {
         val normalizedUrl = normalizeLink(url)
@@ -42,3 +41,5 @@ class NetworkRepository(
         }
     }
 }
+
+internal expect fun defaultHttpClient(): HttpClient

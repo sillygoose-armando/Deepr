@@ -1,6 +1,5 @@
 package com.yogeshpaliyal.deepr.data
 
-import android.content.Context
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
@@ -12,20 +11,20 @@ import com.yogeshpaliyal.deepr.GetLinksForBackup
 import com.yogeshpaliyal.deepr.ListDeeprWithTagsAsc
 import com.yogeshpaliyal.deepr.Profile
 import com.yogeshpaliyal.deepr.Tags
-import com.yogeshpaliyal.deepr.backup.GoogleDriveAutoBackupWorker
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 class LinkRepositoryImpl(
-    private val context: Context,
     private val deeprQueries: DeeprQueries,
+    private val onDataChanged: () -> Unit = {},
 ) : LinkRepository {
     /**
      * Schedules auto backup after data modification.
      */
     private fun scheduleAutoBackup() {
-        GoogleDriveAutoBackupWorker.scheduleBackup(context)
+        onDataChanged()
     }
 
     // Profile operations

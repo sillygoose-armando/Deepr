@@ -9,6 +9,11 @@ plugins {
 }
 
 kotlin {
+    // Expect/actual classes (HtmlParser) are used here.
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     // Default template plus a "jvmShared" group (android + jvm) for code using java.* / javax.crypto.
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     applyDefaultHierarchyTemplate {
@@ -32,9 +37,20 @@ kotlin {
             api(libs.coroutines.extensions)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.ktor.client.core)
         }
         // javax.crypto implementation of P2pCrypto; the sync track keeps it in src/jvmShared.
         getByName("jvmSharedMain").kotlin.srcDir("src/jvmShared/kotlin")
+        getByName("jvmSharedMain").dependencies {
+            implementation(libs.ktor.client.cio)
+            implementation(libs.jsoup)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+        }
+        jvmTest.dependencies {
+            implementation(kotlin("test"))
+        }
     }
 }
 

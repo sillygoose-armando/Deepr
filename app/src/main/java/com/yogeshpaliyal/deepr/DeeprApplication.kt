@@ -13,6 +13,7 @@ import com.yogeshpaliyal.deepr.analytics.AnalyticsManagerFactoryImpl
 import com.yogeshpaliyal.deepr.backup.AutoBackupWorker
 import com.yogeshpaliyal.deepr.backup.ExportRepository
 import com.yogeshpaliyal.deepr.backup.ExportRepositoryImpl
+import com.yogeshpaliyal.deepr.backup.GoogleDriveAutoBackupWorker
 import com.yogeshpaliyal.deepr.backup.ImportRepository
 import com.yogeshpaliyal.deepr.backup.ImportRepositoryImpl
 import com.yogeshpaliyal.deepr.data.HtmlParser
@@ -95,7 +96,10 @@ class DeeprApplication : Application() {
 
                 single<PreferenceRepository> { AppPreferenceDataStore(androidContext()) }
 
-                single<LinkRepository> { LinkRepositoryImpl(androidContext(), get()) }
+                single<LinkRepository> {
+                    val context = androidContext()
+                    LinkRepositoryImpl(get()) { GoogleDriveAutoBackupWorker.scheduleBackup(context) }
+                }
 
                 single<ExportRepository> { ExportRepositoryImpl(androidContext(), get()) }
                 single<DriveSyncManager> { DriveSyncManagerFactoryImpl.create(androidContext(), get()) }

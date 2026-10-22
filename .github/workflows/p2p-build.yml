@@ -31,7 +31,7 @@ jobs:
         run: bash ../../gradlew -p . test
 
       - name: Shared and UI modules (JVM target)
-        run: bash ./gradlew :shared:compileKotlinJvm :ui:compileKotlinJvm :ui:jvmTest
+        run: bash ./gradlew :shared:compileKotlinJvm :shared:jvmTest :ui:compileKotlinJvm :ui:jvmTest
 
       - name: Lint
         run: bash ./gradlew lintKotlin

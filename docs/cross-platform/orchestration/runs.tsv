@@ -15,3 +15,5 @@ ts	task	model	event	session	detail
 2026-10-22T10:35:55Z	M2-04	opencode/glm-5.3-flash-free	end	ses_e9cd29828ffebItU7uQIpPD1io	exit=0 log=.orchestration/logs/M2-04-opencode_glm-5.3-flash-free-20261022-103441.jsonl
 2026-10-22T10:37:32Z	M2-05	opencode/glm-5.3-flash-free	start		.orchestration/logs/M2-05-opencode_glm-5.3-flash-free-20261022-103732.jsonl
 2026-10-22T10:43:34Z	M2-05	opencode/glm-5.3-flash-free	end	ses_e9ccfff43ffeF7EOrNQUDSVC1z	exit=0 log=.orchestration/logs/M2-05-opencode_glm-5.3-flash-free-20261022-103732.jsonl
+2026-10-22T10:45:29Z	M2-06	opencode/deepseek-v4.1-flash-free	start		.orchestration/logs/M2-06-opencode_deepseek-v4.1-flash-free-20261022-104529.jsonl
+2026-10-22T10:48:17Z	M2-06	opencode/deepseek-v4.1-flash-free	end	ses_e9cc8b775ffe00Ksilts6yXRrf	exit=0 log=.orchestration/logs/M2-06-opencode_deepseek-v4.1-flash-free-20261022-104529.jsonl

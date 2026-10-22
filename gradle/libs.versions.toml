@@ -82,6 +82,7 @@ zxing-scanner = { group = "com.journeyapps", name = "zxing-android-embedded", ve
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktorClient" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorClient" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktorClient" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorClient" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktorClient" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version = "1.10.1" }
