@@ -35,5 +35,6 @@ Escalation: after 2 failed attempts with a model, move to the next model in the 
 ## Environment
 - Local: `./gradlew :shared:compileKotlinJvm` (+ `:ui:compileKotlinJvm` once it exists) works thanks to a minimal SDK (`~/android-sdk-min`, platform android-36 only; `local.properties` is untracked). Android variants/APK and iOS: CI only.
 - opencode workers run with `--pure` (the global oh-my-opencode plugin hangs headless runs), and with codegraph MCP from the worktree's untracked `opencode.json`. If that file is missing, recreate it:
-  `{"$schema":"https://opencode.ai/config.json","mcp":{"codegraph":{"type":"local","command":["codegraph","serve","--mcp"],"enabled":true}}}`
+  `{"$schema":"https://opencode.ai/config.json","permission":{"external_directory":"allow"},"mcp":{"codegraph":{"type":"local","command":["codegraph","serve","--mcp"],"enabled":true}}}`
+  `external_directory: allow` matters: headless `opencode run` **ends the session** when it auto-rejects a path outside the repo (e.g. a worker reading a library jar in `~/.gradle`). That killed M2-02 attempts 1–3.
 - Keep `codegraph sync .` current after big moves.
