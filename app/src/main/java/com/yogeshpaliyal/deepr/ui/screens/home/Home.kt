@@ -874,13 +874,14 @@ fun Content(
                 }
 
                 // Display last opened time
-                if (account.lastOpenedAt != null) {
+                val lastOpenedAt = account.lastOpenedAt
+                if (lastOpenedAt != null) {
                     item {
                         MenuListItem(
                             text =
                                 stringResource(
                                     R.string.last_opened,
-                                    formatDateTime(account.lastOpenedAt),
+                                    formatDateTime(lastOpenedAt),
                                 ),
                             textStyle = MaterialTheme.typography.bodySmall,
                             onClick = {

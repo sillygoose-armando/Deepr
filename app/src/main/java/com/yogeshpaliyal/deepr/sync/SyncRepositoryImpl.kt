@@ -120,11 +120,12 @@ class SyncRepositoryImpl(
                     val escapedNotes = item.notes.replace("|", "\\|").replace("\n", " ")
 
                     // Format tags as hashtags
+                    val tagsNames = item.tagsNames
                     val tags =
-                        if (item.tagsNames.isNullOrEmpty()) {
+                        if (tagsNames.isNullOrEmpty()) {
                             ""
                         } else {
-                            item.tagsNames
+                            tagsNames
                                 .split(", ")
                                 .filter { it.isNotEmpty() }
                                 .joinToString(" ") { "#${it.replace(" ", "").replace("|", "")}" }
