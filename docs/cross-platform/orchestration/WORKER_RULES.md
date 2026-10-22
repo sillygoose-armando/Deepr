@@ -12,4 +12,6 @@
 7. **No new dependencies** unless your brief names them (with version).
 8. **Disk is tight (~1.5 GB free):** don't download SDKs or large tools; don't create big files.
 9. **Style:** Kotlin, 4-space indent, trailing commas, match the surrounding code (the project uses ktlint via kotlinter). Comments only for a non-obvious "why".
-10. **Finish:** append to the brief's `## Worker log`: date, model, files changed, the verification commands + results, open questions. Be honest: if something fails or is untested, say so.
+10. **Stay inside the repository directory.** Never `cd` to `/tmp` or other outside paths: opencode auto-rejects that and your session ends. Need scratch space? Use `.orchestration/tmp/` (untracked). Generated sources (e.g. Compose `Res` accessors) are under `<module>/build/generated/`. Read them there, and don't exclude `build/` when searching for generated APIs.
+11. **Don't over-explore:** once you've read the brief and the files it names, start implementing. Verify by compiling, not by searching.
+12. **Finish:** append to the brief's `## Worker log`: date, model, files changed, the verification commands + results, open questions. Be honest: if something fails or is untested, say so.
