@@ -1,12 +1,9 @@
 package com.yogeshpaliyal.deepr.ui.screens.home
 
-import androidx.annotation.IntDef
-
 @Retention(AnnotationRetention.SOURCE)
 @Target(
     AnnotationTarget.TYPE,
 )
-@IntDef(value = [ViewType.LIST, ViewType.GRID, ViewType.COMPACT])
 annotation class ViewType {
     companion object {
         const val LIST = 0

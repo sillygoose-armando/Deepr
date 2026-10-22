@@ -23,6 +23,7 @@ kotlin {
             api(libs.compose.ui)
             api(libs.compose.components.resources)
             api(libs.compose.material3)
+            implementation(libs.tabler.icons)
         }
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)
