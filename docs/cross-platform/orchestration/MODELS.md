@@ -6,7 +6,7 @@ Chosen from **public ratings** (user instruction 2026-10-22: no trials). Sources
 |---|---|---|---|
 | A | Gradle/KMP config, data layer, navigation, big screens (M2-01, 06–09, 12–15) | `opencode/deepseek-v4.1-flash-free` | `opencode/glm-5.3-flash-free` |
 | B | Mechanical moves of components/screens (M2-03–05, 10–11) | `opencode/glm-5.3-flash-free` | `opencode/nemotron-3-ultra-free` |
-| C | Bulk text transforms (big resource files), long-context reading | `opencode/beam-free` (1M context) | orchestrator script |
+| C | Bulk text transforms (big resource files), long-context reading | ~~`opencode/beam-free`~~ → `opencode/glm-5.3-flash-free` | orchestrator script |
 
 ## Evidence
 | Model | Public ratings found (Oct 2026) |
@@ -23,3 +23,7 @@ Chosen from **public ratings** (user instruction 2026-10-22: no trials). Sources
 A partial trial was run before the user stopped it (single task, hidden tests; anecdotal): nemotron-3-ultra 18/18, deepseek/beam/glm 17/18, minimax errored, flint and nemotron-3.5-super-vl didn't produce compiling code. This is consistent with the roster.
 
 Sources: benchlm.ai (Terminal-Bench 2.1, SWE-bench Verified, model comparisons), artificialanalysis.ai (model comparisons, changelog), officechai.com (DeepSeek V4.1 Flash 1017 on AA), minimax.io/blog/minimax-m31f, lmmarketcap.com, orcarouter.ai (Beam 1.0 on opencode), opencode.ai/docs/zen.
+
+## Observed in practice
+- 2026-10-22, **beam**: 2/2 attempts on M2-02 produced no changes (over-exploration, repeated `/tmp` access despite rules). Demoted; don't use.
+- 2026-10-22, **deepseek-v4.1-flash**: M2-01 done in one attempt, in scope, CI green.
