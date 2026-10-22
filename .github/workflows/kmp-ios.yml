@@ -1,0 +1,32 @@
+name: KMP iOS compile
+
+# macOS minutes are gated by path (DECISIONS.md D3).
+on:
+  push:
+    branches: [ 'feature/kmp' ]
+    paths: [ 'shared/**', 'ui/**', 'iosApp/**', 'desktopApp/**', 'gradle/**', '**.gradle.kts', 'gradle.properties', '.github/workflows/kmp-ios.yml' ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'jetbrains'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compile :shared for iOS
+        run: ./gradlew :shared:compileKotlinIosSimulatorArm64 :shared:compileKotlinIosArm64

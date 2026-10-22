@@ -1,4 +1,4 @@
-// Standalone JVM build: compiles app's Deepr.sq + migrations + p2p/core without the Android SDK.
+// Standalone JVM build: compiles shared's Deepr.sq + migrations + p2p/core without the Android SDK.
 pluginManagement {
     repositories {
         gradlePluginPortal()

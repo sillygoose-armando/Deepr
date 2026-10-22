@@ -4,7 +4,7 @@ plugins {
     id("app.cash.sqldelight") version "2.1.0"
 }
 
-val appMain = rootDir.resolve("../../app/src/main")
+val sharedMain = rootDir.resolve("../../shared/src/commonMain")
 
 kotlin {
     jvmToolchain(17)
@@ -16,7 +16,7 @@ sqldelight {
     databases {
         create("DeeprDB") {
             packageName.set("com.yogeshpaliyal.deepr")
-            srcDirs.setFrom(appMain.resolve("sqldelight"))
+            srcDirs.setFrom(sharedMain.resolve("sqldelight"))
         }
     }
 }

@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Deepr"
 include(":app")
+include(":shared")

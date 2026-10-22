@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.sqldelight)
     id("org.jmailen.kotlinter")
 //     id("com.google.gms.google-services")
 //     id("com.google.firebase.crashlytics")
@@ -109,16 +108,8 @@ android {
     }
 }
 
-sqldelight {
-    databases {
-        create("DeeprDB") {
-            packageName.set("com.yogeshpaliyal.deepr")
-        }
-    }
-}
-
 dependencies {
-
+    implementation(project(":shared"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -139,7 +130,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.android.driver)
-    implementation(libs.coroutines.extensions)
     implementation(project.dependencies.platform(libs.koin.bom))
     implementation(libs.koin.core)
     implementation(libs.koin.android)
