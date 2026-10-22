@@ -1,18 +1,18 @@
 package com.yogeshpaliyal.deepr.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
+
+@Composable
+internal expect fun platformDynamicColorScheme(darkTheme: Boolean): ColorScheme?
+
+@Composable
+internal expect fun PlatformSystemBarsAppearance(darkTheme: Boolean)
 
 // Default Purple theme
 private val DarkColorScheme =
@@ -250,7 +250,6 @@ fun DeeprTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     themeMode: String = "system",
     colorTheme: String = "dynamic",
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
@@ -263,10 +262,9 @@ fun DeeprTheme(
 
     val colorScheme =
         when {
-            colorTheme == "dynamic" && dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                val context = LocalContext.current
-                if (useDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-            }
+            colorTheme == "dynamic" && dynamicColor ->
+                platformDynamicColorScheme(useDarkTheme)
+                    ?: (if (useDarkTheme) DarkColorScheme else LightColorScheme)
             colorTheme == "red" -> if (useDarkTheme) RedDarkColorScheme else RedLightColorScheme
             colorTheme == "orange" -> if (useDarkTheme) OrangeDarkColorScheme else OrangeLightColorScheme
             colorTheme == "blue" -> if (useDarkTheme) BlueDarkColorScheme else BlueLightColorScheme
@@ -278,13 +276,7 @@ fun DeeprTheme(
             else -> LightColorScheme
         }
 
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as? android.app.Activity)?.window ?: return@SideEffect
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !useDarkTheme
-        }
-    }
+    PlatformSystemBarsAppearance(useDarkTheme)
 
     MaterialTheme(
         colorScheme = colorScheme,

@@ -24,6 +24,9 @@ kotlin {
             api(libs.compose.components.resources)
             api(libs.compose.material3)
         }
+        androidMain.dependencies {
+            implementation(libs.androidx.core.ktx)
+        }
         jvmTest.dependencies {
             implementation(kotlin("test"))
         }
