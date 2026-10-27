@@ -1,4 +1,6 @@
-# M2 task queue (source of truth: see ORCHESTRATION.md for the lifecycle and resume protocol)
+# M2 task queue
+
+**[!] 2026-10-27: dispatch paused. The host disk is full (~40 MB free; another project and opencode's 2.6 GB DB are growing). Resume when `df -h /` shows >1.5 GB free. M2-08b's brief is ready.** (source of truth: see ORCHESTRATION.md for the lifecycle and resume protocol)
 
 Statuses: todo · running · review · changes · ci · done · blocked. "Tier" maps to MODELS.md (A = hardest/riskiest).
 Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM compile green; CI (`P2P Sync Build` + `KMP iOS compile`) green before `done`.
@@ -12,9 +14,9 @@ Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM comp
 | M2-05 | String-using components → `ui` (DeleteConfirmationDialog, ThemeSelectionDialog, ProfileSelectionDialog, ClipboardLinkBanner+ClipboardLink) | 02,04 | B | done | glm-5.3-flash | 1 | c9b2b2c | [39765314814](https://github.com/sillygoose-armando/Deepr/actions/runs/39765314814), iOS [39765314788](https://github.com/sillygoose-armando/Deepr/actions/runs/39765314788) |
 | M2-05b | QRCodeDialog: replace `compose-qr-code` (no iOS) with a multiplatform QR library, or expect/actual | 05 | B | todo | | 0 | | |
 | M2-06 | Data layer → `shared`: LinkRepository(+Impl, WorkManager scheduling behind an interface), NetworkRepository/HtmlParser (jsoup → common parser), RequestResult, Constants | 01 | A | done | deepseek-v4.1-flash | 1 | 152c2f0 | [39766237375](https://github.com/sillygoose-armando/Deepr/actions/runs/39766237375), iOS [39766237381](https://github.com/sillygoose-armando/Deepr/actions/runs/39766237381) |
-| M2-07 | Preferences → `shared` (PreferenceRepository + DataStore KMP; Android file path via expect/actual) | 06 | A | ci | deepseek-v4.1-flash | 1 | | |
-| M2-08a | AccountViewModel's collaborator interfaces → `shared` (RequestResult, ImportResult, Analytics*, SyncRepository, Export/ImportRepository + BookmarkImporter with `Uri`→`String`, AutoBackupRunner) | 06,07 | A | ci | deepseek-v4.1-flash | 1 | | |
-| M2-08b | AccountViewModel → `shared` (lifecycle-viewmodel KMP); `requestReview` moves to Settings' call site; then FilterMenu → `ui` | 08a | A | todo | | 0 | | |
+| M2-07 | Preferences → `shared` (PreferenceRepository + DataStore KMP; Android file path via expect/actual) | 06 | A | done | deepseek-v4.1-flash | 1 | 867376c | [40481208945](https://github.com/sillygoose-armando/Deepr/actions/runs/40481208945), iOS [40481208962](https://github.com/sillygoose-armando/Deepr/actions/runs/40481208962) |
+| M2-08a | AccountViewModel's collaborator interfaces → `shared` (RequestResult, ImportResult, Analytics*, SyncRepository, Export/ImportRepository + BookmarkImporter with `Uri`→`String`, AutoBackupRunner) | 06,07 | A | done | deepseek-v4.1-flash + orchestrator fix | 1 | 6fbcd64, b91a048 | [40481208945](https://github.com/sillygoose-armando/Deepr/actions/runs/40481208945), iOS [40481208962](https://github.com/sillygoose-armando/Deepr/actions/runs/40481208962) |
+| M2-08b | AccountViewModel → `shared` (lifecycle-viewmodel KMP); `requestReview` moves to Settings' call site; then FilterMenu → `ui` | 08a | A | blocked | | 0 | | |
 | M2-09 | Navigation → JetBrains Navigation3 1.1.x (`Navigation.kt` → `ui`), `:app` migrated off alpha09 | 05,08b | A | todo | | 0 | | |
 | M2-10 | Screens: AboutUs, AppLockScreen, Splash, DeeprItem (+`MenuItem`) and the DeeprItemCompact/Grid/Swipable that depend on it (blocked in M2-05), ProfileSelectorMenu | 09 | B | todo | | 0 | | |
 | M2-11 | Screens: TagSelectionScreen, ProfileManagementScreen | 10 | B | todo | | 0 | | |
