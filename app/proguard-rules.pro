@@ -21,3 +21,7 @@
 #-renamesourcefileattribute SourceFile
 
 -dontwarn io.ktor.util.debug.**
+# Formerly @Keep in source; these classes moved to multiplatform :shared, where androidx.annotation.Keep isn't available on iOS.
+-keep class com.yogeshpaliyal.deepr.util.RequestResult$Success { *; }
+-keep class com.yogeshpaliyal.deepr.util.RequestResult$Error { *; }
+-keep class com.yogeshpaliyal.deepr.backup.ImportResult { *; }

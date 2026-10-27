@@ -36,7 +36,6 @@ kotlin {
             api(libs.sqldelight.runtime)
             api(libs.coroutines.extensions)
             api(libs.androidx.datastore.preferences.core)
-            implementation(libs.androidx.annotation)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.ktor.client.core)
