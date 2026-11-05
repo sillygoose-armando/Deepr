@@ -1,7 +1,5 @@
 package com.yogeshpaliyal.deepr.ui.screens.home
 
-import android.database.sqlite.SQLiteConstraintException
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
@@ -53,20 +51,38 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.yogeshpaliyal.deepr.BuildConfig
 import com.yogeshpaliyal.deepr.Profile
-import com.yogeshpaliyal.deepr.R
+import com.yogeshpaliyal.deepr.ui.LocalIsProUser
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
+import com.yogeshpaliyal.deepr.ui.LocalProfileThemeProvider
 import com.yogeshpaliyal.deepr.ui.TopLevelRoute
 import com.yogeshpaliyal.deepr.ui.components.ClearInputIconButton
-import com.yogeshpaliyal.deepr.ui.screens.ProfileTheme
+import com.yogeshpaliyal.deepr.ui.platform.isUniqueConstraintViolation
+import com.yogeshpaliyal.deepr.ui.platform.koinSharedAccountViewModel
+import com.yogeshpaliyal.deepr.ui.platform.rememberShowToast
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.cancel
+import com.yogeshpaliyal.deepr.ui.resources.cannot_delete_only_profile
+import com.yogeshpaliyal.deepr.ui.resources.create_first_profile
+import com.yogeshpaliyal.deepr.ui.resources.create_profile
+import com.yogeshpaliyal.deepr.ui.resources.delete
+import com.yogeshpaliyal.deepr.ui.resources.delete_profile
+import com.yogeshpaliyal.deepr.ui.resources.edit_profile
+import com.yogeshpaliyal.deepr.ui.resources.failed_to_update_profile
+import com.yogeshpaliyal.deepr.ui.resources.no_profiles_yet
+import com.yogeshpaliyal.deepr.ui.resources.profile_created_successfully
+import com.yogeshpaliyal.deepr.ui.resources.profile_delete_confirmation
+import com.yogeshpaliyal.deepr.ui.resources.profile_deleted_successfully
+import com.yogeshpaliyal.deepr.ui.resources.profile_name
+import com.yogeshpaliyal.deepr.ui.resources.profile_name_exists
+import com.yogeshpaliyal.deepr.ui.resources.profile_updated_successfully
+import com.yogeshpaliyal.deepr.ui.resources.profiles
+import com.yogeshpaliyal.deepr.ui.resources.save
 import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Edit
@@ -75,22 +91,31 @@ import compose.icons.tablericons.Plus
 import compose.icons.tablericons.Trash
 import compose.icons.tablericons.User
 import kotlinx.coroutines.launch
-import org.koin.compose.viewmodel.koinActivityViewModel
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 object ProfileManagementScreen : TopLevelRoute {
     override val icon: ImageVector
         get() = TablerIcons.User
-    override val label: Int
-        get() = R.string.profiles
+    override val label: StringResource
+        get() = Res.string.profiles
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content(windowInsets: WindowInsets) {
-        val viewModel: AccountViewModel = koinActivityViewModel()
+        val viewModel: AccountViewModel = koinSharedAccountViewModel()
+        val showToast = rememberShowToast()
+        // Pre-resolve static string resources used in onClick handlers
+        val profileNameExists = stringResource(Res.string.profile_name_exists)
+        val profileCreatedSuccessfully = stringResource(Res.string.profile_created_successfully)
+        val profileUpdatedSuccessfully = stringResource(Res.string.profile_updated_successfully)
+        val failedToUpdateProfile = stringResource(Res.string.failed_to_update_profile)
+        val profileDeletedSuccessfully = stringResource(Res.string.profile_deleted_successfully)
+        val cannotDeleteOnlyProfile = stringResource(Res.string.cannot_delete_only_profile)
+
         val currentProfile by viewModel.currentProfile.collectAsStateWithLifecycle()
         val profiles by viewModel.allProfiles.collectAsStateWithLifecycle()
         var newProfileName by remember { mutableStateOf("") }
-        val context = LocalContext.current
         val navigator = LocalNavigator.current
         var isProfileEditEnable by remember { mutableStateOf<Profile?>(null) }
         var isProfileDeleteEnable by remember { mutableStateOf<Profile?>(null) }
@@ -107,7 +132,7 @@ object ProfileManagementScreen : TopLevelRoute {
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             Text(
-                                text = stringResource(R.string.profiles),
+                                text = stringResource(Res.string.profiles),
                             )
                             if (profiles.isNotEmpty()) {
                                 Surface(
@@ -173,7 +198,7 @@ object ProfileManagementScreen : TopLevelRoute {
                                     )
                                 }
                                 Text(
-                                    text = stringResource(R.string.create_profile),
+                                    text = stringResource(Res.string.create_profile),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
                                 )
@@ -218,21 +243,11 @@ object ProfileManagementScreen : TopLevelRoute {
                                                 }
 
                                             if (existingProfile != null) {
-                                                Toast
-                                                    .makeText(
-                                                        context,
-                                                        context.getString(R.string.profile_name_exists),
-                                                        Toast.LENGTH_SHORT,
-                                                    ).show()
+                                                showToast(profileNameExists)
                                             } else {
                                                 viewModel.insertProfile(trimmedProfileName)
                                                 newProfileName = ""
-                                                Toast
-                                                    .makeText(
-                                                        context,
-                                                        context.getString(R.string.profile_created_successfully),
-                                                        Toast.LENGTH_SHORT,
-                                                    ).show()
+                                                showToast(profileCreatedSuccessfully)
                                             }
                                         }
                                     },
@@ -241,7 +256,7 @@ object ProfileManagementScreen : TopLevelRoute {
                                 ) {
                                     Icon(
                                         imageVector = TablerIcons.Plus,
-                                        contentDescription = stringResource(R.string.create_profile),
+                                        contentDescription = stringResource(Res.string.create_profile),
                                     )
                                 }
                             }
@@ -350,14 +365,14 @@ object ProfileManagementScreen : TopLevelRoute {
                                 }
                                 Spacer(modifier = Modifier.height(24.dp))
                                 Text(
-                                    text = stringResource(R.string.no_profiles_yet),
+                                    text = stringResource(Res.string.no_profiles_yet),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = stringResource(R.string.create_first_profile),
+                                    text = stringResource(Res.string.create_first_profile),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.outline,
                                     textAlign = TextAlign.Center,
@@ -403,12 +418,12 @@ object ProfileManagementScreen : TopLevelRoute {
                     },
                     title = {
                         Text(
-                            text = stringResource(R.string.edit_profile),
+                            text = stringResource(Res.string.edit_profile),
                             style = MaterialTheme.typography.headlineSmall,
                         )
                     },
                     text = {
-                        val isProUser = BuildConfig.APPLICATION_ID.contains(".pro")
+                        val isProUser = LocalIsProUser.current
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             OutlinedTextField(
                                 value = profile.name,
@@ -417,7 +432,7 @@ object ProfileManagementScreen : TopLevelRoute {
                                     profileEditError = null
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text(stringResource(R.string.profile_name)) },
+                                label = { Text(stringResource(Res.string.profile_name)) },
                                 singleLine = true,
                                 isError = profileEditError != null,
                                 supportingText = {
@@ -447,13 +462,11 @@ object ProfileManagementScreen : TopLevelRoute {
                                     },
                             )
 
-                            // Theme selection for pro users
-                            ProfileTheme(
-                                profile = profile,
-                                onProfileUpdate = {
-                                    isProfileEditEnable = it
-                                },
-                            )
+                            // Theme selection for pro users (provided via composition local from :app)
+                            val profileThemeProvider = LocalProfileThemeProvider.current
+                            if (profileThemeProvider != null) {
+                                profileThemeProvider(profile, { isProfileEditEnable = it })
+                            }
                         }
                     },
                     confirmButton = {
@@ -475,28 +488,20 @@ object ProfileManagementScreen : TopLevelRoute {
                                         )
                                         isProfileEditEnable = null
                                         profileEditError = null
-                                        Toast
-                                            .makeText(
-                                                context,
-                                                context.getString(R.string.profile_updated_successfully),
-                                                Toast.LENGTH_SHORT,
-                                            ).show()
+                                        showToast(profileUpdatedSuccessfully)
                                     } catch (e: Exception) {
                                         profileEditError =
-                                            when (e) {
-                                                is SQLiteConstraintException -> {
-                                                    context.getString(R.string.profile_name_exists)
-                                                }
-                                                else -> {
-                                                    context.getString(R.string.failed_to_update_profile)
-                                                }
+                                            if (e.isUniqueConstraintViolation()) {
+                                                profileNameExists
+                                            } else {
+                                                failedToUpdateProfile
                                             }
                                     }
                                 }
                             },
                             enabled = isProfileEditEnable?.name?.isNotBlank() == true,
                         ) {
-                            Text(stringResource(R.string.save))
+                            Text(stringResource(Res.string.save))
                         }
                     },
                     dismissButton = {
@@ -504,7 +509,7 @@ object ProfileManagementScreen : TopLevelRoute {
                             isProfileEditEnable = null
                             profileEditError = null
                         }) {
-                            Text(stringResource(R.string.cancel))
+                            Text(stringResource(Res.string.cancel))
                         }
                     },
                 )
@@ -529,7 +534,7 @@ object ProfileManagementScreen : TopLevelRoute {
                     },
                     title = {
                         Text(
-                            text = stringResource(R.string.delete_profile),
+                            text = stringResource(Res.string.delete_profile),
                             style = MaterialTheme.typography.headlineSmall,
                         )
                     },
@@ -537,7 +542,7 @@ object ProfileManagementScreen : TopLevelRoute {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             val message =
                                 buildAnnotatedString {
-                                    append(stringResource(R.string.profile_delete_confirmation))
+                                    append(stringResource(Res.string.profile_delete_confirmation))
                                 }
                             Text(text = message)
 
@@ -550,7 +555,7 @@ object ProfileManagementScreen : TopLevelRoute {
                                     shape = RoundedCornerShape(12.dp),
                                 ) {
                                     Text(
-                                        text = stringResource(R.string.cannot_delete_only_profile),
+                                        text = stringResource(Res.string.cannot_delete_only_profile),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onErrorContainer,
                                         modifier = Modifier.padding(12.dp),
@@ -565,19 +570,9 @@ object ProfileManagementScreen : TopLevelRoute {
                                 if (profiles.size > 1) {
                                     viewModel.deleteProfile(profile.id)
                                     isProfileDeleteEnable = null
-                                    Toast
-                                        .makeText(
-                                            context,
-                                            context.getString(R.string.profile_deleted_successfully),
-                                            Toast.LENGTH_SHORT,
-                                        ).show()
+                                    showToast(profileDeletedSuccessfully)
                                 } else {
-                                    Toast
-                                        .makeText(
-                                            context,
-                                            context.getString(R.string.cannot_delete_only_profile),
-                                            Toast.LENGTH_SHORT,
-                                        ).show()
+                                    showToast(cannotDeleteOnlyProfile)
                                 }
                             },
                             colors =
@@ -587,12 +582,12 @@ object ProfileManagementScreen : TopLevelRoute {
                                 ),
                             enabled = profiles.size > 1,
                         ) {
-                            Text(stringResource(R.string.delete))
+                            Text(stringResource(Res.string.delete))
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { isProfileDeleteEnable = null }) {
-                            Text(stringResource(R.string.cancel))
+                            Text(stringResource(Res.string.cancel))
                         }
                     },
                 )
@@ -695,7 +690,7 @@ private fun ProfileItem(
                 ) {
                     Icon(
                         imageVector = TablerIcons.Edit,
-                        contentDescription = stringResource(R.string.edit_profile),
+                        contentDescription = stringResource(Res.string.edit_profile),
                         modifier = Modifier.size(18.dp),
                     )
                 }
@@ -711,7 +706,7 @@ private fun ProfileItem(
                 ) {
                     Icon(
                         imageVector = TablerIcons.Trash,
-                        contentDescription = stringResource(R.string.delete_profile),
+                        contentDescription = stringResource(Res.string.delete_profile),
                         modifier = Modifier.size(18.dp),
                     )
                 }

@@ -1,7 +1,5 @@
 package com.yogeshpaliyal.deepr.ui.screens.home
 
-import android.database.sqlite.SQLiteConstraintException
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
@@ -55,8 +53,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -65,11 +61,35 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yogeshpaliyal.deepr.GetAllTagsWithCount
-import com.yogeshpaliyal.deepr.R
 import com.yogeshpaliyal.deepr.Tags
+import com.yogeshpaliyal.deepr.ui.LocalDashboardRoute
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.TopLevelRoute
 import com.yogeshpaliyal.deepr.ui.components.ClearInputIconButton
+import com.yogeshpaliyal.deepr.ui.platform.isUniqueConstraintViolation
+import com.yogeshpaliyal.deepr.ui.platform.koinSharedAccountViewModel
+import com.yogeshpaliyal.deepr.ui.platform.rememberShowToast
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.all_tags
+import com.yogeshpaliyal.deepr.ui.resources.cancel
+import com.yogeshpaliyal.deepr.ui.resources.clear_all_filters
+import com.yogeshpaliyal.deepr.ui.resources.create_tag
+import com.yogeshpaliyal.deepr.ui.resources.delete
+import com.yogeshpaliyal.deepr.ui.resources.delete_tag
+import com.yogeshpaliyal.deepr.ui.resources.delete_tag_description
+import com.yogeshpaliyal.deepr.ui.resources.edit_tag
+import com.yogeshpaliyal.deepr.ui.resources.edit_tag_description
+import com.yogeshpaliyal.deepr.ui.resources.failed_to_edit_tag
+import com.yogeshpaliyal.deepr.ui.resources.filtered_tags_count
+import com.yogeshpaliyal.deepr.ui.resources.no_search_results
+import com.yogeshpaliyal.deepr.ui.resources.no_search_results_description
+import com.yogeshpaliyal.deepr.ui.resources.save
+import com.yogeshpaliyal.deepr.ui.resources.search
+import com.yogeshpaliyal.deepr.ui.resources.selected_tags_count
+import com.yogeshpaliyal.deepr.ui.resources.tag_deleted_successfully
+import com.yogeshpaliyal.deepr.ui.resources.tag_edited_successfully
+import com.yogeshpaliyal.deepr.ui.resources.tag_name_exists
+import com.yogeshpaliyal.deepr.ui.resources.tags
 import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Edit
@@ -80,24 +100,32 @@ import compose.icons.tablericons.Search
 import compose.icons.tablericons.Tag
 import compose.icons.tablericons.Trash
 import kotlinx.coroutines.runBlocking
-import org.koin.compose.viewmodel.koinActivityViewModel
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 object TagSelectionScreen : TopLevelRoute {
     override val icon: ImageVector
         get() = TablerIcons.Tag
-    override val label: Int
-        get() = R.string.tags
+    override val label: StringResource
+        get() = Res.string.tags
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content(windowInsets: WindowInsets) {
-        val viewModel: AccountViewModel = koinActivityViewModel()
+        val viewModel: AccountViewModel = koinSharedAccountViewModel()
+        val showToast = rememberShowToast()
+        val dashboardRoute = LocalDashboardRoute.current
+        // Pre-resolve static string resources used in onClick handlers
+        val tagNameExists = stringResource(Res.string.tag_name_exists)
+        val tagEditedSuccessfully = stringResource(Res.string.tag_edited_successfully)
+        val failedToEditTag = stringResource(Res.string.failed_to_edit_tag)
+        val tagDeletedSuccessfully = stringResource(Res.string.tag_deleted_successfully)
+
         val selectedTag by viewModel.selectedTagFilter.collectAsStateWithLifecycle()
         var newTagName by remember { mutableStateOf("") }
         var searchQuery by remember { mutableStateOf("") }
         var isSearchVisible by remember { mutableStateOf(false) }
         val tagsWithCount by viewModel.allTagsWithCount.collectAsStateWithLifecycle()
-        val context = LocalContext.current
         val navigator = LocalNavigator.current
         var isTagEditEnable by remember { mutableStateOf<GetAllTagsWithCount?>(null) }
         var isTagDeleteEnable by remember { mutableStateOf<GetAllTagsWithCount?>(null) }
@@ -127,7 +155,7 @@ object TagSelectionScreen : TopLevelRoute {
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 Text(
-                                    text = stringResource(R.string.tags),
+                                    text = stringResource(Res.string.tags),
                                 )
                                 if (tagsWithCount.isNotEmpty()) {
                                     Surface(
@@ -176,7 +204,7 @@ object TagSelectionScreen : TopLevelRoute {
                 ) {
                     ExtendedFloatingActionButton(
                         onClick = {
-                            navigator.clearStackAndAdd(Dashboard2())
+                            navigator.clearStackAndAdd(dashboardRoute)
                         },
                         icon = {
                             Icon(
@@ -214,7 +242,7 @@ object TagSelectionScreen : TopLevelRoute {
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text(stringResource(R.string.search)) },
+                            placeholder = { Text(stringResource(Res.string.search)) },
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
                             leadingIcon = {
@@ -266,7 +294,7 @@ object TagSelectionScreen : TopLevelRoute {
                                     )
                                 }
                                 Text(
-                                    text = stringResource(R.string.create_tag),
+                                    text = stringResource(Res.string.create_tag),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
                                 )
@@ -316,21 +344,11 @@ object TagSelectionScreen : TopLevelRoute {
                                                 }
 
                                             if (existingTag != null) {
-                                                Toast
-                                                    .makeText(
-                                                        context,
-                                                        context.getString(R.string.tag_name_exists),
-                                                        Toast.LENGTH_SHORT,
-                                                    ).show()
+                                                showToast(tagNameExists)
                                             } else {
                                                 viewModel.insertTagOnly(trimmedTagName)
                                                 newTagName = ""
-                                                Toast
-                                                    .makeText(
-                                                        context,
-                                                        "Tag created successfully",
-                                                        Toast.LENGTH_SHORT,
-                                                    ).show()
+                                                showToast("Tag created successfully")
                                             }
                                         }
                                     },
@@ -339,7 +357,7 @@ object TagSelectionScreen : TopLevelRoute {
                                 ) {
                                     Icon(
                                         imageVector = TablerIcons.Plus,
-                                        contentDescription = stringResource(R.string.create_tag),
+                                        contentDescription = stringResource(Res.string.create_tag),
                                     )
                                 }
                             }
@@ -383,7 +401,7 @@ object TagSelectionScreen : TopLevelRoute {
                                     Text(
                                         text =
                                             stringResource(
-                                                R.string.selected_tags_count,
+                                                Res.string.selected_tags_count,
                                                 selectedTag.size,
                                             ),
                                         style = MaterialTheme.typography.bodyMedium,
@@ -394,7 +412,7 @@ object TagSelectionScreen : TopLevelRoute {
                                 TextButton(
                                     onClick = { viewModel.setTagFilter(null) },
                                 ) {
-                                    Text(stringResource(R.string.clear_all_filters))
+                                    Text(stringResource(Res.string.clear_all_filters))
                                 }
                             }
                         }
@@ -411,7 +429,7 @@ object TagSelectionScreen : TopLevelRoute {
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = stringResource(R.string.all_tags),
+                                text = stringResource(Res.string.all_tags),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 4.dp),
@@ -420,7 +438,7 @@ object TagSelectionScreen : TopLevelRoute {
                                 Text(
                                     text =
                                         stringResource(
-                                            R.string.filtered_tags_count,
+                                            Res.string.filtered_tags_count,
                                             filteredTags.size,
                                             tagsWithCount.size,
                                         ),
@@ -502,14 +520,14 @@ object TagSelectionScreen : TopLevelRoute {
                             }
                             Spacer(modifier = Modifier.height(24.dp))
                             Text(
-                                text = stringResource(R.string.no_search_results),
+                                text = stringResource(Res.string.no_search_results),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = stringResource(R.string.no_search_results_description),
+                                text = stringResource(Res.string.no_search_results_description),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.outline,
                                 textAlign = TextAlign.Center,
@@ -554,7 +572,7 @@ object TagSelectionScreen : TopLevelRoute {
                     },
                     title = {
                         Text(
-                            text = stringResource(R.string.edit_tag),
+                            text = stringResource(Res.string.edit_tag),
                             style = MaterialTheme.typography.headlineSmall,
                         )
                     },
@@ -619,29 +637,20 @@ object TagSelectionScreen : TopLevelRoute {
                                 if (result.isFailure) {
                                     val exception = result.exceptionOrNull()
                                     tagEditError =
-                                        when (exception) {
-                                            is SQLiteConstraintException -> {
-                                                context.getString(R.string.tag_name_exists)
-                                            }
-
-                                            else -> {
-                                                context.getString(R.string.failed_to_edit_tag)
-                                            }
+                                        if (exception?.isUniqueConstraintViolation() == true) {
+                                            tagNameExists
+                                        } else {
+                                            failedToEditTag
                                         }
                                 } else {
                                     isTagEditEnable = null
                                     tagEditError = null
-                                    Toast
-                                        .makeText(
-                                            context,
-                                            context.getString(R.string.tag_edited_successfully),
-                                            Toast.LENGTH_SHORT,
-                                        ).show()
+                                    showToast(tagEditedSuccessfully)
                                 }
                             },
                             enabled = isTagEditEnable?.name?.isNotBlank() == true,
                         ) {
-                            Text(stringResource(R.string.save))
+                            Text(stringResource(Res.string.save))
                         }
                     },
                     dismissButton = {
@@ -649,7 +658,7 @@ object TagSelectionScreen : TopLevelRoute {
                             isTagEditEnable = null
                             tagEditError = null
                         }) {
-                            Text(stringResource(R.string.cancel))
+                            Text(stringResource(Res.string.cancel))
                         }
                     },
                 )
@@ -674,7 +683,7 @@ object TagSelectionScreen : TopLevelRoute {
                     },
                     title = {
                         Text(
-                            text = stringResource(R.string.delete_tag),
+                            text = stringResource(Res.string.delete_tag),
                             style = MaterialTheme.typography.headlineSmall,
                         )
                     },
@@ -727,12 +736,7 @@ object TagSelectionScreen : TopLevelRoute {
                             onClick = {
                                 viewModel.deleteTag(tag.id)
                                 isTagDeleteEnable = null
-                                Toast
-                                    .makeText(
-                                        context,
-                                        context.getString(R.string.tag_deleted_successfully),
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
+                                showToast(tagDeletedSuccessfully)
                             },
                             colors =
                                 ButtonDefaults.buttonColors(
@@ -740,12 +744,12 @@ object TagSelectionScreen : TopLevelRoute {
                                     contentColor = MaterialTheme.colorScheme.onError,
                                 ),
                         ) {
-                            Text(stringResource(R.string.delete))
+                            Text(stringResource(Res.string.delete))
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { isTagDeleteEnable = null }) {
-                            Text(stringResource(R.string.cancel))
+                            Text(stringResource(Res.string.cancel))
                         }
                     },
                 )
@@ -877,7 +881,7 @@ private fun TagItem(
                 ) {
                     Icon(
                         imageVector = TablerIcons.Edit,
-                        contentDescription = stringResource(R.string.edit_tag_description),
+                        contentDescription = stringResource(Res.string.edit_tag_description),
                         modifier = Modifier.size(18.dp),
                     )
                 }
@@ -893,7 +897,7 @@ private fun TagItem(
                 ) {
                     Icon(
                         imageVector = TablerIcons.Trash,
-                        contentDescription = stringResource(R.string.delete_tag_description),
+                        contentDescription = stringResource(Res.string.delete_tag_description),
                         modifier = Modifier.size(18.dp),
                     )
                 }

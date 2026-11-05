@@ -10,10 +10,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
+import com.yogeshpaliyal.deepr.Profile
+import org.jetbrains.compose.resources.StringResource
 import kotlin.collections.remove
 
 val LocalNavigator =
     compositionLocalOf<TopLevelBackStack<BaseScreen>> { error("LocalNavigator not provided") }
+
+// Points to the "home" dashboard screen so that other screens (e.g. TagSelectionScreen)
+// can navigate there without a direct dependency on :app's Dashboard2 type.
+// Provided by MainActivity; M2-13 will move Dashboard2 into :ui and remove this bridge.
+val LocalDashboardRoute =
+    compositionLocalOf<BaseScreen> { error("LocalDashboardRoute not provided") }
+
+// Bridge for ProfileTheme (stays in :app pro/freeGithub source sets until M2-13).
+// ProfileManagementScreen calls this in its edit dialog for pro users.
+// Default: null skips the theme customization section on non-pro builds.
+val LocalProfileThemeProvider =
+    compositionLocalOf<(@Composable (profile: Profile, onProfileUpdate: (Profile) -> Unit) -> Unit)?> { null }
 
 sealed interface BaseScreen : NavKey
 
@@ -25,7 +39,7 @@ interface Screen : BaseScreen {
 interface TopLevelRoute : BaseScreen {
     val icon: ImageVector
 
-    val label: Int
+    val label: StringResource
 
     @Composable
     fun Content(windowInsets: WindowInsets)

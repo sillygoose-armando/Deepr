@@ -116,6 +116,8 @@ import com.yogeshpaliyal.deepr.ui.components.DeleteConfirmationDialog
 import com.yogeshpaliyal.deepr.ui.components.NoteViewDialog
 import com.yogeshpaliyal.deepr.ui.components.QrCodeDialog
 import com.yogeshpaliyal.deepr.ui.components.ServerStatusBar
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.home
 import com.yogeshpaliyal.deepr.ui.screens.LocalNetworkServer
 import com.yogeshpaliyal.deepr.ui.screens.home.MenuItem.Click
 import com.yogeshpaliyal.deepr.ui.screens.home.MenuItem.Copy
@@ -154,6 +156,7 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 
@@ -169,8 +172,8 @@ class Dashboard2(
 ) : TopLevelRoute {
     override val icon: ImageVector
         get() = TablerIcons.Home
-    override val label: Int
-        get() = R.string.home
+    override val label: StringResource
+        get() = Res.string.home
 
     @Composable
     override fun Content(windowInsets: WindowInsets) {

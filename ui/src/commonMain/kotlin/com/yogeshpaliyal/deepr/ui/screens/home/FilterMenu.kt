@@ -23,7 +23,6 @@ import com.yogeshpaliyal.deepr.ui.resources.sort_by_name_descending
 import com.yogeshpaliyal.deepr.ui.resources.sort_by_opened_ascending
 import com.yogeshpaliyal.deepr.ui.resources.sort_by_opened_descending
 import com.yogeshpaliyal.deepr.viewmodel.SortType
-import org.jetbrains.compose.resources.stringResource
 import compose.icons.TablerIcons
 import compose.icons.tablericons.ArrowsSort
 import compose.icons.tablericons.Calendar
@@ -32,6 +31,7 @@ import compose.icons.tablericons.Eye
 import compose.icons.tablericons.EyeOff
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun FilterMenu(

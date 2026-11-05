@@ -24,19 +24,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yogeshpaliyal.deepr.Profile
-import com.yogeshpaliyal.deepr.R
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.manage_profiles
+import com.yogeshpaliyal.deepr.ui.resources.profiles
+import com.yogeshpaliyal.deepr.ui.resources.switch_profile
 import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Check
 import compose.icons.tablericons.Settings
 import compose.icons.tablericons.User
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ProfileSelectorMenu(
@@ -52,7 +55,7 @@ fun ProfileSelectorMenu(
         IconButton(onClick = { expanded = true }) {
             Icon(
                 imageVector = TablerIcons.User,
-                contentDescription = stringResource(R.string.profiles),
+                contentDescription = stringResource(Res.string.profiles),
             )
         }
 
@@ -68,7 +71,7 @@ fun ProfileSelectorMenu(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 Text(
-                    text = stringResource(R.string.switch_profile),
+                    text = stringResource(Res.string.switch_profile),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -102,7 +105,7 @@ fun ProfileSelectorMenu(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = stringResource(R.string.manage_profiles),
+                            text = stringResource(Res.string.manage_profiles),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }

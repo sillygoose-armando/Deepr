@@ -20,7 +20,7 @@ Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM comp
 | M2-09 | Navigation → JetBrains Navigation3 1.1.x (`Navigation.kt` → `ui`), `:app` migrated off alpha09 | 05,08b | A | ci | deepseek-v4.1-flash | 1 | | |
 | M2-10a | Screens: FilterMenu, AboutUs (+LocalAppVersion, LocalAppIcon), AppLockScreen → `ui` | 09 | B | ci | glm-5.3-flash | 1 | a86ebe8 | Android [42058899626](https://github.com/sillygoose-armando/Deepr/actions/runs/42058899626) ✓, iOS pending (runner capacity) |
 | M2-10b | DeeprItem (+MenuItem) + DeeprItemCompact/Grid/Swipable → `ui` (clipboard, toast, date format, star icons per platform) | 10a | A | ci | openrouter deepseek-v4-flash (fallback) + orchestrator | 1 | | |
-| M2-11 | Screens: TagSelectionScreen, ProfileManagementScreen, ProfileSelectorMenu (+ `lifecycle-runtime-compose` on `:ui`) | 10b | B | running | deepseek-v4.1-flash (→ openrouter fallback) | 1 | | |
+| M2-11 | Screens: TagSelectionScreen, ProfileManagementScreen, ProfileSelectorMenu (+ `lifecycle-runtime-compose` on `:ui`) | 10b | B | ci | openrouter deepseek-v4-flash + orchestrator | 1 | | |
 | M2-12 | Screen: AddLinkScreen (Android bits behind interfaces) | 10b | A | todo | | 0 | | |
 | M2-13 | Screen: Home (+ Splash, Dashboard2) | 11,12 | A | todo | | 0 | | |
 | M2-14 | Screen: Settings + LanguageSelectionDialog (`LanguageUtil` per platform; Android-only rows via platform slot) | 13 | A | todo | | 0 | | |

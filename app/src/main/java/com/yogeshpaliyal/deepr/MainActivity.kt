@@ -35,7 +35,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.core.content.getSystemService
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -47,11 +46,15 @@ import com.yogeshpaliyal.deepr.security.AppLockState
 import com.yogeshpaliyal.deepr.ui.BaseScreen
 import com.yogeshpaliyal.deepr.ui.LocalAppIcon
 import com.yogeshpaliyal.deepr.ui.LocalAppVersion
+import com.yogeshpaliyal.deepr.ui.LocalDashboardRoute
+import com.yogeshpaliyal.deepr.ui.LocalIsProUser
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
+import com.yogeshpaliyal.deepr.ui.LocalProfileThemeProvider
 import com.yogeshpaliyal.deepr.ui.Screen
 import com.yogeshpaliyal.deepr.ui.TopLevelBackStack
 import com.yogeshpaliyal.deepr.ui.TopLevelRoute
 import com.yogeshpaliyal.deepr.ui.screens.AppLockScreen
+import com.yogeshpaliyal.deepr.ui.screens.ProfileTheme
 import com.yogeshpaliyal.deepr.ui.screens.Settings
 import com.yogeshpaliyal.deepr.ui.screens.home.Dashboard2
 import com.yogeshpaliyal.deepr.ui.screens.home.TagSelectionScreen
@@ -64,6 +67,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.stringResource
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import org.koin.java.KoinJavaComponent.getKoin
@@ -272,6 +276,11 @@ fun Dashboard(
                 LocalNavigator provides backStack,
                 LocalAppVersion provides BuildConfig.VERSION_NAME,
                 LocalAppIcon provides painterResource(R.mipmap.ic_launcher_foreground),
+                LocalIsProUser provides BuildConfig.APPLICATION_ID.contains(".pro"),
+                LocalDashboardRoute provides Dashboard2(),
+                LocalProfileThemeProvider provides @Composable { profile, onUpdate ->
+                    ProfileTheme(profile = profile, onProfileUpdate = onUpdate)
+                },
             ) {
                 Scaffold(
                     modifier = modifier,

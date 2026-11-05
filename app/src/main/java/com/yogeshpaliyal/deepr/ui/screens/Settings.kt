@@ -53,6 +53,8 @@ import com.yogeshpaliyal.deepr.ui.components.ServerStatusBar
 import com.yogeshpaliyal.deepr.ui.components.SettingsItem
 import com.yogeshpaliyal.deepr.ui.components.SettingsSection
 import com.yogeshpaliyal.deepr.ui.components.ThemeSelectionDialog
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.settings
 import com.yogeshpaliyal.deepr.util.LanguageUtil
 import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
 import compose.icons.TablerIcons
@@ -72,14 +74,15 @@ import compose.icons.tablericons.Settings
 import compose.icons.tablericons.Share
 import compose.icons.tablericons.Star
 import compose.icons.tablericons.Upload
+import org.jetbrains.compose.resources.StringResource
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 object Settings : TopLevelRoute {
     override val icon: ImageVector
         get() = TablerIcons.Settings
-    override val label: Int
-        get() = R.string.settings
+    override val label: StringResource
+        get() = Res.string.settings
 
     @Composable
     override fun Content(windowInsets: WindowInsets) {

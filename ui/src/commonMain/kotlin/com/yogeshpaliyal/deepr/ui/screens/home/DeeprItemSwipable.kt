@@ -24,8 +24,8 @@ import com.yogeshpaliyal.deepr.ui.resources.edit
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Edit
 import compose.icons.tablericons.Trash
-import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun DeeprItemSwipable(

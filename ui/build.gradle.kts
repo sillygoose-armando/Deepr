@@ -43,6 +43,8 @@ kotlin {
             implementation(libs.compose.material.icons.extended.mp)
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.compose.mp)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.jetbrains.lifecycle.runtime.compose)
         }
         // java.text implementation of formatDateTime
         getByName("jvmSharedMain").kotlin.srcDir("src/jvmShared/kotlin")
