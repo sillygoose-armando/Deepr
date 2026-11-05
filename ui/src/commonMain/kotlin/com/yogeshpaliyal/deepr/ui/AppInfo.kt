@@ -9,3 +9,6 @@ val LocalAppVersion = staticCompositionLocalOf { "" }
 val LocalAppIcon = staticCompositionLocalOf<Painter?> { null }
 
 val LocalIsProUser = staticCompositionLocalOf { false }
+
+// Android build variant package name (e.g. "com.yogeshpaliyal.deepr" free, "…deepr.pro" pro).
+val LocalAppPackageName = staticCompositionLocalOf { "" }

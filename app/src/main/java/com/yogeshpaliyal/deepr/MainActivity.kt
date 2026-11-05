@@ -46,6 +46,7 @@ import com.yogeshpaliyal.deepr.review.ReviewManager
 import com.yogeshpaliyal.deepr.security.AppLockState
 import com.yogeshpaliyal.deepr.ui.BaseScreen
 import com.yogeshpaliyal.deepr.ui.LocalAppIcon
+import com.yogeshpaliyal.deepr.ui.LocalAppPackageName
 import com.yogeshpaliyal.deepr.ui.LocalAppVersion
 import com.yogeshpaliyal.deepr.ui.LocalDashboardRoute
 import com.yogeshpaliyal.deepr.ui.LocalHomeNoteViewDialogBuilder
@@ -296,6 +297,7 @@ fun Dashboard(
                 LocalAppVersion provides BuildConfig.VERSION_NAME,
                 LocalAppIcon provides painterResource(R.mipmap.ic_launcher_foreground),
                 LocalIsProUser provides BuildConfig.APPLICATION_ID.contains(".pro"),
+                LocalAppPackageName provides BuildConfig.APPLICATION_ID,
                 LocalDashboardRoute provides Dashboard2(),
                 LocalProfileThemeProvider provides @Composable { profile, onUpdate ->
                     ProfileTheme(profile = profile, onProfileUpdate = onUpdate)

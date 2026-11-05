@@ -1,6 +1,5 @@
 package com.yogeshpaliyal.deepr.ui.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -29,27 +28,50 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.yogeshpaliyal.deepr.BuildConfig
-import com.yogeshpaliyal.deepr.R
+import com.yogeshpaliyal.deepr.ui.LocalAppPackageName
+import com.yogeshpaliyal.deepr.ui.LocalAppVersion
+import com.yogeshpaliyal.deepr.ui.LocalHomeServerBarBuilder
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.TopLevelRoute
 import com.yogeshpaliyal.deepr.ui.components.LanguageSelectionDialog
 import com.yogeshpaliyal.deepr.ui.components.ProfileSelectionDialog
-import com.yogeshpaliyal.deepr.ui.components.ServerStatusBar
 import com.yogeshpaliyal.deepr.ui.components.SettingsItem
 import com.yogeshpaliyal.deepr.ui.components.SettingsSection
 import com.yogeshpaliyal.deepr.ui.components.ThemeSelectionDialog
 import com.yogeshpaliyal.deepr.ui.platform.LocalSettingsPlatform
+import com.yogeshpaliyal.deepr.ui.platform.rememberShowToast
 import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.about_us
+import com.yogeshpaliyal.deepr.ui.resources.app_lock
+import com.yogeshpaliyal.deepr.ui.resources.app_lock_description
+import com.yogeshpaliyal.deepr.ui.resources.app_lock_unavailable
+import com.yogeshpaliyal.deepr.ui.resources.app_name
+import com.yogeshpaliyal.deepr.ui.resources.app_version
+import com.yogeshpaliyal.deepr.ui.resources.back
+import com.yogeshpaliyal.deepr.ui.resources.clipboard_link_detection
+import com.yogeshpaliyal.deepr.ui.resources.clipboard_link_detection_description
+import com.yogeshpaliyal.deepr.ui.resources.default_page
+import com.yogeshpaliyal.deepr.ui.resources.default_page_all
+import com.yogeshpaliyal.deepr.ui.resources.default_page_favourites
+import com.yogeshpaliyal.deepr.ui.resources.language
+import com.yogeshpaliyal.deepr.ui.resources.made_with_love
 import com.yogeshpaliyal.deepr.ui.resources.settings
+import com.yogeshpaliyal.deepr.ui.resources.shortcut_icon
+import com.yogeshpaliyal.deepr.ui.resources.show_open_counter
+import com.yogeshpaliyal.deepr.ui.resources.show_open_counter_description
+import com.yogeshpaliyal.deepr.ui.resources.silent_save_profile
+import com.yogeshpaliyal.deepr.ui.resources.silent_save_profile_description
+import com.yogeshpaliyal.deepr.ui.resources.system_default
+import com.yogeshpaliyal.deepr.ui.resources.theme
+import com.yogeshpaliyal.deepr.ui.resources.theme_dark
+import com.yogeshpaliyal.deepr.ui.resources.theme_light
+import com.yogeshpaliyal.deepr.ui.resources.use_deepr_app_icon
+import com.yogeshpaliyal.deepr.ui.resources.use_link_app_icon
 import com.yogeshpaliyal.deepr.util.LanguageUtil
 import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
 import compose.icons.TablerIcons
@@ -67,7 +89,8 @@ import compose.icons.tablericons.Settings
 import compose.icons.tablericons.Share
 import compose.icons.tablericons.Star
 import org.jetbrains.compose.resources.StringResource
-import org.koin.androidx.compose.koinViewModel
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 
 object Settings : TopLevelRoute {
     override val icon: ImageVector
@@ -81,16 +104,19 @@ object Settings : TopLevelRoute {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     windowInsets: WindowInsets,
     modifier: Modifier = Modifier,
     viewModel: AccountViewModel = koinViewModel(),
 ) {
-    val context = LocalContext.current
     val navigatorContext = LocalNavigator.current
     val settingsPlatform = LocalSettingsPlatform.current
+
+    val showLongToast = rememberShowToast(long = true)
+    val appLockUnavailable = stringResource(Res.string.app_lock_unavailable)
+    val appPackageName = LocalAppPackageName.current
 
     // Collect the shortcut icon preference state
     val useLinkBasedIcons by viewModel.useLinkBasedIcons.collectAsStateWithLifecycle()
@@ -122,7 +148,7 @@ fun SettingsScreen(
             Column {
                 TopAppBar(
                     title = {
-                        Text(stringResource(R.string.settings))
+                        Text(stringResource(Res.string.settings))
                     },
                     navigationIcon = {
                         val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
@@ -132,7 +158,7 @@ fun SettingsScreen(
                         }) {
                             Icon(
                                 TablerIcons.ArrowLeft,
-                                contentDescription = stringResource(R.string.back),
+                                contentDescription = stringResource(Res.string.back),
                                 modifier =
                                     if (isRtl) {
                                         Modifier.graphicsLayer(scaleX = -1f)
@@ -143,14 +169,7 @@ fun SettingsScreen(
                         }
                     },
                 )
-                ServerStatusBar(
-                    onServerStatusClick = {
-                        // Navigate to LocalNetworkServer screen when status bar is clicked
-                        if (navigatorContext.getLast() !is LocalNetworkServer) {
-                            navigatorContext.add(LocalNetworkServer)
-                        }
-                    },
-                )
+                LocalHomeServerBarBuilder.current?.invoke({}, Modifier)
             }
         },
     ) { innerPadding ->
@@ -171,14 +190,14 @@ fun SettingsScreen(
 
                 SettingsItem(
                     TablerIcons.Settings,
-                    title = stringResource(R.string.shortcut_icon),
+                    title = stringResource(Res.string.shortcut_icon),
                     description =
                         if (useLinkBasedIcons) {
                             stringResource(
-                                R.string.use_link_app_icon,
+                                Res.string.use_link_app_icon,
                             )
                         } else {
-                            stringResource(R.string.use_deepr_app_icon)
+                            stringResource(Res.string.use_deepr_app_icon)
                         },
                     onClick = {
                         viewModel.setUseLinkBasedIcons(!useLinkBasedIcons)
@@ -193,13 +212,13 @@ fun SettingsScreen(
 
                 SettingsItem(
                     TablerIcons.Language,
-                    title = stringResource(R.string.language),
+                    title = stringResource(Res.string.language),
                     description =
                         if (languageCode.isEmpty()) {
-                            stringResource(R.string.system_default)
+                            stringResource(Res.string.system_default)
                         } else {
                             LanguageUtil.getLanguageNativeName(languageCode).ifEmpty {
-                                stringResource(R.string.system_default)
+                                stringResource(Res.string.system_default)
                             }
                         },
                     onClick = {
@@ -209,12 +228,12 @@ fun SettingsScreen(
 
                 SettingsItem(
                     TablerIcons.Moon,
-                    title = stringResource(R.string.theme),
+                    title = stringResource(Res.string.theme),
                     description =
                         when (themeMode) {
-                            "light" -> stringResource(R.string.theme_light)
-                            "dark" -> stringResource(R.string.theme_dark)
-                            else -> stringResource(R.string.system_default)
+                            "light" -> stringResource(Res.string.theme_light)
+                            "dark" -> stringResource(Res.string.theme_dark)
+                            else -> stringResource(Res.string.system_default)
                         },
                     onClick = {
                         showThemeDialog = true
@@ -223,12 +242,12 @@ fun SettingsScreen(
 
                 SettingsItem(
                     TablerIcons.Star,
-                    title = stringResource(R.string.default_page),
+                    title = stringResource(Res.string.default_page),
                     description =
                         if (defaultPageFavourites) {
-                            stringResource(R.string.default_page_favourites)
+                            stringResource(Res.string.default_page_favourites)
                         } else {
-                            stringResource(R.string.default_page_all)
+                            stringResource(Res.string.default_page_all)
                         },
                     onClick = {
                         viewModel.setDefaultPageFavourites(!defaultPageFavourites)
@@ -258,8 +277,8 @@ fun SettingsScreen(
 
                 SettingsItem(
                     TablerIcons.ExternalLink,
-                    title = stringResource(R.string.show_open_counter),
-                    description = stringResource(R.string.show_open_counter_description),
+                    title = stringResource(Res.string.show_open_counter),
+                    description = stringResource(Res.string.show_open_counter_description),
                     onClick = {
                         viewModel.setShowOpenCounter(!showOpenCounter)
                     },
@@ -273,10 +292,10 @@ fun SettingsScreen(
 
                 SettingsItem(
                     TablerIcons.Folders,
-                    title = stringResource(R.string.silent_save_profile),
+                    title = stringResource(Res.string.silent_save_profile),
                     description =
                         allProfiles.find { it.id == silentSaveProfileId }?.name
-                            ?: stringResource(R.string.silent_save_profile_description),
+                            ?: stringResource(Res.string.silent_save_profile_description),
                     onClick = {
                         showSilentSaveProfileDialog = true
                     },
@@ -284,8 +303,8 @@ fun SettingsScreen(
 
                 SettingsItem(
                     TablerIcons.Clipboard,
-                    title = stringResource(R.string.clipboard_link_detection),
-                    description = stringResource(R.string.clipboard_link_detection_description),
+                    title = stringResource(Res.string.clipboard_link_detection),
+                    description = stringResource(Res.string.clipboard_link_detection_description),
                     onClick = {
                         viewModel.setClipboardLinkDetectionEnabled(!clipboardLinkDetectionEnabled)
                     },
@@ -302,18 +321,13 @@ fun SettingsScreen(
                 SettingsSection("Security") {
                     SettingsItem(
                         TablerIcons.Lock,
-                        title = stringResource(R.string.app_lock),
-                        description = stringResource(R.string.app_lock_description),
+                        title = stringResource(Res.string.app_lock),
+                        description = stringResource(Res.string.app_lock_description),
                         onClick = {
                             if (appLockEnabled || settingsPlatform.isDeviceSecure?.invoke() == true) {
                                 viewModel.setAppLockEnabled(!appLockEnabled)
                             } else {
-                                Toast
-                                    .makeText(
-                                        context,
-                                        context.getString(R.string.app_lock_unavailable),
-                                        Toast.LENGTH_LONG,
-                                    ).show()
+                                showLongToast(appLockUnavailable)
                             }
                         },
                         trailing = {
@@ -323,12 +337,7 @@ fun SettingsScreen(
                                     if (!enabled || settingsPlatform.isDeviceSecure?.invoke() == true) {
                                         viewModel.setAppLockEnabled(enabled)
                                     } else {
-                                        Toast
-                                            .makeText(
-                                                context,
-                                                context.getString(R.string.app_lock_unavailable),
-                                                Toast.LENGTH_LONG,
-                                            ).show()
+                                        showLongToast(appLockUnavailable)
                                     }
                                 },
                             )
@@ -338,7 +347,7 @@ fun SettingsScreen(
             }
 
             SettingsSection("About") {
-                val appName = stringResource(R.string.app_name)
+                val appName = stringResource(Res.string.app_name)
                 if (settingsPlatform.sendFeedback != null) {
                     SettingsItem(
                         icon = TablerIcons.AlertTriangle,
@@ -371,7 +380,7 @@ fun SettingsScreen(
                         description = "Share $appName with your friends",
                         onClick = {
                             settingsPlatform.shareApp?.invoke(
-                                "Check out $appName - Your link organizer and Read Later App! Download it from https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}",
+                                "Check out $appName - Your link organizer and Read Later App! Download it from https://play.google.com/store/apps/details?id=${appPackageName}",
                             )
                         },
                     )
@@ -379,7 +388,7 @@ fun SettingsScreen(
 
                 SettingsItem(
                     TablerIcons.InfoCircle,
-                    title = stringResource(R.string.about_us),
+                    title = stringResource(Res.string.about_us),
                     onClick = {
                         navigatorContext.add(AboutUs)
                     },
@@ -394,14 +403,14 @@ fun SettingsScreen(
                         .padding(8.dp),
             ) {
                 Text(
-                    stringResource(R.string.app_version, BuildConfig.VERSION_NAME),
+                    stringResource(Res.string.app_version, LocalAppVersion.current),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    stringResource(R.string.made_with_love),
+                    stringResource(Res.string.made_with_love),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
@@ -445,7 +454,7 @@ fun SettingsScreen(
                     showSilentSaveProfileDialog = false
                 },
                 onDismiss = { showSilentSaveProfileDialog = false },
-                title = stringResource(R.string.silent_save_profile),
+                title = stringResource(Res.string.silent_save_profile),
             )
         }
     }
