@@ -50,6 +50,8 @@ kotlin {
         getByName("jvmSharedMain").kotlin.srcDir("src/jvmShared/kotlin")
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.zxing.scanner)
         }
         jvmTest.dependencies {
             implementation(kotlin("test"))

@@ -1,5 +1,7 @@
 package com.yogeshpaliyal.deepr.util
 
+expect fun isValidDeeplink(link: String): Boolean
+
 fun normalizeLink(link: String): String {
     if (link.isBlank()) return link
 

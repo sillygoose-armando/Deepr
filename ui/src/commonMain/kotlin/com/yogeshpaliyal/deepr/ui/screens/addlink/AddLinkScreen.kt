@@ -1,7 +1,5 @@
 package com.yogeshpaliyal.deepr.ui.screens.addlink
 
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -60,22 +58,50 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.journeyapps.barcodescanner.ScanOptions
 import com.yogeshpaliyal.deepr.GetLinksAndTags
-import com.yogeshpaliyal.deepr.R
 import com.yogeshpaliyal.deepr.Tags
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.components.ClearInputIconButton
-import com.yogeshpaliyal.deepr.util.QRScanner
+import com.yogeshpaliyal.deepr.ui.platform.rememberOpenLink
+import com.yogeshpaliyal.deepr.ui.platform.rememberQrScanLauncher
+import com.yogeshpaliyal.deepr.ui.platform.rememberShowToast
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.add_tag
+import com.yogeshpaliyal.deepr.ui.resources.back
+import com.yogeshpaliyal.deepr.ui.resources.cancel
+import com.yogeshpaliyal.deepr.ui.resources.create
+import com.yogeshpaliyal.deepr.ui.resources.create_tag
+import com.yogeshpaliyal.deepr.ui.resources.create_profile
+import com.yogeshpaliyal.deepr.ui.resources.deeplink_already_exists
+import com.yogeshpaliyal.deepr.ui.resources.edit
+import com.yogeshpaliyal.deepr.ui.resources.enter_deeplink_command
+import com.yogeshpaliyal.deepr.ui.resources.enter_link_name
+import com.yogeshpaliyal.deepr.ui.resources.enter_link_name_error
+import com.yogeshpaliyal.deepr.ui.resources.enter_notes
+import com.yogeshpaliyal.deepr.ui.resources.execute
+import com.yogeshpaliyal.deepr.ui.resources.failed_to_fetch_metadata
+import com.yogeshpaliyal.deepr.ui.resources.fetch_name_from_link
+import com.yogeshpaliyal.deepr.ui.resources.invalid_empty_deeplink
+import com.yogeshpaliyal.deepr.ui.resources.profile
+import com.yogeshpaliyal.deepr.ui.resources.profile_created_successfully
+import com.yogeshpaliyal.deepr.ui.resources.profile_name
+import com.yogeshpaliyal.deepr.ui.resources.profile_name_cannot_be_blank
+import com.yogeshpaliyal.deepr.ui.resources.profile_name_exists
+import com.yogeshpaliyal.deepr.ui.resources.qr_scanner
+import com.yogeshpaliyal.deepr.ui.resources.remove_tag
+import com.yogeshpaliyal.deepr.ui.resources.remove_thumbnail
+import com.yogeshpaliyal.deepr.ui.resources.save
+import com.yogeshpaliyal.deepr.ui.resources.save_and_execute
+import com.yogeshpaliyal.deepr.ui.resources.select_profile
+import com.yogeshpaliyal.deepr.ui.resources.tags
+import com.yogeshpaliyal.deepr.ui.resources.tags_label
+import com.yogeshpaliyal.deepr.ui.resources.thumbnail_url
 import com.yogeshpaliyal.deepr.util.isValidDeeplink
 import com.yogeshpaliyal.deepr.util.normalizeLink
-import com.yogeshpaliyal.deepr.util.openDeeplink
 import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
 import compose.icons.TablerIcons
 import compose.icons.tablericons.ArrowLeft
@@ -90,6 +116,7 @@ import compose.icons.tablericons.Tag
 import compose.icons.tablericons.User
 import compose.icons.tablericons.X
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,12 +126,16 @@ fun AddLinkScreen(
     modifier: Modifier = Modifier,
     viewModel: AccountViewModel = koinInject(),
 ) {
-    val context = LocalContext.current
     val navigator = LocalNavigator.current
     val scope = rememberCoroutineScope()
-    val fetchMetadataErrorText = stringResource(R.string.failed_to_fetch_metadata)
-    val removeTagText = stringResource(R.string.remove_tag)
-    val deeplinkExistsText = stringResource(R.string.deeplink_already_exists)
+    val showToast = rememberShowToast()
+    val openLink = rememberOpenLink()
+    val fetchMetadataErrorText = stringResource(Res.string.failed_to_fetch_metadata)
+    val removeTagText = stringResource(Res.string.remove_tag)
+    val deeplinkExistsText = stringResource(Res.string.deeplink_already_exists)
+    val profileNameCannotBeBlank = stringResource(Res.string.profile_name_cannot_be_blank)
+    val profileNameExists = stringResource(Res.string.profile_name_exists)
+    val profileCreatedSuccessfully = stringResource(Res.string.profile_created_successfully)
     var deeprInfo by remember(selectedLink) {
         mutableStateOf(
             selectedLink,
@@ -114,15 +145,11 @@ fun AddLinkScreen(
     var isNameError by remember { mutableStateOf(false) }
     var isFetchingMetadata by remember { mutableStateOf(false) }
 
-    val qrScanner =
-        rememberLauncherForActivityResult(
-            QRScanner(),
-        ) { result ->
-            if (result.contents != null) {
-                val normalizedLink = normalizeLink(result.contents)
-                deeprInfo = deeprInfo.copy(link = normalizedLink)
-                isError = false
-            }
+    val qrScannerLauncher =
+        rememberQrScanLauncher { contents ->
+            val normalizedLink = normalizeLink(contents)
+            deeprInfo = deeprInfo.copy(link = normalizedLink)
+            isError = false
         }
 
     // Tags
@@ -159,12 +186,7 @@ fun AddLinkScreen(
                 deeprInfo = deeprInfo.copy(name = it.title ?: "", thumbnail = it.image ?: "")
                 isNameError = false
             } else {
-                Toast
-                    .makeText(
-                        context,
-                        fetchMetadataErrorText,
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                showToast(fetchMetadataErrorText)
             }
         }
     }
@@ -203,7 +225,7 @@ fun AddLinkScreen(
             val normalizedLink = normalizeLink(deeprInfo.link)
 
             if (isCreate && viewModel.isLinkDuplicate(normalizedLink)) {
-                Toast.makeText(context, deeplinkExistsText, Toast.LENGTH_SHORT).show()
+                showToast(deeplinkExistsText)
                 return@launch
             }
 
@@ -239,7 +261,7 @@ fun AddLinkScreen(
                 )
             }
             if (executeAfterSave) {
-                openDeeplink(context, normalizedLink)
+                openLink(normalizedLink)
             }
             navigator.removeLast()
         }
@@ -253,12 +275,12 @@ fun AddLinkScreen(
             LargeTopAppBar(
                 title = {
                     Text(
-                        text = if (isCreate) stringResource(R.string.create) else stringResource(R.string.edit),
+                        text = if (isCreate) stringResource(Res.string.create) else stringResource(Res.string.edit),
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navigator.removeLast() }) {
-                        Icon(TablerIcons.ArrowLeft, contentDescription = stringResource(R.string.back))
+                        Icon(TablerIcons.ArrowLeft, contentDescription = stringResource(Res.string.back))
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -299,7 +321,7 @@ fun AddLinkScreen(
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                             Text(
-                                text = stringResource(R.string.enter_deeplink_command),
+                                text = stringResource(Res.string.enter_deeplink_command),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                             )
@@ -316,7 +338,7 @@ fun AddLinkScreen(
                             isError = isError,
                             supportingText = {
                                 if (isError) {
-                                    Text(text = stringResource(R.string.invalid_empty_deeplink))
+                                    Text(text = stringResource(Res.string.invalid_empty_deeplink))
                                 }
                             },
                             trailingIcon = {
@@ -329,14 +351,14 @@ fun AddLinkScreen(
                                             },
                                         )
                                     }
-                                    IconButton(onClick = {
-                                        qrScanner.launch(ScanOptions())
-                                    }) {
-                                        Icon(
-                                            imageVector = TablerIcons.Qrcode,
-                                            contentDescription = stringResource(R.string.qr_scanner),
-                                            tint = MaterialTheme.colorScheme.primary,
-                                        )
+                                    if (qrScannerLauncher != null) {
+                                        IconButton(onClick = { qrScannerLauncher() }) {
+                                            Icon(
+                                                imageVector = TablerIcons.Qrcode,
+                                                contentDescription = stringResource(Res.string.qr_scanner),
+                                                tint = MaterialTheme.colorScheme.primary,
+                                            )
+                                        }
                                     }
                                 }
                             },
@@ -363,7 +385,7 @@ fun AddLinkScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                             }
-                            Text(stringResource(R.string.fetch_name_from_link))
+                            Text(stringResource(Res.string.fetch_name_from_link))
                         }
                     }
                 }
@@ -422,7 +444,7 @@ fun AddLinkScreen(
                                     deeprInfo = deeprInfo.copy(thumbnail = it)
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text(stringResource(R.string.thumbnail_url)) },
+                                label = { Text(stringResource(Res.string.thumbnail_url)) },
                                 trailingIcon =
                                     if (deeprInfo.thumbnail.isEmpty()) {
                                         null
@@ -449,7 +471,7 @@ fun AddLinkScreen(
                                     modifier = Modifier.size(18.dp),
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(stringResource(R.string.remove_thumbnail))
+                                Text(stringResource(Res.string.remove_thumbnail))
                             }
                         }
                     }
@@ -475,10 +497,10 @@ fun AddLinkScreen(
                                 isNameError = false
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            label = { Text(stringResource(R.string.enter_link_name)) },
+                            label = { Text(stringResource(Res.string.enter_link_name)) },
                             supportingText = {
                                 if (isNameError) {
-                                    Text(text = stringResource(R.string.enter_link_name_error))
+                                    Text(text = stringResource(Res.string.enter_link_name_error))
                                 }
                             },
                             trailingIcon =
@@ -517,7 +539,7 @@ fun AddLinkScreen(
                                     deeprInfo = deeprInfo.copy(notes = it)
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text(stringResource(R.string.enter_notes)) },
+                                label = { Text(stringResource(Res.string.enter_notes)) },
                                 trailingIcon =
                                     if (deeprInfo.notes.isEmpty()) {
                                         null
@@ -560,7 +582,7 @@ fun AddLinkScreen(
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                             Text(
-                                text = stringResource(R.string.profile),
+                                text = stringResource(Res.string.profile),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                             )
@@ -579,7 +601,7 @@ fun AddLinkScreen(
                                 value = selectedProfile?.name ?: "",
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text(stringResource(R.string.select_profile)) },
+                                label = { Text(stringResource(Res.string.select_profile)) },
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
@@ -635,7 +657,7 @@ fun AddLinkScreen(
                                                 tint = MaterialTheme.colorScheme.primary,
                                             )
                                             Text(
-                                                text = stringResource(R.string.create_profile),
+                                                text = stringResource(Res.string.create_profile),
                                                 color = MaterialTheme.colorScheme.primary,
                                             )
                                         }
@@ -672,7 +694,7 @@ fun AddLinkScreen(
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                             Text(
-                                text = stringResource(R.string.tags),
+                                text = stringResource(Res.string.tags),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                             )
@@ -706,7 +728,7 @@ fun AddLinkScreen(
                                     newTagName = it
                                     expanded = true
                                 },
-                                label = { Text(stringResource(R.string.add_tag)) },
+                                label = { Text(stringResource(Res.string.add_tag)) },
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
@@ -742,7 +764,7 @@ fun AddLinkScreen(
                                                     modifier = Modifier.size(18.dp),
                                                 )
                                                 Text(
-                                                    stringResource(R.string.create_tag) + ": \"$newTagName\"",
+                                                    stringResource(Res.string.create_tag) + ": \"$newTagName\"",
                                                     color = MaterialTheme.colorScheme.primary,
                                                 )
                                             }
@@ -775,7 +797,7 @@ fun AddLinkScreen(
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(
-                                    stringResource(R.string.tags_label),
+                                    stringResource(Res.string.tags_label),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -830,7 +852,7 @@ fun AddLinkScreen(
                             shape = RoundedCornerShape(12.dp),
                         ) {
                             Text(
-                                stringResource(R.string.save),
+                                stringResource(Res.string.save),
                                 modifier = Modifier.padding(vertical = 4.dp),
                             )
                         }
@@ -847,7 +869,7 @@ fun AddLinkScreen(
                             shape = RoundedCornerShape(12.dp),
                         ) {
                             Text(
-                                stringResource(R.string.save_and_execute),
+                                stringResource(Res.string.save_and_execute),
                                 modifier = Modifier.padding(vertical = 4.dp),
                             )
                         }
@@ -868,7 +890,7 @@ fun AddLinkScreen(
                                 shape = RoundedCornerShape(12.dp),
                             ) {
                                 Text(
-                                    stringResource(R.string.save),
+                                    stringResource(Res.string.save),
                                     modifier = Modifier.padding(vertical = 4.dp),
                                 )
                             }
@@ -876,12 +898,12 @@ fun AddLinkScreen(
                             FilledTonalButton(
                                 modifier = Modifier.weight(1f),
                                 onClick = {
-                                    isError = !openDeeplink(context, deeprInfo.link)
+                                    isError = !openLink(deeprInfo.link)
                                 },
                                 shape = RoundedCornerShape(12.dp),
                             ) {
                                 Text(
-                                    stringResource(R.string.execute),
+                                    stringResource(Res.string.execute),
                                     modifier = Modifier.padding(vertical = 4.dp),
                                 )
                             }
@@ -921,7 +943,7 @@ fun AddLinkScreen(
                 profileCreationError = null
             },
             title = {
-                Text(stringResource(R.string.create_profile))
+                Text(stringResource(Res.string.create_profile))
             },
             text = {
                 Column(
@@ -933,7 +955,7 @@ fun AddLinkScreen(
                             newProfileName = it
                             profileCreationError = null
                         },
-                        label = { Text(stringResource(R.string.profile_name)) },
+                        label = { Text(stringResource(Res.string.profile_name)) },
                         singleLine = true,
                         isError = profileCreationError != null,
                         modifier = Modifier.fillMaxWidth(),
@@ -953,7 +975,7 @@ fun AddLinkScreen(
                     onClick = {
                         val trimmedProfileName = newProfileName.trim()
                         if (trimmedProfileName.isBlank()) {
-                            profileCreationError = context.getString(R.string.profile_name_cannot_be_blank)
+                            profileCreationError = profileNameCannotBeBlank
                             return@TextButton
                         }
 
@@ -963,22 +985,17 @@ fun AddLinkScreen(
                             }
 
                         if (existingProfile != null) {
-                            profileCreationError = context.getString(R.string.profile_name_exists)
+                            profileCreationError = profileNameExists
                         } else {
                             viewModel.insertProfile(trimmedProfileName)
                             pendingProfileNameToSelect = trimmedProfileName
                             showCreateProfileDialog = false
-                            Toast
-                                .makeText(
-                                    context,
-                                    context.getString(R.string.profile_created_successfully),
-                                    Toast.LENGTH_SHORT,
-                                ).show()
+                            showToast(profileCreatedSuccessfully)
                         }
                     },
                     enabled = newProfileName.isNotBlank(),
                 ) {
-                    Text(stringResource(R.string.create_profile))
+                    Text(stringResource(Res.string.create_profile))
                 }
             },
             dismissButton = {
@@ -988,7 +1005,7 @@ fun AddLinkScreen(
                         profileCreationError = null
                     },
                 ) {
-                    Text(stringResource(android.R.string.cancel))
+                    Text(stringResource(Res.string.cancel))
                 }
             },
         )
