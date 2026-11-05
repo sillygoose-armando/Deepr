@@ -19,12 +19,6 @@ import kotlin.collections.remove
 val LocalNavigator =
     compositionLocalOf<TopLevelBackStack<BaseScreen>> { error("LocalNavigator not provided") }
 
-// Points to the "home" dashboard screen so that other screens (e.g. TagSelectionScreen)
-// can navigate there without a direct dependency on :app's Dashboard2 type.
-// Provided by MainActivity; M2-13 will move Dashboard2 into :ui and remove this bridge.
-val LocalDashboardRoute =
-    compositionLocalOf<BaseScreen> { error("LocalDashboardRoute not provided") }
-
 // Bridge for ProfileTheme (stays in :app pro/freeGithub source sets until M2-13).
 // ProfileManagementScreen calls this in its edit dialog for pro users.
 // Default: null skips the theme customization section on non-pro builds.

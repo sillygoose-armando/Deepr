@@ -9,18 +9,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -29,34 +19,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavEntry
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
 import com.yogeshpaliyal.deepr.preference.PreferenceRepository
 import com.yogeshpaliyal.deepr.review.ReviewManager
 import com.yogeshpaliyal.deepr.security.AppLockState
-import com.yogeshpaliyal.deepr.ui.BaseScreen
+import com.yogeshpaliyal.deepr.ui.DeeprApp
 import com.yogeshpaliyal.deepr.ui.LocalAppIcon
 import com.yogeshpaliyal.deepr.ui.LocalAppPackageName
 import com.yogeshpaliyal.deepr.ui.LocalAppVersion
-import com.yogeshpaliyal.deepr.ui.LocalDashboardRoute
 import com.yogeshpaliyal.deepr.ui.LocalHomeNoteViewDialogBuilder
 import com.yogeshpaliyal.deepr.ui.LocalHomeServerBarBuilder
 import com.yogeshpaliyal.deepr.ui.LocalIsProUser
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.LocalProfileThemeProvider
-import com.yogeshpaliyal.deepr.ui.Screen
-import com.yogeshpaliyal.deepr.ui.TopLevelBackStack
-import com.yogeshpaliyal.deepr.ui.TopLevelRoute
 import com.yogeshpaliyal.deepr.ui.components.CreateShortcutDialog
 import com.yogeshpaliyal.deepr.ui.components.NoteViewDialog
 import com.yogeshpaliyal.deepr.ui.components.ServerStatusBar
@@ -77,10 +56,7 @@ import com.yogeshpaliyal.deepr.ui.screens.DriveSettingsItem
 import com.yogeshpaliyal.deepr.ui.screens.LocalNetworkServer
 import com.yogeshpaliyal.deepr.ui.screens.ProfileTheme
 import com.yogeshpaliyal.deepr.ui.screens.RestoreScreen
-import com.yogeshpaliyal.deepr.ui.screens.Settings
-import com.yogeshpaliyal.deepr.ui.screens.home.Dashboard2
 import com.yogeshpaliyal.deepr.ui.screens.home.ShortcutMenuItem
-import com.yogeshpaliyal.deepr.ui.screens.home.TagSelectionScreen
 import com.yogeshpaliyal.deepr.ui.theme.DeeprTheme
 import com.yogeshpaliyal.deepr.util.LanguageUtil
 import com.yogeshpaliyal.deepr.util.isValidDeeplink
@@ -239,9 +215,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private val TOP_LEVEL_ROUTES: List<TopLevelRoute> =
-    listOf(Dashboard2(), TagSelectionScreen, Settings)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Dashboard(
@@ -249,16 +222,6 @@ fun Dashboard(
     sharedText: SharedLink? = null,
     resetSharedText: () -> Unit,
 ) {
-    val backStack =
-        remember {
-            TopLevelBackStack<BaseScreen>(
-                Dashboard2(),
-            )
-        }
-    val current = backStack.getLast()
-    val scrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
-    val hapticFeedback = LocalHapticFeedback.current
-    val layoutDirection = LocalLayoutDirection.current
     val context = LocalContext.current
     val viewModel: AccountViewModel = koinViewModel()
 
@@ -290,205 +253,143 @@ fun Dashboard(
 
     val reviewManager: ReviewManager = koinInject()
     val appName = stringResource(Res.string.app_name)
-    CompositionLocalProvider(LocalSharedText provides Pair(sharedText, resetSharedText)) {
-        CompositionLocalProvider(LocalClipboardLink provides Pair(clipboardLink, resetClipboardLink)) {
-            CompositionLocalProvider(
-                LocalNavigator provides backStack,
-                LocalAppVersion provides BuildConfig.VERSION_NAME,
-                LocalAppIcon provides painterResource(R.mipmap.ic_launcher_foreground),
-                LocalIsProUser provides BuildConfig.APPLICATION_ID.contains(".pro"),
-                LocalAppPackageName provides BuildConfig.APPLICATION_ID,
-                LocalDashboardRoute provides Dashboard2(),
-                LocalProfileThemeProvider provides @Composable { profile, onUpdate ->
-                    ProfileTheme(profile = profile, onProfileUpdate = onUpdate)
+    CompositionLocalProvider(
+        LocalAppVersion provides BuildConfig.VERSION_NAME,
+        LocalAppIcon provides painterResource(R.mipmap.ic_launcher_foreground),
+        LocalIsProUser provides BuildConfig.APPLICATION_ID.contains(".pro"),
+        LocalAppPackageName provides BuildConfig.APPLICATION_ID,
+        LocalProfileThemeProvider provides @Composable { profile, onUpdate ->
+            ProfileTheme(profile = profile, onProfileUpdate = onUpdate)
+        },
+        LocalHomeServerBarBuilder provides @Composable { onServerStatusClick, modifier ->
+            val nav = LocalNavigator.current
+            ServerStatusBar(
+                onServerStatusClick = {
+                    onServerStatusClick()
+                    if (nav.getLast() !is LocalNetworkServer) {
+                        nav.add(LocalNetworkServer)
+                    }
                 },
-                LocalHomeServerBarBuilder provides @Composable { onServerStatusClick, modifier ->
-                    val nav = LocalNavigator.current
-                    ServerStatusBar(
-                        onServerStatusClick = {
-                            onServerStatusClick()
-                            if (nav.getLast() !is LocalNetworkServer) {
-                                nav.add(LocalNetworkServer)
+                modifier = modifier,
+            )
+        },
+        LocalHomeNoteViewDialogBuilder provides @Composable { deepr, onDismiss, onEdit, modifier ->
+            NoteViewDialog(deepr = deepr, onDismiss = onDismiss, onEdit = onEdit, modifier = modifier)
+        },
+        LocalPlatformLinkActions provides
+            remember(context) {
+                PlatformLinkActions(
+                    share = { text ->
+                        val sendIntent =
+                            Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_TEXT, text)
+                                type = "text/plain"
                             }
-                        },
-                        modifier = modifier,
-                    )
-                },
-                LocalHomeNoteViewDialogBuilder provides @Composable { deepr, onDismiss, onEdit, modifier ->
-                    NoteViewDialog(deepr = deepr, onDismiss = onDismiss, onEdit = onEdit, modifier = modifier)
-                },
-                LocalPlatformLinkActions provides
-                    remember(context) {
-                        PlatformLinkActions(
-                            share = { text ->
-                                val sendIntent =
-                                    Intent().apply {
-                                        action = Intent.ACTION_SEND
-                                        putExtra(Intent.EXTRA_TEXT, text)
-                                        type = "text/plain"
-                                    }
-                                val shareIntent = Intent.createChooser(sendIntent, null)
-                                context.startActivity(shareIntent)
-                            },
-                            openExternal = { link -> openDeeplinkExternal(context, link) },
-                            shortcutMenuItem = { account, onClick ->
-                                ShortcutMenuItem(account, onClick)
-                            },
-                            shortcutDialog = { account, onDismiss ->
-                                CreateShortcutDialog(account, onDismiss)
-                            },
-                        )
+                        val shareIntent = Intent.createChooser(sendIntent, null)
+                        context.startActivity(shareIntent)
                     },
-                LocalSettingsPlatform provides
-                    remember(context, reviewManager, appName) {
-                        SettingsPlatform(
-                            topSections = {
-                                val navigator = LocalNavigator.current
-                                SettingsSection("Data Management") {
-                                    SettingsItem(
-                                        TablerIcons.Upload,
-                                        title = stringResource(Res.string.backup),
-                                        description = "Export to CSV, Local file sync, Auto backup",
-                                        onClick = {
-                                            navigator.add(BackupScreen)
-                                        },
-                                    )
-                                    SettingsItem(
-                                        TablerIcons.Download,
-                                        title = stringResource(Res.string.restore),
-                                        description = "Import from CSV, Bookmarks, and other formats",
-                                        onClick = {
-                                            navigator.add(RestoreScreen)
-                                        },
-                                    )
-                                }
-                                DriveSettingsItem()
-                            },
-                            localServerRow = {
-                                val navigator = LocalNavigator.current
-                                SettingsItem(
-                                    TablerIcons.Server,
-                                    title = stringResource(Res.string.local_network_server),
-                                    onClick = {
-                                        navigator.add(LocalNetworkServer)
-                                    },
-                                )
-                            },
-                            isDeviceSecure = {
-                                val keyguardManager = context.getSystemService<KeyguardManager>()
-                                keyguardManager?.isDeviceSecure == true
-                            },
-                            sendFeedback = {
-                                val emailIntent =
-                                    Intent(Intent.ACTION_SENDTO).apply {
-                                        data = "mailto:".toUri()
-                                        putExtra(
-                                            Intent.EXTRA_EMAIL,
-                                            arrayOf("yogeshpaliyal.foss+deepr@gmail.com"),
-                                        )
-                                        putExtra(
-                                            Intent.EXTRA_SUBJECT,
-                                            "$appName App Feedback/Issue",
-                                        )
-                                        putExtra(
-                                            Intent.EXTRA_TEXT,
-                                            "Describe your issue or feedback here:\n App Version : ${BuildConfig.VERSION_NAME}\n",
-                                        )
-                                    }
-                                context.startActivity(
-                                    Intent.createChooser(
-                                        emailIntent,
-                                        "Send email via...",
-                                    ),
-                                )
-                            },
-                            requestReview = {
-                                reviewManager.requestReview(context as MainActivity)
-                            },
-                            shareApp = { text ->
-                                val shareIntent =
-                                    Intent().apply {
-                                        action = Intent.ACTION_SEND
-                                        putExtra(Intent.EXTRA_TEXT, text)
-                                        type = "text/plain"
-                                    }
-                                context.startActivity(
-                                    Intent.createChooser(
-                                        shareIntent,
-                                        "Share via",
-                                    ),
-                                )
-                            },
-                            recreateForLanguage = {
-                                (context as? MainActivity)?.recreate()
-                            },
-                        )
+                    openExternal = { link -> openDeeplinkExternal(context, link) },
+                    shortcutMenuItem = { account, onClick ->
+                        ShortcutMenuItem(account, onClick)
                     },
-            ) {
-                Scaffold(
-                    modifier = modifier,
-                    bottomBar = {
-                        AnimatedVisibility(
-                            (TOP_LEVEL_ROUTES.any { it::class == current::class }),
-                            enter = slideInVertically(initialOffsetY = { it }),
-                            exit = slideOutVertically(targetOffsetY = { it }),
-                        ) {
-                            BottomAppBar(scrollBehavior = scrollBehavior) {
-                                TOP_LEVEL_ROUTES.forEach { topLevelRoute ->
-                                    val isSelected =
-                                        topLevelRoute::class == backStack.topLevelKey::class
-                                    NavigationBarItem(
-                                        selected = isSelected,
-                                        onClick = {
-                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                            backStack.addTopLevel(topLevelRoute)
-                                        },
-                                        label = {
-                                            Text(stringResource(topLevelRoute.label))
-                                        },
-                                        icon = {
-                                            Icon(
-                                                imageVector = topLevelRoute.icon,
-                                                contentDescription = null,
-                                            )
-                                        },
-                                    )
-                                }
-                            }
+                    shortcutDialog = { account, onDismiss ->
+                        CreateShortcutDialog(account, onDismiss)
+                    },
+                )
+            },
+        LocalSettingsPlatform provides
+            remember(context, reviewManager, appName) {
+                SettingsPlatform(
+                    topSections = {
+                        val navigator = LocalNavigator.current
+                        SettingsSection("Data Management") {
+                            SettingsItem(
+                                TablerIcons.Upload,
+                                title = stringResource(Res.string.backup),
+                                description = "Export to CSV, Local file sync, Auto backup",
+                                onClick = {
+                                    navigator.add(BackupScreen)
+                                },
+                            )
+                            SettingsItem(
+                                TablerIcons.Download,
+                                title = stringResource(Res.string.restore),
+                                description = "Import from CSV, Bookmarks, and other formats",
+                                onClick = {
+                                    navigator.add(RestoreScreen)
+                                },
+                            )
                         }
+                        DriveSettingsItem()
                     },
-                ) { contentPadding ->
-                    NavDisplay(
-                        backStack = backStack.backStack,
-                        entryDecorators =
-                            listOf(
-                                // Saveable state per entry; scene setup is built into NavDisplay.
-                                rememberSaveableStateHolderNavEntryDecorator(),
-                                // Then add the view model store decorator
-                                rememberViewModelStoreNavEntryDecorator(),
-                            ),
-                        onBack = {
-                            backStack.removeLast()
-                        },
-                        entryProvider = {
-                            NavEntry(it) { entryItem ->
-                                if (entryItem is TopLevelRoute) {
-                                    entryItem.Content(
-                                        WindowInsets(
-                                            left = contentPadding.calculateLeftPadding(layoutDirection),
-                                            right = contentPadding.calculateRightPadding(layoutDirection),
-                                            top = contentPadding.calculateTopPadding(),
-                                            bottom = contentPadding.calculateBottomPadding(),
-                                        ),
-                                    )
-                                } else if (entryItem is Screen) {
-                                    entryItem.Content()
-                                }
+                    localServerRow = {
+                        val navigator = LocalNavigator.current
+                        SettingsItem(
+                            TablerIcons.Server,
+                            title = stringResource(Res.string.local_network_server),
+                            onClick = {
+                                navigator.add(LocalNetworkServer)
+                            },
+                        )
+                    },
+                    isDeviceSecure = {
+                        val keyguardManager = context.getSystemService<KeyguardManager>()
+                        keyguardManager?.isDeviceSecure == true
+                    },
+                    sendFeedback = {
+                        val emailIntent =
+                            Intent(Intent.ACTION_SENDTO).apply {
+                                data = "mailto:".toUri()
+                                putExtra(
+                                    Intent.EXTRA_EMAIL,
+                                    arrayOf("yogeshpaliyal.foss+deepr@gmail.com"),
+                                )
+                                putExtra(
+                                    Intent.EXTRA_SUBJECT,
+                                    "$appName App Feedback/Issue",
+                                )
+                                putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    "Describe your issue or feedback here:\n App Version : ${BuildConfig.VERSION_NAME}\n",
+                                )
                             }
-                        },
-                    )
-                }
-            }
-        }
+                        context.startActivity(
+                            Intent.createChooser(
+                                emailIntent,
+                                "Send email via...",
+                            ),
+                        )
+                    },
+                    requestReview = {
+                        reviewManager.requestReview(context as MainActivity)
+                    },
+                    shareApp = { text ->
+                        val shareIntent =
+                            Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_TEXT, text)
+                                type = "text/plain"
+                            }
+                        context.startActivity(
+                            Intent.createChooser(
+                                shareIntent,
+                                "Share via",
+                            ),
+                        )
+                    },
+                    recreateForLanguage = {
+                        (context as? MainActivity)?.recreate()
+                    },
+                )
+            },
+    ) {
+        DeeprApp(
+            sharedText = sharedText,
+            resetSharedText = resetSharedText,
+            clipboardLink = clipboardLink,
+            resetClipboardLink = resetClipboardLink,
+            modifier = modifier,
+        )
     }
 }
