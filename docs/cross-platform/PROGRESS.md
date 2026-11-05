@@ -48,3 +48,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done (with verifying command / 
 - 2026-10-22: M1 done. CI caught 2 smart casts that no longer compile across the module boundary (`tagsNames`, `lastOpenedAt`) → local vals. macOS job uses temurin (jetbrains JDK resolver hit the GitHub API rate limit). Repositories/preferences still in `:app`. Next: M2 (`:ui`), start with D6 nav3 pairing check.
 
 - 2026-11-05: **M2 complete.** All shared UI is in `:ui` (Compose Multiplatform), state and data in `:shared`; `:app` is a thin Android host (`MainActivity` → `DeeprApp`) plus Android-only features behind bridges. Kotlin 2.3.21 (D11). Android + iOS CI green on 4f0cf1e. Task-level detail: orchestration/QUEUE.md.
+- 2026-11-05: M3-01..03 done: common Koin module, `desktopApp` runs `DeeprApp` on the shared schema, desktop UI smoke test. Upstream unit tests now fail 3 (not 4): BookmarkImporterTest passes since M2-08a's Uri→String.

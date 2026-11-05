@@ -33,6 +33,9 @@ jobs:
       - name: Shared, UI, and Desktop modules (JVM target)
         run: bash ./gradlew :shared:compileKotlinJvm :shared:jvmTest :ui:compileKotlinJvm :ui:jvmTest :desktopApp:compileKotlin :desktopApp:test
 
+      - name: Desktop test counts (UI tests must run, not skip)
+        run: grep -ho 'testsuite name="[^"]*" tests="[0-9]*" skipped="[0-9]*" failures="[0-9]*" errors="[0-9]*"' desktopApp/build/test-results/test/*.xml
+
       - name: Lint
         run: bash ./gradlew lintKotlin
 
