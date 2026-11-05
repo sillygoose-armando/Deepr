@@ -2,6 +2,11 @@
 
 User instruction (2026-10-22): delegate implementation to opencode free models chosen by quality/capability; the orchestrator (Claude) plans, reviews, verifies and commits. Use codegraph. State must survive interruptions of workers and of the orchestrator.
 
+## Resume checkpoint (2026-11-05, harness restart)
+- In flight at restart: **M2-11** worker (`dispatch.sh M2-11 opencode/deepseek-v4.1-flash-free`, free tier exhausted, so it falls back to `openrouter/deepseek/deepseek-v4-flash`). If its `runs.tsv` rows show a `start` without a matching `end`, it was killed: check `git status` for partial work, then resume with `tools/orchestrate/dispatch.sh M2-11 openrouter/deepseek/deepseek-v4-flash --resume <sessionID from its log>` or finish/review by hand.
+- CI to check: runs 42064628205 (Android) / 42064628200 (iOS, first run on `macos-15`) cover M2-08b..M2-10b. When green, close issues #1, #2, #3 and update #4 and epic #16.
+- Next after M2-11: M2-12 AddLinkScreen (#6), M2-13 Home + Splash/Dashboard2 (#7), M2-14 Settings (#8), M2-15 thin host (#9).
+
 ## GitHub issues (user instruction 2026-11-05)
 Plans and work are also tracked as issues in this repo (`sillygoose-armando/Deepr`), titled `RnD: p2p-bmarks: …`. The epic is **#16** (pinned); one issue per open task or milestone (#1–#15). On task completion, comment the commit + CI run on its issue, close it, and tick it in #16. New tasks get a new issue. QUEUE.md stays the detailed source of truth; issues are the shared view.
 
