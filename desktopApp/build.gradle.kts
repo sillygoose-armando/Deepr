@@ -4,9 +4,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-kotlin {
-    jvmToolchain(17)
-}
 
 dependencies {
     implementation(project(":ui"))
@@ -19,6 +16,9 @@ dependencies {
     implementation(libs.koin.core)
     testImplementation(kotlin("test"))
     testImplementation(libs.koin.test)
+    // Compose UI tests on the desktop JVM (M3-03): JUnit4 rule + JUnit4 framework.
+    testImplementation(compose.desktop.uiTestJUnit4)
+    testImplementation(libs.junit)
 }
 
 compose.desktop {
