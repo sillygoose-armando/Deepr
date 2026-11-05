@@ -46,3 +46,5 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done (with verifying command / 
 - 2026-10-22: PROGRESS.md created. Branch `feature/kmp` == `feature/p2p-sync` (e5abbd8), no rebase needed.
 - 2026-10-22: M0 spikes done (D6–D8 with sources). M1 module written; locally `:shared:compileKotlinJvm` + `compileCommonMainKotlinMetadata` and harness (35 tests) green. Next: CI for Android + iOS compile.
 - 2026-10-22: M1 done. CI caught 2 smart casts that no longer compile across the module boundary (`tagsNames`, `lastOpenedAt`) → local vals. macOS job uses temurin (jetbrains JDK resolver hit the GitHub API rate limit). Repositories/preferences still in `:app`. Next: M2 (`:ui`), start with D6 nav3 pairing check.
+
+- 2026-11-05: **M2 complete.** All shared UI is in `:ui` (Compose Multiplatform), state and data in `:shared`; `:app` is a thin Android host (`MainActivity` → `DeeprApp`) plus Android-only features behind bridges. Kotlin 2.3.21 (D11). Android + iOS CI green on 4f0cf1e. Task-level detail: orchestration/QUEUE.md.
