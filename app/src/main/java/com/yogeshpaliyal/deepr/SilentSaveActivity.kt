@@ -7,13 +7,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
-import com.yogeshpaliyal.deepr.data.LinkRepository
-import com.yogeshpaliyal.deepr.data.NetworkRepository
-import com.yogeshpaliyal.deepr.preference.PreferenceRepository
-import com.yogeshpaliyal.deepr.util.isValidDeeplink
-import com.yogeshpaliyal.deepr.util.normalizeLink
+import com.yogeshpaliyal.deepr.data.SilentSaveResult
+import com.yogeshpaliyal.deepr.data.SilentSaver
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
@@ -24,9 +20,7 @@ import org.koin.android.ext.android.inject
  * links without interrupting their workflow.
  */
 class SilentSaveActivity : ComponentActivity() {
-    private val linkRepository: LinkRepository by inject()
-    private val networkRepository: NetworkRepository by inject()
-    private val preferenceRepository: PreferenceRepository by inject()
+    private val silentSaver: SilentSaver by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,64 +51,33 @@ class SilentSaveActivity : ComponentActivity() {
                 val title = intent.getStringExtra(Intent.EXTRA_TITLE)
 
                 if (sharedText != null) {
-                    val normalizedLink = normalizeLink(sharedText)
-                    if (isValidDeeplink(normalizedLink)) {
-                        saveLinkSilently(normalizedLink, title ?: "", appContext)
-                    } else {
-                        showToast(appContext, appContext.getString(R.string.invalid_link_silent_save))
+                    // Launch in application scope so it continues after activity finishes
+                    lifecycleScope.launch {
+                        val result = silentSaver.save(sharedText, title)
+                        handleResult(result, appContext, sharedText)
                     }
                 }
             }
         }
     }
 
-    /**
-     * Saves the link to the database, fetching metadata if title or thumbnail is missing.
-     */
-    private fun saveLinkSilently(
-        link: String,
-        title: String,
+    private fun handleResult(
+        result: SilentSaveResult,
         appContext: Context,
+        link: String,
     ) {
-        // Launch in application scope so it continues after activity finishes
-        lifecycleScope.launch {
-            try {
-                val profileId = preferenceRepository.getSilentSaveProfileId.first()
-
-                // Check if link already exists
-                val existingLink = linkRepository.getDeeprByLink(link)
-                if (existingLink != null) {
-                    showToast(appContext, appContext.getString(R.string.link_already_exists))
-                    return@launch
-                }
-
-                var finalTitle = title
-                var finalThumbnail = ""
-
-                // If title or thumbnail is blank, try to fetch it
-                if (finalTitle.isBlank() || finalThumbnail.isBlank()) {
-                    networkRepository.getLinkInfo(link).onSuccess { linkInfo ->
-                        if (finalTitle.isBlank()) {
-                            finalTitle = linkInfo.title ?: ""
-                        }
-                        if (finalThumbnail.isBlank()) {
-                            finalThumbnail = linkInfo.image ?: ""
-                        }
-                    }
-                }
-
-                linkRepository.insertDeepr(
-                    link = link,
-                    name = finalTitle,
-                    openedCount = 0,
-                    notes = "",
-                    thumbnail = finalThumbnail,
-                    profileId = profileId,
-                )
-
+        when (result) {
+            is SilentSaveResult.Saved -> {
                 showToast(appContext, appContext.getString(R.string.link_saved_silently))
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to save link silently: $link", e)
+            }
+            is SilentSaveResult.AlreadyExists -> {
+                showToast(appContext, appContext.getString(R.string.link_already_exists))
+            }
+            is SilentSaveResult.InvalidLink -> {
+                showToast(appContext, appContext.getString(R.string.invalid_link_silent_save))
+            }
+            is SilentSaveResult.Failed -> {
+                Log.e(TAG, "Failed to save link silently: $link", result.error)
                 showToast(appContext, appContext.getString(R.string.failed_to_save_link))
             }
         }

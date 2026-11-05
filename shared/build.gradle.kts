@@ -60,6 +60,7 @@ kotlin {
             implementation(kotlin("test"))
             implementation(libs.sqldelight.sqlite.driver)
             implementation(libs.koin.test)
+            implementation(libs.ktor.client.mock)
         }
     }
 }
