@@ -84,9 +84,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
         buildConfig = true
@@ -103,8 +100,17 @@ android {
         }
     }
 
-    packagingOptions {
-        exclude("META-INF/DEPENDENCIES")
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+        }
+    }
+}
+
+// Kotlin 2.3 removed kotlinOptions.jvmTarget (DECISIONS D11)
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
 }
 
