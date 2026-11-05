@@ -10,6 +10,7 @@ import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import app.cash.sqldelight.logs.LogSqliteDriver
 import com.yogeshpaliyal.deepr.analytics.AnalyticsManager
 import com.yogeshpaliyal.deepr.analytics.AnalyticsManagerFactoryImpl
+import com.yogeshpaliyal.deepr.backup.AutoBackupRunner
 import com.yogeshpaliyal.deepr.backup.AutoBackupWorker
 import com.yogeshpaliyal.deepr.backup.ExportRepository
 import com.yogeshpaliyal.deepr.backup.ExportRepositoryImpl
@@ -45,6 +46,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.dsl.binds
 import org.koin.dsl.module
 
 class DeeprApplication : Application() {
@@ -109,7 +111,11 @@ class DeeprApplication : Application() {
 
                 single<SyncRepository> { SyncRepositoryImpl(androidContext(), get(), get()) }
 
-                single<AutoBackupWorker> { AutoBackupWorker(androidContext(), get(), get()) }
+                single { AutoBackupWorker(androidContext(), get(), get()) } binds
+                    arrayOf(
+                        AutoBackupWorker::class,
+                        AutoBackupRunner::class,
+                    )
 
                 single {
                     HttpClient(CIO) {

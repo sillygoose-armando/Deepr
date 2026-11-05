@@ -44,6 +44,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.yogeshpaliyal.deepr.BuildConfig
 import com.yogeshpaliyal.deepr.MainActivity
 import com.yogeshpaliyal.deepr.R
+import com.yogeshpaliyal.deepr.review.ReviewManager
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.TopLevelRoute
 import com.yogeshpaliyal.deepr.ui.components.LanguageSelectionDialog
@@ -72,6 +73,7 @@ import compose.icons.tablericons.Share
 import compose.icons.tablericons.Star
 import compose.icons.tablericons.Upload
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 object Settings : TopLevelRoute {
     override val icon: ImageVector
@@ -94,6 +96,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val navigatorContext = LocalNavigator.current
+    val reviewManager: ReviewManager = koinInject()
 
     // Collect the shortcut icon preference state
     val useLinkBasedIcons by viewModel.useLinkBasedIcons.collectAsStateWithLifecycle()
@@ -403,7 +406,7 @@ fun SettingsScreen(
                     description = "Rate us on the Play Store",
                     shouldShowLoading = false,
                     onClick = {
-                        viewModel.requestReview(context as MainActivity)
+                        reviewManager.requestReview(context as MainActivity)
                     },
                 )
 

@@ -73,7 +73,7 @@ fun BackupScreenContent(
             contract = ActivityResultContracts.CreateDocument("text/csv"),
         ) { uri ->
             uri?.let {
-                viewModel.exportCsvData(it)
+                viewModel.exportCsvData(it.toString())
             }
         }
 

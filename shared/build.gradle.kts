@@ -34,6 +34,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.sqldelight.runtime)
+            api(libs.androidx.lifecycle.viewmodel)
             api(libs.coroutines.extensions)
             api(libs.androidx.datastore.preferences.core)
             implementation(libs.kotlinx.coroutines.core)

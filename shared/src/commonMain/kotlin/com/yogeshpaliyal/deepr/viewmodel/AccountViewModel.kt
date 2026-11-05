@@ -1,13 +1,12 @@
 package com.yogeshpaliyal.deepr.viewmodel
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yogeshpaliyal.deepr.GetAllTagsWithCount
 import com.yogeshpaliyal.deepr.GetLinksAndTags
 import com.yogeshpaliyal.deepr.Tags
 import com.yogeshpaliyal.deepr.analytics.AnalyticsManager
-import com.yogeshpaliyal.deepr.backup.AutoBackupWorker
+import com.yogeshpaliyal.deepr.backup.AutoBackupRunner
 import com.yogeshpaliyal.deepr.backup.ExportRepository
 import com.yogeshpaliyal.deepr.backup.ImportRepository
 import com.yogeshpaliyal.deepr.data.LinkInfo
@@ -19,6 +18,7 @@ import com.yogeshpaliyal.deepr.ui.screens.home.ViewType
 import com.yogeshpaliyal.deepr.util.RequestResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,10 +40,9 @@ class AccountViewModel(
     private val importRepository: ImportRepository,
     private val syncRepository: SyncRepository,
     private val networkRepository: NetworkRepository,
-    private val autoBackupWorker: AutoBackupWorker,
+    private val autoBackupWorker: AutoBackupRunner,
     private val analyticsManager: AnalyticsManager,
     private val preferenceRepository: PreferenceRepository,
-    private val reviewManager: com.yogeshpaliyal.deepr.review.ReviewManager,
 ) : ViewModel() {
     private val searchQuery = MutableStateFlow("")
 
@@ -466,9 +465,9 @@ class AccountViewModel(
         }
     }
 
-    fun exportCsvData(uri: Uri? = null) {
+    fun exportCsvData(uri: String? = null) {
         viewModelScope.launch(Dispatchers.IO) {
-            when (val result = exportRepository.exportToCsv(uri?.toString())) {
+            when (val result = exportRepository.exportToCsv(uri)) {
                 is RequestResult.Success -> {
                     exportResultChannel.send("Export completed: ${result.data}")
                     analyticsManager.logEvent(
@@ -483,10 +482,10 @@ class AccountViewModel(
         }
     }
 
-    fun importCsvData(uri: Uri) {
+    fun importCsvData(uri: String) {
         viewModelScope.launch(Dispatchers.IO) {
             importResultChannel.send("Importing, please wait...")
-            when (val result = importRepository.importFromCsv(uri.toString())) {
+            when (val result = importRepository.importFromCsv(uri)) {
                 is RequestResult.Success -> {
                     importResultChannel.send(
                         "Import complete! Added: ${result.data.importedCount}, Skipped (duplicates): ${result.data.skippedCount}",
@@ -508,12 +507,12 @@ class AccountViewModel(
     }
 
     fun importBookmarks(
-        uri: Uri,
+        uri: String,
         importer: com.yogeshpaliyal.deepr.backup.importer.BookmarkImporter,
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             importResultChannel.send("Importing ${importer.getDisplayName()}, please wait...")
-            when (val result = importRepository.importBookmarks(uri.toString(), importer)) {
+            when (val result = importRepository.importBookmarks(uri, importer)) {
                 is RequestResult.Success -> {
                     importResultChannel.send(
                         "Import complete! Added: ${result.data.importedCount}, Skipped (duplicates): ${result.data.skippedCount}",
@@ -731,10 +730,6 @@ class AccountViewModel(
                 }
             }
         }
-    }
-
-    fun requestReview(activity: android.app.Activity) {
-        reviewManager.requestReview(activity)
     }
 
     // Profile management methods

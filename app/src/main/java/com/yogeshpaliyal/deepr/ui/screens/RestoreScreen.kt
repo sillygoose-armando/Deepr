@@ -77,7 +77,7 @@ fun RestoreScreenContent(
         ) { uri ->
             uri?.let {
                 selectedImporter?.let { importer ->
-                    viewModel.importBookmarks(it, importer)
+                    viewModel.importBookmarks(it.toString(), importer)
                 }
             }
         }
