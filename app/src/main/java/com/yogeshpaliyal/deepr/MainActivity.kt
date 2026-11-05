@@ -24,7 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,15 +52,20 @@ import com.yogeshpaliyal.deepr.ui.LocalProfileThemeProvider
 import com.yogeshpaliyal.deepr.ui.Screen
 import com.yogeshpaliyal.deepr.ui.TopLevelBackStack
 import com.yogeshpaliyal.deepr.ui.TopLevelRoute
+import com.yogeshpaliyal.deepr.ui.components.CreateShortcutDialog
+import com.yogeshpaliyal.deepr.ui.platform.LocalPlatformLinkActions
+import com.yogeshpaliyal.deepr.ui.platform.PlatformLinkActions
 import com.yogeshpaliyal.deepr.ui.screens.AppLockScreen
 import com.yogeshpaliyal.deepr.ui.screens.ProfileTheme
 import com.yogeshpaliyal.deepr.ui.screens.Settings
 import com.yogeshpaliyal.deepr.ui.screens.home.Dashboard2
+import com.yogeshpaliyal.deepr.ui.screens.home.ShortcutMenuItem
 import com.yogeshpaliyal.deepr.ui.screens.home.TagSelectionScreen
 import com.yogeshpaliyal.deepr.ui.theme.DeeprTheme
 import com.yogeshpaliyal.deepr.util.LanguageUtil
 import com.yogeshpaliyal.deepr.util.isValidDeeplink
 import com.yogeshpaliyal.deepr.util.normalizeLink
+import com.yogeshpaliyal.deepr.util.openDeeplinkExternal
 import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -71,11 +75,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import org.koin.java.KoinJavaComponent.getKoin
-
-data class SharedLink(
-    val url: String,
-    val title: String?,
-)
 
 class MainActivity : ComponentActivity() {
     val sharingLink = MutableStateFlow<SharedLink?>(null)
@@ -218,12 +217,6 @@ class MainActivity : ComponentActivity() {
 private val TOP_LEVEL_ROUTES: List<TopLevelRoute> =
     listOf(Dashboard2(), TagSelectionScreen, Settings)
 
-val LocalSharedText =
-    compositionLocalOf<Pair<SharedLink?, () -> Unit>?> { null }
-
-val LocalClipboardLink =
-    compositionLocalOf<Pair<ClipboardLink?, () -> Unit>?> { null }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Dashboard(
@@ -281,6 +274,28 @@ fun Dashboard(
                 LocalProfileThemeProvider provides @Composable { profile, onUpdate ->
                     ProfileTheme(profile = profile, onProfileUpdate = onUpdate)
                 },
+                LocalPlatformLinkActions provides
+                    remember(context) {
+                        PlatformLinkActions(
+                            share = { text ->
+                                val sendIntent =
+                                    Intent().apply {
+                                        action = Intent.ACTION_SEND
+                                        putExtra(Intent.EXTRA_TEXT, text)
+                                        type = "text/plain"
+                                    }
+                                val shareIntent = Intent.createChooser(sendIntent, null)
+                                context.startActivity(shareIntent)
+                            },
+                            openExternal = { link -> openDeeplinkExternal(context, link) },
+                            shortcutMenuItem = { account, onClick ->
+                                ShortcutMenuItem(account, onClick)
+                            },
+                            shortcutDialog = { account, onDismiss ->
+                                CreateShortcutDialog(account, onDismiss)
+                            },
+                        )
+                    },
             ) {
                 Scaffold(
                     modifier = modifier,

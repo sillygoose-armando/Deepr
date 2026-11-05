@@ -5,11 +5,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import com.yogeshpaliyal.deepr.GetLinksAndTags
-import com.yogeshpaliyal.deepr.R
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.show_qr_code
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Qrcode
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ShowQRCodeMenuItem(
@@ -22,11 +23,11 @@ fun ShowQRCodeMenuItem(
             modifier.clickable {
                 onQrCodeClick(account)
             },
-        headlineContent = { Text(stringResource(R.string.show_qr_code)) },
+        headlineContent = { Text(stringResource(Res.string.show_qr_code)) },
         leadingContent = {
             Icon(
                 TablerIcons.Qrcode,
-                contentDescription = stringResource(R.string.show_qr_code),
+                contentDescription = stringResource(Res.string.show_qr_code),
             )
         },
     )

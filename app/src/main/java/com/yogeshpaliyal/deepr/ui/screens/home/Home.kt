@@ -3,7 +3,6 @@ package com.yogeshpaliyal.deepr.ui.screens.home
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -111,11 +110,11 @@ import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.TopLevelRoute
 import com.yogeshpaliyal.deepr.ui.components.ClearInputIconButton
 import com.yogeshpaliyal.deepr.ui.components.ClipboardLinkBanner
-import com.yogeshpaliyal.deepr.ui.components.CreateShortcutDialog
 import com.yogeshpaliyal.deepr.ui.components.DeleteConfirmationDialog
 import com.yogeshpaliyal.deepr.ui.components.NoteViewDialog
 import com.yogeshpaliyal.deepr.ui.components.QrCodeDialog
 import com.yogeshpaliyal.deepr.ui.components.ServerStatusBar
+import com.yogeshpaliyal.deepr.ui.platform.LocalPlatformLinkActions
 import com.yogeshpaliyal.deepr.ui.resources.Res
 import com.yogeshpaliyal.deepr.ui.resources.home
 import com.yogeshpaliyal.deepr.ui.screens.LocalNetworkServer
@@ -133,7 +132,6 @@ import com.yogeshpaliyal.deepr.ui.screens.home.MenuItem.ViewNote
 import com.yogeshpaliyal.deepr.util.isValidDeeplink
 import com.yogeshpaliyal.deepr.util.normalizeLink
 import com.yogeshpaliyal.deepr.util.openDeeplink
-import com.yogeshpaliyal.deepr.util.openDeeplinkExternal
 import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
 import compose.icons.TablerIcons
 import compose.icons.tablericons.ArrowLeft
@@ -582,16 +580,14 @@ fun Content(
     }
 
     val context = LocalContext.current
+    val linkActions = LocalPlatformLinkActions.current
     var showShortcutDialog by remember { mutableStateOf<GetLinksAndTags?>(null) }
     var showQrCodeDialog by remember { mutableStateOf<GetLinksAndTags?>(null) }
     var showDeleteConfirmDialog by remember { mutableStateOf<GetLinksAndTags?>(null) }
     var showNoteDialog by remember { mutableStateOf<GetLinksAndTags?>(null) }
 
     showShortcutDialog?.let { deepr ->
-        CreateShortcutDialog(
-            deepr = deepr,
-            onDismiss = { showShortcutDialog = null },
-        )
+        linkActions.shortcutDialog?.invoke(deepr) { showShortcutDialog = null }
     }
 
     showQrCodeDialog?.let {
@@ -681,19 +677,11 @@ fun Content(
 
             is Share -> {
                 analyticsManager.logEvent(AnalyticsEvents.ITEM_MENU_SHARE)
-                val shareText = formatShareText(it.item)
-                val sendIntent =
-                    Intent().apply {
-                        action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_TEXT, shareText)
-                        type = "text/plain"
-                    }
-                val shareIntent = Intent.createChooser(sendIntent, null)
-                context.startActivity(shareIntent)
+                linkActions.share?.invoke(formatShareText(it.item))
             }
 
             is MenuItem.OpenWith -> {
-                openDeeplinkExternal(context, it.item.link)
+                linkActions.openExternal?.invoke(it.item.link)
             }
 
             is ViewNote -> {
@@ -806,9 +794,9 @@ fun Content(
                 }
 
                 item {
-                    ShortcutMenuItem(account, {
+                    linkActions.shortcutMenuItem?.invoke(account) {
                         onItemClick(Shortcut(it))
-                    })
+                    }
                 }
 
                 item {
@@ -821,24 +809,28 @@ fun Content(
                     )
                 }
 
-                item {
-                    MenuListItem(
-                        text = stringResource(R.string.open_with),
-                        icon = TablerIcons.ExternalLink,
-                        onClick = {
-                            onItemClick(MenuItem.OpenWith(account))
-                        },
-                    )
+                if (linkActions.openExternal != null) {
+                    item {
+                        MenuListItem(
+                            text = stringResource(R.string.open_with),
+                            icon = TablerIcons.ExternalLink,
+                            onClick = {
+                                onItemClick(MenuItem.OpenWith(account))
+                            },
+                        )
+                    }
                 }
 
-                item {
-                    MenuListItem(
-                        text = stringResource(R.string.share_link),
-                        icon = TablerIcons.Share,
-                        onClick = {
-                            onItemClick(Share(account))
-                        },
-                    )
+                if (linkActions.share != null) {
+                    item {
+                        MenuListItem(
+                            text = stringResource(R.string.share_link),
+                            icon = TablerIcons.Share,
+                            onClick = {
+                                onItemClick(Share(account))
+                            },
+                        )
+                    }
                 }
 
                 item {
