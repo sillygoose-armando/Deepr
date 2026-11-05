@@ -12,6 +12,7 @@ import androidx.navigationevent.NavigationEventDispatcher
 import androidx.navigationevent.NavigationEventDispatcherOwner
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.yogeshpaliyal.deepr.di.sharedModule
+import com.yogeshpaliyal.deepr.di.unsupportedFeaturesModule
 import com.yogeshpaliyal.deepr.ui.DeeprApp
 import com.yogeshpaliyal.deepr.ui.theme.DeeprTheme
 import org.junit.After
@@ -59,7 +60,7 @@ class DeeprAppUiTest {
         tmpDir.mkdirs()
         stopKoin()
         startKoin {
-            modules(sharedModule, desktopModule(tmpDir))
+            modules(sharedModule, desktopModule(tmpDir), unsupportedFeaturesModule("desktop"))
         }
     }
 

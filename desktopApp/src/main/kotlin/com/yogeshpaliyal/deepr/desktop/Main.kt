@@ -5,6 +5,7 @@ import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.yogeshpaliyal.deepr.di.sharedModule
+import com.yogeshpaliyal.deepr.di.unsupportedFeaturesModule
 import com.yogeshpaliyal.deepr.ui.DeeprApp
 import com.yogeshpaliyal.deepr.ui.theme.DeeprTheme
 import org.koin.core.context.startKoin
@@ -12,7 +13,7 @@ import org.koin.core.context.startKoin
 fun main() {
     // Start Koin once, outside the composable application scope (which can recompose).
     startKoin {
-        modules(sharedModule, desktopModule(appDataDir()))
+        modules(sharedModule, desktopModule(appDataDir()), unsupportedFeaturesModule("desktop"))
     }
     application { DeeprWindow() }
 }

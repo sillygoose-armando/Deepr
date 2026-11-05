@@ -3,6 +3,7 @@ package com.yogeshpaliyal.deepr.desktop
 import com.yogeshpaliyal.deepr.DeeprQueries
 import com.yogeshpaliyal.deepr.data.LinkRepository
 import com.yogeshpaliyal.deepr.di.sharedModule
+import com.yogeshpaliyal.deepr.di.unsupportedFeaturesModule
 import com.yogeshpaliyal.deepr.preference.PreferenceRepository
 import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
 import kotlinx.coroutines.runBlocking
@@ -29,7 +30,7 @@ class DesktopModuleTest : KoinTest {
         tmpDir.mkdirs()
         stopKoin()
         startKoin {
-            modules(sharedModule, desktopModule(tmpDir))
+            modules(sharedModule, desktopModule(tmpDir), unsupportedFeaturesModule("desktop"))
         }
     }
 

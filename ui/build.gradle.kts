@@ -61,6 +61,22 @@ kotlin {
         jvmTest.dependencies {
             implementation(kotlin("test"))
         }
+        iosMain.dependencies {
+            implementation(libs.sqldelight.native.driver)
+        }
+    }
+
+    iosArm64 {
+        binaries.framework {
+            baseName = "DeeprUI"
+            isStatic = true
+        }
+    }
+    iosSimulatorArm64 {
+        binaries.framework {
+            baseName = "DeeprUI"
+            isStatic = true
+        }
     }
 }
 

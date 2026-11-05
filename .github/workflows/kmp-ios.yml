@@ -32,4 +32,4 @@ jobs:
           cache-disabled: true
 
       - name: Compile :shared and :ui for iOS
-        run: ./gradlew :shared:compileKotlinIosSimulatorArm64 :shared:compileKotlinIosArm64 :ui:compileKotlinIosSimulatorArm64 :ui:compileKotlinIosArm64
+        run: ./gradlew :shared:compileKotlinIosSimulatorArm64 :shared:compileKotlinIosArm64 :ui:compileKotlinIosSimulatorArm64 :ui:compileKotlinIosArm64 :ui:linkDebugFrameworkIosSimulatorArm64 :ui:linkDebugFrameworkIosArm64
