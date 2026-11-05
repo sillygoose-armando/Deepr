@@ -52,3 +52,8 @@ The host is aarch64 Linux with ~2 GB free disk and no Android SDK (`aapt2` has n
 - qrose 1.3.x is compiled with Kotlin 2.4 (stdlib 2.4.0, metadata 2.4); our 2.2.20 compiler reads metadata only up to 2.3, so it can't be used. Pinned **qrose 1.1.2** (stdlib 2.3.0; same API; android/desktop/iOS). Found by the M2-05b worker.
 - Same constraint as D8 (cryptography-kotlin pinned to 0.5.0). **When choosing a library version, check its `kotlin-stdlib` dependency (≤ 2.3.x)**, not just its platforms.
 - Revisit: when the project upgrades Kotlin (also unlocks newer CMP/qrose/cryptography-kotlin).
+
+## D11 — Kotlin/Native klib versions; upgrade Kotlin to 2.3.x (2026-11-05)
+- iOS CI failed with `KLIB resolver: Could not find navigation3-ui-iosSimulatorArm64Main-1.1.2.klib`. Cause: JetBrains `navigation3-ui` 1.1.0–1.1.2 iOS klibs are built with **Kotlin 2.3.20 (abi 2.3.0)**; Kotlin/Native 2.2.20 can't read them. D6 only checked the JVM stdlib dependency (2.2.20), but native klibs carry their own compiler/ABI version, which is stricter. Only `1.1.0-alpha01` is built with 2.2.20.
+- Decision: **upgrade the project to Kotlin 2.3.x** (target 2.3.21) instead of pinning an alpha navigation API. This also relaxes D10 (newer qrose / cryptography-kotlin become possible later). Checks: AGP 8.11.1, SQLDelight 2.1.0, CMP 1.10.3, kotlinter.
+- Lesson for library checks: for native targets, read the klib `manifest` (`compiler_version`, `abi_version`), not just the POM.
