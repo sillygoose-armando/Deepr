@@ -23,7 +23,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done (with verifying command / 
 - [ ] Android UI unchanged (screenshot spot-checks): **not done yet**. Compile and code-review parity only; needs the APK from run 42084308366 on a device or emulator (asked the user).
 
 ### M3 Desktop
-- [ ] `desktopApp` runs (links/tags/profiles on the same schema)
+- [x] `desktopApp` builds and its UI test renders + navigates the real `DeeprApp` on CI (3/3 UI tests executed, 0 skipped). **Not yet launched on a real display** (asked the user).
 - [ ] `packageDistributionForCurrentOS` works
 
 ### M4 iOS
@@ -49,3 +49,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done (with verifying command / 
 
 - 2026-11-05: **M2 complete.** All shared UI is in `:ui` (Compose Multiplatform), state and data in `:shared`; `:app` is a thin Android host (`MainActivity` → `DeeprApp`) plus Android-only features behind bridges. Kotlin 2.3.21 (D11). Android + iOS CI green on 4f0cf1e. Task-level detail: orchestration/QUEUE.md.
 - 2026-11-05: M3-01..03 done: common Koin module, `desktopApp` runs `DeeprApp` on the shared schema, desktop UI smoke test. Upstream unit tests now fail 3 (not 4): BookmarkImporterTest passes since M2-08a's Uri→String.
+- 2026-11-05: M3-04 done: unsigned installers built by CI (deb 118 MB, msi 126 MB, dmg 271 MB x86_64/Rosetta), run 42092693733. Open: a real desktop launch (headless here) + the Android on-device spot-check.
