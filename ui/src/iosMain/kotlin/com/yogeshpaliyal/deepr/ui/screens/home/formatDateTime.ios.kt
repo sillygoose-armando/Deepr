@@ -5,6 +5,7 @@ import platform.Foundation.NSDateFormatterMediumStyle
 import platform.Foundation.NSDateFormatterShortStyle
 import platform.Foundation.NSLocale
 import platform.Foundation.NSTimeZone
+import platform.Foundation.timeZoneWithName
 
 actual fun formatDateTime(dateTimeString: String): String {
     try {
@@ -12,7 +13,7 @@ actual fun formatDateTime(dateTimeString: String): String {
         parser.dateFormat = "yyyy-MM-dd HH:mm:ss"
         // Fixed-format parsing: POSIX locale (Apple QA1480); UTC like the JVM actual.
         parser.locale = NSLocale(localeIdentifier = "en_US_POSIX")
-        parser.timeZone = NSTimeZone(name = "UTC")
+        NSTimeZone.timeZoneWithName("UTC")?.let { parser.timeZone = it }
         val date = parser.dateFromString(dateTimeString)
         val display = NSDateFormatter()
         display.dateStyle = NSDateFormatterMediumStyle
