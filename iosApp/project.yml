@@ -71,3 +71,22 @@ targets:
         script: |
           cd "$SRCROOT/.." && ./gradlew :ui:embedAndSignAppleFrameworkForXcode
         basedOnDependencyAnalysis: false
+  DeeprUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [DeeprUITests]
+    dependencies:
+      - target: Deepr
+    settings:
+      TEST_TARGET_NAME: Deepr
+      PRODUCT_BUNDLE_IDENTIFIER: com.yogeshpaliyal.deepr.uitests
+      GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Deepr:
+    build:
+      targets:
+        Deepr: all
+        DeeprUITests: [test]
+    test:
+      targets: [DeeprUITests]
