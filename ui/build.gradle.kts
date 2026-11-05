@@ -24,6 +24,7 @@ kotlin {
             api(libs.compose.components.resources)
             api(libs.compose.material3)
             implementation(libs.coil.compose)
+            implementation(libs.qrose)
             implementation(libs.tabler.icons)
         }
         androidMain.dependencies {

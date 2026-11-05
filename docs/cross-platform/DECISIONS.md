@@ -47,3 +47,8 @@ The host is aarch64 Linux with ~2 GB free disk and no Android SDK (`aapt2` has n
 - `jvmShared` is a hierarchy-template group (android + jvm) → source set `jvmSharedMain`, which also compiles `src/jvmShared/kotlin` so the sync track's paths stay unchanged.
 - `kotlin.native.ignoreDisabledTargets=true`: iOS targets build only on macOS (CI job `kmp-ios.yml`, path-gated per D3).
 - The SQLDelight DB moved to `shared/src/commonMain/sqldelight` (same `DeeprDB` name/package, migrations byte-identical, `git mv`). `:app` keeps its Android driver and DI; repositories/preferences stay in `:app` for now (moved with the UI in M2 when they need to be common).
+
+## D10 — Third-party KMP libraries must match Kotlin 2.2.20 (2026-11-05)
+- qrose 1.3.x is compiled with Kotlin 2.4 (stdlib 2.4.0, metadata 2.4); our 2.2.20 compiler reads metadata only up to 2.3, so it can't be used. Pinned **qrose 1.1.2** (stdlib 2.3.0; same API; android/desktop/iOS). Found by the M2-05b worker.
+- Same constraint as D8 (cryptography-kotlin pinned to 0.5.0). **When choosing a library version, check its `kotlin-stdlib` dependency (≤ 2.3.x)**, not just its platforms.
+- Revisit: when the project upgrades Kotlin (also unlocks newer CMP/qrose/cryptography-kotlin).

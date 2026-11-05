@@ -19,14 +19,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.lightspark.composeqr.DotShape
-import com.lightspark.composeqr.QrCodeColors
-import com.lightspark.composeqr.QrCodeView
+import io.github.alexzhirkevich.qrose.options.QrBrush
+import io.github.alexzhirkevich.qrose.options.QrPixelShape
+import io.github.alexzhirkevich.qrose.options.circle
+import io.github.alexzhirkevich.qrose.options.solid
+import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import com.yogeshpaliyal.deepr.GetLinksAndTags
-import com.yogeshpaliyal.deepr.R
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.app_logo
+import com.yogeshpaliyal.deepr.ui.resources.show_qr_code
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun QrCodeDialog(
@@ -35,7 +39,7 @@ fun QrCodeDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.show_qr_code)) },
+        title = { Text(stringResource(Res.string.show_qr_code)) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -49,16 +53,19 @@ fun QrCodeDialog(
                                 shape = RoundedCornerShape(12.dp),
                             ).padding(16.dp),
                 ) {
-                    QrCodeView(
-                        data = deepr.link,
-                        modifier = Modifier.size(268.dp),
-                        colors =
-                            QrCodeColors(
-                                background = Color.White,
-                                foreground = Color.Black,
-                            ),
-                        dotShape = DotShape.Circle,
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(268.dp).background(Color.White),
                     ) {
+                        Image(
+                            painter =
+                                rememberQrCodePainter(data = deepr.link) {
+                                    shapes { darkPixel = QrPixelShape.circle() }
+                                    colors { dark = QrBrush.solid(Color.Black) }
+                                },
+                            contentDescription = stringResource(Res.string.show_qr_code),
+                            modifier = Modifier.fillMaxSize(),
+                        )
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier =
@@ -69,8 +76,8 @@ fun QrCodeDialog(
                                     .background(Color.Transparent),
                         ) {
                             Image(
-                                painter = painterResource(id = R.drawable.app_logo),
-                                contentDescription = stringResource(R.string.app_logo),
+                                painter = painterResource(Res.drawable.app_logo),
+                                contentDescription = stringResource(Res.string.app_logo),
                                 modifier =
                                     Modifier
                                         .fillMaxSize(0.5f)
