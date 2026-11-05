@@ -1,3 +1,5 @@
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.compose.multiplatform)
@@ -24,5 +26,15 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "com.yogeshpaliyal.deepr.desktop.MainKt"
+        nativeDistributions {
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            packageName = "Deepr"
+            packageVersion = "1.0.28"
+            description = "Deepr link manager"
+            vendor = "Deepr"
+            modules("java.instrument", "java.management", "java.net.http", "java.sql", "jdk.unsupported")
+            linux { menuGroup = "Utility" }
+            windows { menuGroup = "Deepr"; perUserInstall = true }
+        }
     }
 }
