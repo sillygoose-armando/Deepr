@@ -5,8 +5,12 @@ Chosen from **public ratings** (user instruction 2026-10-22: no trials). Sources
 | Tier | Use for | Primary | Fallback |
 |---|---|---|---|
 | A | Gradle/KMP config, data layer, navigation, big screens (M2-01, 06–09, 12–15) | `opencode/deepseek-v4.1-flash-free` | `opencode/glm-5.3-flash-free` |
-| B | Mechanical moves of components/screens (M2-03–05, 10–11) | `opencode/glm-5.3-flash-free` | `opencode/nemotron-3-ultra-free` |
+| B | Mechanical moves of components/screens (M2-03–05, 10–11) | `opencode/glm-5.3-flash-free` | `opencode/deepseek-v4.1-flash-free` |
 | C | Bulk text transforms (big resource files), long-context reading | ~~`opencode/beam-free`~~ → `opencode/glm-5.3-flash-free` | orchestrator script |
+
+**Paid fallback for any tier when free credits run out:** `openrouter/deepseek/deepseek-v4-flash` (automatic in dispatch.sh; user instruction 2026-11-05).
+
+**2026-11-05 catalog change:** `nemotron-3-ultra-free` and `minimax-m3.1-flash-free` are no longer offered; new unrated `crouton-alpha-free` and `pulse-alpha-free` appeared (not used).
 
 ## Evidence
 | Model | Public ratings found (Oct 2026) |
