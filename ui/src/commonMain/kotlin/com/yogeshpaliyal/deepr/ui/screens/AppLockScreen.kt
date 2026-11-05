@@ -12,11 +12,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.yogeshpaliyal.deepr.R
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.app_lock_screen_subtitle
+import com.yogeshpaliyal.deepr.ui.resources.app_lock_screen_title
+import com.yogeshpaliyal.deepr.ui.resources.unlock
 import compose.icons.TablerIcons
+import org.jetbrains.compose.resources.stringResource
 import compose.icons.tablericons.Lock
 
 @Composable
@@ -40,19 +43,19 @@ fun AppLockScreen(
                 tint = MaterialTheme.colorScheme.primary,
             )
             Text(
-                text = stringResource(R.string.app_lock_screen_title),
+                text = stringResource(Res.string.app_lock_screen_title),
                 style = MaterialTheme.typography.titleLarge,
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = stringResource(R.string.app_lock_screen_subtitle),
+                text = stringResource(Res.string.app_lock_screen_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
             )
             Button(onClick = onUnlockClick) {
-                Text(stringResource(R.string.unlock))
+                Text(stringResource(Res.string.unlock))
             }
         }
     }

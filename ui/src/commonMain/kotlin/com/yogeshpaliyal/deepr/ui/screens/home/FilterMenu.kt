@@ -12,9 +12,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.yogeshpaliyal.deepr.R
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.filter
+import com.yogeshpaliyal.deepr.ui.resources.sort_by_date_ascending
+import com.yogeshpaliyal.deepr.ui.resources.sort_by_date_descending
+import com.yogeshpaliyal.deepr.ui.resources.sort_by_link_ascending
+import com.yogeshpaliyal.deepr.ui.resources.sort_by_link_descending
+import com.yogeshpaliyal.deepr.ui.resources.sort_by_name_ascending
+import com.yogeshpaliyal.deepr.ui.resources.sort_by_name_descending
+import com.yogeshpaliyal.deepr.ui.resources.sort_by_opened_ascending
+import com.yogeshpaliyal.deepr.ui.resources.sort_by_opened_descending
 import com.yogeshpaliyal.deepr.viewmodel.SortType
+import org.jetbrains.compose.resources.stringResource
 import compose.icons.TablerIcons
 import compose.icons.tablericons.ArrowsSort
 import compose.icons.tablericons.Calendar
@@ -32,14 +41,14 @@ fun FilterMenu(
     var expanded by remember { mutableStateOf(false) }
     Box(modifier) {
         IconButton(onClick = { expanded = true }) {
-            Icon(TablerIcons.ArrowsSort, contentDescription = stringResource(R.string.filter))
+            Icon(TablerIcons.ArrowsSort, contentDescription = stringResource(Res.string.filter))
         }
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
         ) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.sort_by_date_ascending)) },
+                text = { Text(stringResource(Res.string.sort_by_date_ascending)) },
                 onClick = {
                     onSortOrderChange(SortType.SORT_CREATED_BY_ASC)
                     expanded = false
@@ -52,7 +61,7 @@ fun FilterMenu(
                 },
             )
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.sort_by_date_descending)) },
+                text = { Text(stringResource(Res.string.sort_by_date_descending)) },
                 onClick = {
                     onSortOrderChange(SortType.SORT_CREATED_BY_DESC)
                     expanded = false
@@ -65,7 +74,7 @@ fun FilterMenu(
                 },
             )
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.sort_by_opened_ascending)) },
+                text = { Text(stringResource(Res.string.sort_by_opened_ascending)) },
                 onClick = {
                     onSortOrderChange(SortType.SORT_OPENED_ASC)
                     expanded = false
@@ -78,7 +87,7 @@ fun FilterMenu(
                 },
             )
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.sort_by_opened_descending)) },
+                text = { Text(stringResource(Res.string.sort_by_opened_descending)) },
                 onClick = {
                     onSortOrderChange(SortType.SORT_OPENED_DESC)
                     expanded = false
@@ -91,7 +100,7 @@ fun FilterMenu(
                 },
             )
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.sort_by_name_ascending)) },
+                text = { Text(stringResource(Res.string.sort_by_name_ascending)) },
                 onClick = {
                     onSortOrderChange(SortType.SORT_NAME_ASC)
                     expanded = false
@@ -104,7 +113,7 @@ fun FilterMenu(
                 },
             )
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.sort_by_name_descending)) },
+                text = { Text(stringResource(Res.string.sort_by_name_descending)) },
                 onClick = {
                     onSortOrderChange(SortType.SORT_NAME_DESC)
                     expanded = false
@@ -117,7 +126,7 @@ fun FilterMenu(
                 },
             )
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.sort_by_link_ascending)) },
+                text = { Text(stringResource(Res.string.sort_by_link_ascending)) },
                 onClick = {
                     onSortOrderChange(SortType.SORT_LINK_ASC)
                     expanded = false
@@ -130,7 +139,7 @@ fun FilterMenu(
                 },
             )
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.sort_by_link_descending)) },
+                text = { Text(stringResource(Res.string.sort_by_link_descending)) },
                 onClick = {
                     onSortOrderChange(SortType.SORT_LINK_DESC)
                     expanded = false

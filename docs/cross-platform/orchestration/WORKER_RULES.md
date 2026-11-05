@@ -8,6 +8,7 @@
 6. **Verify locally** with the commands in your brief. Typical ones:
    - `./gradlew :shared:compileKotlinJvm :ui:compileKotlinJvm -q` (common code, compiled for JVM; works on this machine)
    - `cd tools/sync-harness && ../../gradlew -p . test -q` (sync tests)
+   - `./gradlew :app:lintKotlinMain -q` (ktlint on `:app`, the same check CI runs; works here). Run it whenever you touch `:app` files. Remember ktlint's `filename` rule: a file holding a single class must be named after it.
    - Android (`:app`) and iOS can NOT be built on this machine (no Android build-tools, no Xcode). Don't try to install them. The orchestrator runs CI.
 7. **No new dependencies** unless your brief names them (with version).
 8. **Disk is tight (~1.5 GB free):** don't download SDKs or large tools; don't create big files.

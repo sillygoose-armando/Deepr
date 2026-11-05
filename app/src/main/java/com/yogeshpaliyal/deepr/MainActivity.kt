@@ -34,6 +34,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.getSystemService
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,6 +45,8 @@ import androidx.navigation3.ui.NavDisplay
 import com.yogeshpaliyal.deepr.preference.PreferenceRepository
 import com.yogeshpaliyal.deepr.security.AppLockState
 import com.yogeshpaliyal.deepr.ui.BaseScreen
+import com.yogeshpaliyal.deepr.ui.LocalAppIcon
+import com.yogeshpaliyal.deepr.ui.LocalAppVersion
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.Screen
 import com.yogeshpaliyal.deepr.ui.TopLevelBackStack
@@ -265,7 +268,11 @@ fun Dashboard(
 
     CompositionLocalProvider(LocalSharedText provides Pair(sharedText, resetSharedText)) {
         CompositionLocalProvider(LocalClipboardLink provides Pair(clipboardLink, resetClipboardLink)) {
-            CompositionLocalProvider(LocalNavigator provides backStack) {
+            CompositionLocalProvider(
+                LocalNavigator provides backStack,
+                LocalAppVersion provides BuildConfig.VERSION_NAME,
+                LocalAppIcon provides painterResource(R.mipmap.ic_launcher_foreground),
+            ) {
                 Scaffold(
                     modifier = modifier,
                     bottomBar = {
