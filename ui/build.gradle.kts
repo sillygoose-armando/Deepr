@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -41,6 +42,10 @@ kotlin {
             implementation(libs.qrose)
             implementation(libs.tabler.icons)
             implementation(libs.compose.material.icons.extended.mp)
+            implementation(libs.compose.ui.backhandler)
+            implementation(libs.haze)
+            implementation(libs.haze.materials)
+            implementation(libs.kotlinx.serialization.json)
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.compose.mp)
             implementation(libs.koin.compose.viewmodel)

@@ -62,9 +62,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yogeshpaliyal.deepr.GetAllTagsWithCount
 import com.yogeshpaliyal.deepr.Tags
-import com.yogeshpaliyal.deepr.ui.LocalDashboardRoute
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.TopLevelRoute
+import com.yogeshpaliyal.deepr.ui.screens.home.Dashboard2
 import com.yogeshpaliyal.deepr.ui.components.ClearInputIconButton
 import com.yogeshpaliyal.deepr.ui.platform.isUniqueConstraintViolation
 import com.yogeshpaliyal.deepr.ui.platform.koinSharedAccountViewModel
@@ -114,7 +114,7 @@ object TagSelectionScreen : TopLevelRoute {
     override fun Content(windowInsets: WindowInsets) {
         val viewModel: AccountViewModel = koinSharedAccountViewModel()
         val showToast = rememberShowToast()
-        val dashboardRoute = LocalDashboardRoute.current
+        val dashboardRoute = Dashboard2()
         // Pre-resolve static string resources used in onClick handlers
         val tagNameExists = stringResource(Res.string.tag_name_exists)
         val tagEditedSuccessfully = stringResource(Res.string.tag_edited_successfully)

@@ -8,8 +8,10 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
+import com.yogeshpaliyal.deepr.GetLinksAndTags
 import com.yogeshpaliyal.deepr.Profile
 import org.jetbrains.compose.resources.StringResource
 import kotlin.collections.remove
@@ -28,6 +30,16 @@ val LocalDashboardRoute =
 // Default: null skips the theme customization section on non-pro builds.
 val LocalProfileThemeProvider =
     compositionLocalOf<(@Composable (profile: Profile, onProfileUpdate: (Profile) -> Unit) -> Unit)?> { null }
+
+// Bridge for the server status bar rendered in HomeScreen's Scaffold topBar.
+// Provided by :app's MainActivity; defaults to null (no bar shown).
+val LocalHomeServerBarBuilder =
+    compositionLocalOf<(@Composable (onServerStatusClick: () -> Unit, modifier: Modifier) -> Unit)?> { null }
+
+// Bridge for the note-view dialog used from HomeScreen's Content.
+// Provided by :app's MainActivity; defaults to null (note viewing unavailable).
+val LocalHomeNoteViewDialogBuilder =
+    compositionLocalOf<(@Composable (deepr: GetLinksAndTags, onDismiss: () -> Unit, onEdit: (GetLinksAndTags) -> Unit, modifier: Modifier) -> Unit)?> { null }
 
 sealed interface BaseScreen : NavKey
 

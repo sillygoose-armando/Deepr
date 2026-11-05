@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.Screen
 import com.yogeshpaliyal.deepr.ui.screens.home.Dashboard2
@@ -21,7 +20,6 @@ object Splash : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.current
-        val context = LocalContext.current
 
         LaunchedEffect(Unit) {
 //            // Check if user is opening the app for the first time

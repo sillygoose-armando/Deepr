@@ -46,6 +46,8 @@ import com.yogeshpaliyal.deepr.ui.BaseScreen
 import com.yogeshpaliyal.deepr.ui.LocalAppIcon
 import com.yogeshpaliyal.deepr.ui.LocalAppVersion
 import com.yogeshpaliyal.deepr.ui.LocalDashboardRoute
+import com.yogeshpaliyal.deepr.ui.LocalHomeNoteViewDialogBuilder
+import com.yogeshpaliyal.deepr.ui.LocalHomeServerBarBuilder
 import com.yogeshpaliyal.deepr.ui.LocalIsProUser
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.LocalProfileThemeProvider
@@ -53,9 +55,12 @@ import com.yogeshpaliyal.deepr.ui.Screen
 import com.yogeshpaliyal.deepr.ui.TopLevelBackStack
 import com.yogeshpaliyal.deepr.ui.TopLevelRoute
 import com.yogeshpaliyal.deepr.ui.components.CreateShortcutDialog
+import com.yogeshpaliyal.deepr.ui.components.NoteViewDialog
+import com.yogeshpaliyal.deepr.ui.components.ServerStatusBar
 import com.yogeshpaliyal.deepr.ui.platform.LocalPlatformLinkActions
 import com.yogeshpaliyal.deepr.ui.platform.PlatformLinkActions
 import com.yogeshpaliyal.deepr.ui.screens.AppLockScreen
+import com.yogeshpaliyal.deepr.ui.screens.LocalNetworkServer
 import com.yogeshpaliyal.deepr.ui.screens.ProfileTheme
 import com.yogeshpaliyal.deepr.ui.screens.Settings
 import com.yogeshpaliyal.deepr.ui.screens.home.Dashboard2
@@ -273,6 +278,21 @@ fun Dashboard(
                 LocalDashboardRoute provides Dashboard2(),
                 LocalProfileThemeProvider provides @Composable { profile, onUpdate ->
                     ProfileTheme(profile = profile, onProfileUpdate = onUpdate)
+                },
+                LocalHomeServerBarBuilder provides @Composable { onServerStatusClick, modifier ->
+                    val nav = LocalNavigator.current
+                    ServerStatusBar(
+                        onServerStatusClick = {
+                            onServerStatusClick()
+                            if (nav.getLast() !is LocalNetworkServer) {
+                                nav.add(LocalNetworkServer)
+                            }
+                        },
+                        modifier = modifier,
+                    )
+                },
+                LocalHomeNoteViewDialogBuilder provides @Composable { deepr, onDismiss, onEdit, modifier ->
+                    NoteViewDialog(deepr = deepr, onDismiss = onDismiss, onEdit = onEdit, modifier = modifier)
                 },
                 LocalPlatformLinkActions provides
                     remember(context) {

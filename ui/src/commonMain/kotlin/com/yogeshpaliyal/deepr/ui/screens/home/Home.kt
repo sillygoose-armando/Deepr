@@ -1,10 +1,7 @@
+@file:OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+
 package com.yogeshpaliyal.deepr.ui.screens.home
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.scaleIn
@@ -80,15 +77,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -99,7 +96,6 @@ import coil3.compose.AsyncImage
 import com.yogeshpaliyal.deepr.GetLinksAndTags
 import com.yogeshpaliyal.deepr.LocalClipboardLink
 import com.yogeshpaliyal.deepr.LocalSharedText
-import com.yogeshpaliyal.deepr.R
 import com.yogeshpaliyal.deepr.SharedLink
 import com.yogeshpaliyal.deepr.Tags
 import com.yogeshpaliyal.deepr.analytics.AnalyticsEvents
@@ -108,16 +104,46 @@ import com.yogeshpaliyal.deepr.analytics.AnalyticsParams
 import com.yogeshpaliyal.deepr.ui.AddLinkScreen
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.TopLevelRoute
+import com.yogeshpaliyal.deepr.ui.LocalHomeNoteViewDialogBuilder
+import com.yogeshpaliyal.deepr.ui.LocalHomeServerBarBuilder
 import com.yogeshpaliyal.deepr.ui.components.ClearInputIconButton
 import com.yogeshpaliyal.deepr.ui.components.ClipboardLinkBanner
 import com.yogeshpaliyal.deepr.ui.components.DeleteConfirmationDialog
-import com.yogeshpaliyal.deepr.ui.components.NoteViewDialog
 import com.yogeshpaliyal.deepr.ui.components.QrCodeDialog
-import com.yogeshpaliyal.deepr.ui.components.ServerStatusBar
 import com.yogeshpaliyal.deepr.ui.platform.LocalPlatformLinkActions
+import com.yogeshpaliyal.deepr.ui.platform.koinSharedAccountViewModel
+import com.yogeshpaliyal.deepr.ui.platform.rememberOpenLink
+import com.yogeshpaliyal.deepr.ui.platform.rememberShowToast
 import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.add_link
+import com.yogeshpaliyal.deepr.ui.resources.add_to_favourites
+import com.yogeshpaliyal.deepr.ui.resources.all
+import com.yogeshpaliyal.deepr.ui.resources.back
+import com.yogeshpaliyal.deepr.ui.resources.delete
+import com.yogeshpaliyal.deepr.ui.resources.edit
+import com.yogeshpaliyal.deepr.ui.resources.favourites
 import com.yogeshpaliyal.deepr.ui.resources.home
-import com.yogeshpaliyal.deepr.ui.screens.LocalNetworkServer
+import com.yogeshpaliyal.deepr.ui.resources.last_opened
+import com.yogeshpaliyal.deepr.ui.resources.link_copied
+import com.yogeshpaliyal.deepr.ui.resources.load_more_tags
+import com.yogeshpaliyal.deepr.ui.resources.no_favourites_description
+import com.yogeshpaliyal.deepr.ui.resources.no_favourites_found
+import com.yogeshpaliyal.deepr.ui.resources.no_links_saved_yet
+import com.yogeshpaliyal.deepr.ui.resources.no_links_with_tags
+import com.yogeshpaliyal.deepr.ui.resources.no_links_with_tags_description
+import com.yogeshpaliyal.deepr.ui.resources.no_search_results
+import com.yogeshpaliyal.deepr.ui.resources.no_search_results_description
+import com.yogeshpaliyal.deepr.ui.resources.open_with
+import com.yogeshpaliyal.deepr.ui.resources.profiles
+import com.yogeshpaliyal.deepr.ui.resources.remove_from_favourites
+import com.yogeshpaliyal.deepr.ui.resources.reset_opened_count
+import com.yogeshpaliyal.deepr.ui.resources.save_your_link_below
+import com.yogeshpaliyal.deepr.ui.resources.search
+import com.yogeshpaliyal.deepr.ui.resources.share_link
+import com.yogeshpaliyal.deepr.ui.resources.show_less_tags
+import com.yogeshpaliyal.deepr.ui.resources.show_qr_code
+import com.yogeshpaliyal.deepr.ui.resources.sorting
+import com.yogeshpaliyal.deepr.ui.resources.view_note
 import com.yogeshpaliyal.deepr.ui.screens.home.MenuItem.Click
 import com.yogeshpaliyal.deepr.ui.screens.home.MenuItem.Copy
 import com.yogeshpaliyal.deepr.ui.screens.home.MenuItem.Delete
@@ -131,7 +157,6 @@ import com.yogeshpaliyal.deepr.ui.screens.home.MenuItem.ShowQrCode
 import com.yogeshpaliyal.deepr.ui.screens.home.MenuItem.ViewNote
 import com.yogeshpaliyal.deepr.util.isValidDeeplink
 import com.yogeshpaliyal.deepr.util.normalizeLink
-import com.yogeshpaliyal.deepr.util.openDeeplink
 import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
 import compose.icons.TablerIcons
 import compose.icons.tablericons.ArrowLeft
@@ -156,7 +181,6 @@ import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.koin.compose.koinInject
-import org.koin.compose.viewmodel.koinActivityViewModel
 
 data object Home
 
@@ -209,7 +233,9 @@ fun HomeScreen(
     sharedText: SharedLink? = null,
     resetSharedText: () -> Unit,
 ) {
-    val viewModel: AccountViewModel = koinActivityViewModel()
+    val viewModel: AccountViewModel = koinSharedAccountViewModel()
+    val showToast = rememberShowToast()
+    val serverBarBuilder = LocalHomeServerBarBuilder.current
     val currentViewType by viewModel.viewType.collectAsStateWithLifecycle()
     val currentProfile by viewModel.currentProfile.collectAsStateWithLifecycle()
     val localNavigator = LocalNavigator.current
@@ -219,7 +245,6 @@ fun HomeScreen(
     var selectedLink by remember { mutableStateOf<GetLinksAndTags?>(mSelectedLink) }
     val selectedTag by viewModel.selectedTagFilter.collectAsStateWithLifecycle()
     val hazeState = rememberHazeState(blurEnabled = true)
-    val context = LocalContext.current
     val scrollBehavior = SearchBarDefaults.enterAlwaysSearchBarScrollBehavior()
     val searchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState()
@@ -267,9 +292,7 @@ fun HomeScreen(
                 selectedLink =
                     createDeeprObject(link = normalizedLink, name = sharedText.title ?: "", profileId = currentProfile?.id ?: 1L)
             } else {
-                Toast
-                    .makeText(context, "Invalid deeplink from shared content", Toast.LENGTH_SHORT)
-                    .show()
+                showToast("Invalid deeplink from shared content")
             }
             // Reset shared text even on error to prevent stuck state
             resetSharedText()
@@ -330,7 +353,7 @@ fun HomeScreen(
                     if (searchBarState.currentValue == SearchBarValue.Collapsed) {
                         Text(
                             modifier = Modifier.fillMaxWidth(),
-                            text = stringResource(R.string.search),
+                            text = stringResource(Res.string.search),
                             textAlign = TextAlign.Center,
                         )
                     }
@@ -344,7 +367,7 @@ fun HomeScreen(
                                 TooltipDefaults.rememberTooltipPositionProvider(
                                     TooltipAnchorPosition.Above,
                                 ),
-                            tooltip = { PlainTooltip { Text(stringResource(R.string.back)) } },
+                            tooltip = { PlainTooltip { Text(stringResource(Res.string.back)) } },
                             state = rememberTooltipState(),
                         ) {
                             IconButton(
@@ -352,7 +375,7 @@ fun HomeScreen(
                             ) {
                                 Icon(
                                     TablerIcons.ArrowLeft,
-                                    contentDescription = stringResource(R.string.back),
+                                    contentDescription = stringResource(Res.string.back),
                                     modifier =
                                         if (isRtl) {
                                             Modifier.graphicsLayer(scaleX = -1f)
@@ -374,7 +397,7 @@ fun HomeScreen(
                                     TooltipDefaults.rememberTooltipPositionProvider(
                                         TooltipAnchorPosition.Below,
                                     ),
-                                tooltip = { PlainTooltip { Text(stringResource(R.string.profiles)) } },
+                                tooltip = { PlainTooltip { Text(stringResource(Res.string.profiles)) } },
                                 state = rememberTooltipState(),
                             ) {
                                 ProfileSelectorMenu(viewModel = viewModel)
@@ -398,7 +421,7 @@ fun HomeScreen(
                                     TooltipDefaults.rememberTooltipPositionProvider(
                                         TooltipAnchorPosition.Below,
                                     ),
-                                tooltip = { PlainTooltip { Text(stringResource(R.string.sorting)) } },
+                                tooltip = { PlainTooltip { Text(stringResource(Res.string.sorting)) } },
                                 state = rememberTooltipState(),
                             ) {
                                 FilterMenu(onSortOrderChange = {
@@ -440,14 +463,11 @@ fun HomeScreen(
                             appBarContainerColor = Color.Transparent,
                         ),
                 )
-                ServerStatusBar(
-                    onServerStatusClick = {
-                        // Navigate to LocalNetworkServer screen when status bar is clicked
+                serverBarBuilder?.invoke(
+                    {
                         analyticsManager.logEvent(AnalyticsEvents.NAVIGATE_LOCAL_SERVER)
-                        if (localNavigator.getLast() !is LocalNetworkServer) {
-                            localNavigator.add(LocalNetworkServer)
-                        }
                     },
+                    Modifier,
                 )
 
                 // Clipboard link banner
@@ -475,7 +495,7 @@ fun HomeScreen(
                             viewModel.setFavouriteFilter(-1)
                             viewModel.setTagFilter(null)
                         }, label = {
-                            Text(stringResource(R.string.all) + " (${totalLinks ?: 0})")
+                            Text(stringResource(Res.string.all) + " (${totalLinks ?: 0})")
                         }, modifier = Modifier.animateItem(), shape = RoundedCornerShape(percent = 50))
                     }
                     item {
@@ -483,7 +503,7 @@ fun HomeScreen(
                             viewModel.setFavouriteFilter(1)
                             viewModel.setTagFilter(null)
                         }, label = {
-                            Text(stringResource(R.string.favourites) + " (${favouriteLinks ?: 0})")
+                            Text(stringResource(Res.string.favourites) + " (${favouriteLinks ?: 0})")
                         }, modifier = Modifier.animateItem(), shape = RoundedCornerShape(percent = 50))
                     }
 
@@ -502,11 +522,11 @@ fun HomeScreen(
                 icon = {
                     Icon(
                         TablerIcons.Plus,
-                        contentDescription = stringResource(R.string.add_link),
+                        contentDescription = stringResource(Res.string.add_link),
                     )
                 },
                 text = {
-                    Text(stringResource(R.string.add_link))
+                    Text(stringResource(Res.string.add_link))
                 },
                 expanded = isExpanded,
                 onClick = {
@@ -569,6 +589,11 @@ fun Content(
     val showMoreBottomSheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showMoreSelectedItem by remember { mutableStateOf<GetLinksAndTags?>(null) }
     val analyticsManager = koinInject<AnalyticsManager>()
+    val openLink = rememberOpenLink()
+    val showToast = rememberShowToast()
+    val linkCopiedText = stringResource(Res.string.link_copied)
+    val copyLinkAction = rememberCopyLinkAction()
+    val noteViewBuilder = LocalHomeNoteViewDialogBuilder.current
 
     if (accounts == null) {
         Column(
@@ -579,7 +604,6 @@ fun Content(
         return
     }
 
-    val context = LocalContext.current
     val linkActions = LocalPlatformLinkActions.current
     var showShortcutDialog by remember { mutableStateOf<GetLinksAndTags?>(null) }
     var showQrCodeDialog by remember { mutableStateOf<GetLinksAndTags?>(null) }
@@ -602,18 +626,17 @@ fun Content(
             onDismiss = { showDeleteConfirmDialog = null },
             onConfirm = {
                 viewModel.deleteAccount(it.id)
-                Toast.makeText(context, "Deleted", Toast.LENGTH_SHORT).show()
+                showToast("Deleted")
             },
         )
     }
 
     showNoteDialog?.let { deepr ->
-        NoteViewDialog(
-            deepr = deepr,
-            onDismiss = { showNoteDialog = null },
-            onEdit = {
-                editDeepr(it)
-            },
+        noteViewBuilder?.invoke(
+            deepr,
+            { showNoteDialog = null },
+            { editDeepr(it) },
+            Modifier,
         )
     }
 
@@ -622,7 +645,7 @@ fun Content(
         when (it) {
             is Click -> {
                 viewModel.incrementOpenedCount(it.item.id)
-                openDeeplink(context, it.item.link)
+                openLink(it.item.link)
                 analyticsManager.logEvent(
                     AnalyticsEvents.OPEN_LINK,
                     mapOf(AnalyticsParams.LINK_ID to it.item.id),
@@ -647,7 +670,7 @@ fun Content(
             is ResetCounter -> {
                 analyticsManager.logEvent(AnalyticsEvents.ITEM_MENU_RESET_COUNTER)
                 viewModel.resetOpenedCount(it.item.id)
-                Toast.makeText(context, "Opened count reset", Toast.LENGTH_SHORT).show()
+                showToast("Opened count reset")
             }
 
             is Shortcut -> {
@@ -665,14 +688,7 @@ fun Content(
             }
 
             is Copy -> {
-                val clipboard =
-                    context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip =
-                    ClipData.newPlainText(context.getString(R.string.link_copied), it.item.link)
-                clipboard.setPrimaryClip(clip)
-                Toast
-                    .makeText(context, context.getString(R.string.link_copied), Toast.LENGTH_SHORT)
-                    .show()
+                copyLinkAction(linkCopiedText, it.item.link)
             }
 
             is Share -> {
@@ -766,7 +782,7 @@ fun Content(
                 if (account.notes.isNotEmpty()) {
                     item {
                         MenuListItem(
-                            text = stringResource(R.string.view_note),
+                            text = stringResource(Res.string.view_note),
                             icon = TablerIcons.Note,
                             onClick = {
                                 onItemClick(ViewNote(account))
@@ -779,10 +795,10 @@ fun Content(
                     MenuListItem(
                         text =
                             if (account.isFavourite == 1L) {
-                                stringResource(R.string.remove_from_favourites)
+                                stringResource(Res.string.remove_from_favourites)
                             } else {
                                 stringResource(
-                                    R.string.add_to_favourites,
+                                    Res.string.add_to_favourites,
                                 )
                             },
                         icon = if (account.isFavourite == 1L) Icons.Rounded.Star else Icons.Rounded.StarBorder,
@@ -801,7 +817,7 @@ fun Content(
 
                 item {
                     MenuListItem(
-                        text = stringResource(R.string.show_qr_code),
+                        text = stringResource(Res.string.show_qr_code),
                         icon = TablerIcons.Qrcode,
                         onClick = {
                             onItemClick(ShowQrCode(account))
@@ -812,7 +828,7 @@ fun Content(
                 if (linkActions.openExternal != null) {
                     item {
                         MenuListItem(
-                            text = stringResource(R.string.open_with),
+                            text = stringResource(Res.string.open_with),
                             icon = TablerIcons.ExternalLink,
                             onClick = {
                                 onItemClick(MenuItem.OpenWith(account))
@@ -824,7 +840,7 @@ fun Content(
                 if (linkActions.share != null) {
                     item {
                         MenuListItem(
-                            text = stringResource(R.string.share_link),
+                            text = stringResource(Res.string.share_link),
                             icon = TablerIcons.Share,
                             onClick = {
                                 onItemClick(Share(account))
@@ -835,7 +851,7 @@ fun Content(
 
                 item {
                     MenuListItem(
-                        text = stringResource(R.string.reset_opened_count),
+                        text = stringResource(Res.string.reset_opened_count),
                         icon = TablerIcons.Refresh,
                         onClick = {
                             onItemClick(ResetCounter(account))
@@ -845,7 +861,7 @@ fun Content(
 
                 item {
                     MenuListItem(
-                        text = stringResource(R.string.edit),
+                        text = stringResource(Res.string.edit),
                         icon = TablerIcons.Edit,
                         onClick = {
                             onItemClick(Edit(account))
@@ -854,7 +870,7 @@ fun Content(
                 }
                 item {
                     MenuListItem(
-                        text = stringResource(R.string.delete),
+                        text = stringResource(Res.string.delete),
                         icon = TablerIcons.Trash,
                         onClick = {
                             onItemClick(Delete(account))
@@ -875,7 +891,7 @@ fun Content(
                         MenuListItem(
                             text =
                                 stringResource(
-                                    R.string.last_opened,
+                                    Res.string.last_opened,
                                     formatDateTime(lastOpenedAt),
                                 ),
                             textStyle = MaterialTheme.typography.bodySmall,
@@ -928,9 +944,9 @@ fun Content(
                                 Text(
                                     text =
                                         if (tagsExpanded) {
-                                            stringResource(R.string.show_less_tags)
+                                            stringResource(Res.string.show_less_tags)
                                         } else {
-                                            stringResource(R.string.load_more_tags, hiddenTagsCount)
+                                            stringResource(Res.string.load_more_tags, hiddenTagsCount)
                                         },
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                 )
@@ -1029,29 +1045,29 @@ fun DeeprList(
                         isSearchActive ->
                             Triple(
                                 TablerIcons.Search,
-                                R.string.no_search_results,
-                                R.string.no_search_results_description,
+                                Res.string.no_search_results,
+                                Res.string.no_search_results_description,
                             )
 
                         isTagFilterActive ->
                             Triple(
                                 TablerIcons.Tag,
-                                R.string.no_links_with_tags,
-                                R.string.no_links_with_tags_description,
+                                Res.string.no_links_with_tags,
+                                Res.string.no_links_with_tags_description,
                             )
 
                         isFavouriteFilterActive ->
                             Triple(
                                 TablerIcons.Link,
-                                R.string.no_favourites_found,
-                                R.string.no_favourites_description,
+                                Res.string.no_favourites_found,
+                                Res.string.no_favourites_description,
                             )
 
                         else ->
                             Triple(
                                 TablerIcons.Link,
-                                R.string.no_links_saved_yet,
-                                R.string.save_your_link_below,
+                                Res.string.no_links_saved_yet,
+                                Res.string.save_your_link_below,
                             )
                     }
 
