@@ -39,9 +39,8 @@ import androidx.core.content.getSystemService
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
-import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.yogeshpaliyal.deepr.preference.PreferenceRepository
 import com.yogeshpaliyal.deepr.security.AppLockState
 import com.yogeshpaliyal.deepr.ui.BaseScreen
@@ -304,9 +303,8 @@ fun Dashboard(
                         backStack = backStack.backStack,
                         entryDecorators =
                             listOf(
-                                // Add the default decorators for managing scenes and saving state
-                                rememberSceneSetupNavEntryDecorator(),
-                                rememberSavedStateNavEntryDecorator(),
+                                // Saveable state per entry; scene setup is built into NavDisplay.
+                                rememberSaveableStateHolderNavEntryDecorator(),
                                 // Then add the view model store decorator
                                 rememberViewModelStoreNavEntryDecorator(),
                             ),
