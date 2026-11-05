@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   ios:
-    runs-on: macos-15  # macos-latest (macOS 26 arm64) repeatedly found no runner within 15 min (2026-11-05)
+    runs-on: macos-15-intel  # arm64 macOS pool (macos-latest, macos-15) never acquired a runner on 2026-11-05: "not acquired by Runner of type hosted"
     steps:
       - uses: actions/checkout@v4
 
