@@ -26,5 +26,5 @@ Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM comp
 | M2-K | Upgrade Kotlin 2.2.20 → 2.3.21 (iOS: JB navigation3 klibs need ABI 2.3, DECISIONS D11) | — | A | ci | orchestrator | 1 | | |
 | M2-13b | Home + Dashboard2 + Splash → `ui` (copy/toasts via helpers, BackHandler multiplatform) | 13a | A | ci | openrouter deepseek-v4-flash | 1 | 9bc9fde | Android [42076450190](https://github.com/sillygoose-armando/Deepr/actions/runs/42076450190) ✓; iOS after M2-K |
 | M2-14a | Settings platform bridge (data-mgmt/Drive + local-server slots, keyguard, feedback, review, share-app, recreate) wired in Settings (still `:app`); LanguageUtil data → `shared` | 13b | A | ci | openrouter deepseek-v4-flash + orchestrator fixes | 1 | | |
-| M2-14b | Settings + LanguageSelectionDialog → `ui` | 14a | A | todo | | 0 | | |
+| M2-14b | Settings + LanguageSelectionDialog → `ui` (long toast, server bar via bridge, koinViewModel KMP) | 14a | A | running | deepseek-v4.1-flash (→ openrouter fallback) | 1 | | |
 | M2-15 | `:app` thin host (also: drop bridges no longer needed, e.g. LocalDashboardRoute): MainActivity renders `ui` App(); remove now-unused Android duplicates/strings; Android-only screens (Backup/Restore/LocalNetworkServer/TransferLink/Drive, ServerStatusBar) stay in `:app` behind a platform-screens slot | 14 | A | todo | | 0 | | |
