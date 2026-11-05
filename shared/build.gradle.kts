@@ -40,6 +40,9 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.ktor.client.core)
+            implementation(project.dependencies.platform(libs.koin.bom))
+            api(libs.koin.core)
+            api(libs.koin.core.viewmodel)
         }
         // javax.crypto implementation of P2pCrypto; the sync track keeps it in src/jvmShared.
         getByName("jvmSharedMain").kotlin.srcDir("src/jvmShared/kotlin")
@@ -55,6 +58,8 @@ kotlin {
         }
         jvmTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.sqldelight.sqlite.driver)
+            implementation(libs.koin.test)
         }
     }
 }

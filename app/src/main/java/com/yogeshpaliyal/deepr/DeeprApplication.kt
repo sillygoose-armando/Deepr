@@ -17,10 +17,9 @@ import com.yogeshpaliyal.deepr.backup.ExportRepositoryImpl
 import com.yogeshpaliyal.deepr.backup.GoogleDriveAutoBackupWorker
 import com.yogeshpaliyal.deepr.backup.ImportRepository
 import com.yogeshpaliyal.deepr.backup.ImportRepositoryImpl
-import com.yogeshpaliyal.deepr.data.HtmlParser
 import com.yogeshpaliyal.deepr.data.LinkRepository
 import com.yogeshpaliyal.deepr.data.LinkRepositoryImpl
-import com.yogeshpaliyal.deepr.data.NetworkRepository
+import com.yogeshpaliyal.deepr.di.sharedModule
 import com.yogeshpaliyal.deepr.gdrive.DriveSyncManager
 import com.yogeshpaliyal.deepr.gdrive.DriveSyncManagerFactoryImpl
 import com.yogeshpaliyal.deepr.preference.AppPreferenceDataStore
@@ -34,7 +33,6 @@ import com.yogeshpaliyal.deepr.server.LocalServerRepositoryImpl
 import com.yogeshpaliyal.deepr.server.LocalServerTransferLink
 import com.yogeshpaliyal.deepr.sync.SyncRepository
 import com.yogeshpaliyal.deepr.sync.SyncRepositoryImpl
-import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
 import com.yogeshpaliyal.deepr.viewmodel.LocalServerViewModel
 import com.yogeshpaliyal.deepr.viewmodel.TransferLinkLocalServerViewModel
 import io.ktor.client.HttpClient
@@ -45,7 +43,6 @@ import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModel
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.binds
 import org.koin.dsl.module
 
@@ -85,18 +82,6 @@ class DeeprApplication : Application() {
                     }
                 }
 
-                // Provide the Database instance
-                single {
-                    DeeprDB(get())
-                }
-
-                // Provide the generated queries from the database.
-                // Replace `accountQueries` if your table has a different name.
-                single<DeeprQueries> {
-                    val database = get<DeeprDB>()
-                    database.deeprQueries
-                }
-
                 single<PreferenceRepository> { AppPreferenceDataStore(androidContext().appDataStore) }
 
                 single<LinkRepository> {
@@ -129,16 +114,6 @@ class DeeprApplication : Application() {
                             )
                         }
                     }
-                }
-
-                viewModelOf(::AccountViewModel)
-
-                single {
-                    HtmlParser()
-                }
-
-                single {
-                    NetworkRepository(get())
                 }
 
                 single<LocalServerRepository> {
@@ -189,7 +164,7 @@ class DeeprApplication : Application() {
             // Provide Android context to Koin
             androidContext(this@DeeprApplication)
 
-            modules(appModule)
+            modules(sharedModule, appModule)
         }
     }
 }
