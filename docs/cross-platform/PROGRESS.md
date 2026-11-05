@@ -18,9 +18,9 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done (with verifying command / 
 - [x] CI green at aef0de7: Android https://github.com/sillygoose-armando/Deepr/actions/runs/39751222857 (harness, `:shared:compileKotlinJvm`, lint, unit tests with only the 4 known upstream failures, APK artifact `deepr-p2p-debug-apk`); iOS compile https://github.com/sillygoose-armando/Deepr/actions/runs/39751222843
 
 ### M2 `:ui`
-- [ ] Screens/theme/navigation/strings in Compose Multiplatform `commonMain`
-- [ ] Android-specific UI behind interfaces; `:app` thin host
-- [ ] Android UI unchanged (screenshot spot-checks)
+- [x] Screens/theme/navigation/strings in Compose Multiplatform `commonMain` (2026-11-05, QUEUE.md M2-01..15)
+- [x] Android-specific UI behind interfaces; `:app` thin host (M2-15, 4f0cf1e)
+- [ ] Android UI unchanged (screenshot spot-checks): **not done yet**. Compile and code-review parity only; needs the APK from run 42084308366 on a device or emulator (asked the user).
 
 ### M3 Desktop
 - [ ] `desktopApp` runs (links/tags/profiles on the same schema)
