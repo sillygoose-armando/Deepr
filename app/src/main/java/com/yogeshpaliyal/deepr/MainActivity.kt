@@ -35,12 +35,14 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.core.content.getSystemService
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.yogeshpaliyal.deepr.preference.PreferenceRepository
+import com.yogeshpaliyal.deepr.review.ReviewManager
 import com.yogeshpaliyal.deepr.security.AppLockState
 import com.yogeshpaliyal.deepr.ui.BaseScreen
 import com.yogeshpaliyal.deepr.ui.LocalAppIcon
@@ -57,11 +59,23 @@ import com.yogeshpaliyal.deepr.ui.TopLevelRoute
 import com.yogeshpaliyal.deepr.ui.components.CreateShortcutDialog
 import com.yogeshpaliyal.deepr.ui.components.NoteViewDialog
 import com.yogeshpaliyal.deepr.ui.components.ServerStatusBar
+import com.yogeshpaliyal.deepr.ui.components.SettingsItem
+import com.yogeshpaliyal.deepr.ui.components.SettingsSection
 import com.yogeshpaliyal.deepr.ui.platform.LocalPlatformLinkActions
+import com.yogeshpaliyal.deepr.ui.platform.LocalSettingsPlatform
 import com.yogeshpaliyal.deepr.ui.platform.PlatformLinkActions
+import com.yogeshpaliyal.deepr.ui.platform.SettingsPlatform
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.app_name
+import com.yogeshpaliyal.deepr.ui.resources.backup
+import com.yogeshpaliyal.deepr.ui.resources.local_network_server
+import com.yogeshpaliyal.deepr.ui.resources.restore
 import com.yogeshpaliyal.deepr.ui.screens.AppLockScreen
+import com.yogeshpaliyal.deepr.ui.screens.BackupScreen
+import com.yogeshpaliyal.deepr.ui.screens.DriveSettingsItem
 import com.yogeshpaliyal.deepr.ui.screens.LocalNetworkServer
 import com.yogeshpaliyal.deepr.ui.screens.ProfileTheme
+import com.yogeshpaliyal.deepr.ui.screens.RestoreScreen
 import com.yogeshpaliyal.deepr.ui.screens.Settings
 import com.yogeshpaliyal.deepr.ui.screens.home.Dashboard2
 import com.yogeshpaliyal.deepr.ui.screens.home.ShortcutMenuItem
@@ -71,7 +85,12 @@ import com.yogeshpaliyal.deepr.util.LanguageUtil
 import com.yogeshpaliyal.deepr.util.isValidDeeplink
 import com.yogeshpaliyal.deepr.util.normalizeLink
 import com.yogeshpaliyal.deepr.util.openDeeplinkExternal
+import com.yogeshpaliyal.deepr.util.updateLocale
 import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
+import compose.icons.TablerIcons
+import compose.icons.tablericons.Download
+import compose.icons.tablericons.Server
+import compose.icons.tablericons.Upload
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -268,6 +287,8 @@ fun Dashboard(
 
     val resetClipboardLink: () -> Unit = { clipboardLink = null }
 
+    val reviewManager: ReviewManager = koinInject()
+    val appName = stringResource(Res.string.app_name)
     CompositionLocalProvider(LocalSharedText provides Pair(sharedText, resetSharedText)) {
         CompositionLocalProvider(LocalClipboardLink provides Pair(clipboardLink, resetClipboardLink)) {
             CompositionLocalProvider(
@@ -313,6 +334,91 @@ fun Dashboard(
                             },
                             shortcutDialog = { account, onDismiss ->
                                 CreateShortcutDialog(account, onDismiss)
+                            },
+                        )
+                    },
+                LocalSettingsPlatform provides
+                    remember(context, reviewManager, appName) {
+                        SettingsPlatform(
+                            topSections = {
+                                val navigator = LocalNavigator.current
+                                SettingsSection("Data Management") {
+                                    SettingsItem(
+                                        TablerIcons.Upload,
+                                        title = stringResource(Res.string.backup),
+                                        description = "Export to CSV, Local file sync, Auto backup",
+                                        onClick = {
+                                            navigator.add(BackupScreen)
+                                        },
+                                    )
+                                    SettingsItem(
+                                        TablerIcons.Download,
+                                        title = stringResource(Res.string.restore),
+                                        description = "Import from CSV, Bookmarks, and other formats",
+                                        onClick = {
+                                            navigator.add(RestoreScreen)
+                                        },
+                                    )
+                                }
+                                DriveSettingsItem()
+                            },
+                            localServerRow = {
+                                val navigator = LocalNavigator.current
+                                SettingsItem(
+                                    TablerIcons.Server,
+                                    title = stringResource(Res.string.local_network_server),
+                                    onClick = {
+                                        navigator.add(LocalNetworkServer)
+                                    },
+                                )
+                            },
+                            isDeviceSecure = {
+                                val keyguardManager = context.getSystemService<KeyguardManager>()
+                                keyguardManager?.isDeviceSecure == true
+                            },
+                            sendFeedback = {
+                                val emailIntent =
+                                    Intent(Intent.ACTION_SENDTO).apply {
+                                        data = "mailto:".toUri()
+                                        putExtra(
+                                            Intent.EXTRA_EMAIL,
+                                            arrayOf("yogeshpaliyal.foss+deepr@gmail.com"),
+                                        )
+                                        putExtra(
+                                            Intent.EXTRA_SUBJECT,
+                                            "$appName App Feedback/Issue",
+                                        )
+                                        putExtra(
+                                            Intent.EXTRA_TEXT,
+                                            "Describe your issue or feedback here:\n App Version : ${BuildConfig.VERSION_NAME}\n",
+                                        )
+                                    }
+                                context.startActivity(
+                                    Intent.createChooser(
+                                        emailIntent,
+                                        "Send email via...",
+                                    ),
+                                )
+                            },
+                            requestReview = {
+                                reviewManager.requestReview(context as MainActivity)
+                            },
+                            shareApp = { text ->
+                                val shareIntent =
+                                    Intent().apply {
+                                        action = Intent.ACTION_SEND
+                                        putExtra(Intent.EXTRA_TEXT, text)
+                                        type = "text/plain"
+                                    }
+                                context.startActivity(
+                                    Intent.createChooser(
+                                        shareIntent,
+                                        "Share via",
+                                    ),
+                                )
+                            },
+                            recreateForLanguage = {
+                                (context as? MainActivity)?.recreate()
                             },
                         )
                     },

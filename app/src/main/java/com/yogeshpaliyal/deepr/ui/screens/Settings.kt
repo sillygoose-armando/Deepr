@@ -1,7 +1,5 @@
 package com.yogeshpaliyal.deepr.ui.screens
 
-import android.app.KeyguardManager
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,14 +35,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.core.content.getSystemService
-import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.yogeshpaliyal.deepr.BuildConfig
-import com.yogeshpaliyal.deepr.MainActivity
 import com.yogeshpaliyal.deepr.R
-import com.yogeshpaliyal.deepr.review.ReviewManager
 import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.TopLevelRoute
 import com.yogeshpaliyal.deepr.ui.components.LanguageSelectionDialog
@@ -53,6 +47,7 @@ import com.yogeshpaliyal.deepr.ui.components.ServerStatusBar
 import com.yogeshpaliyal.deepr.ui.components.SettingsItem
 import com.yogeshpaliyal.deepr.ui.components.SettingsSection
 import com.yogeshpaliyal.deepr.ui.components.ThemeSelectionDialog
+import com.yogeshpaliyal.deepr.ui.platform.LocalSettingsPlatform
 import com.yogeshpaliyal.deepr.ui.resources.Res
 import com.yogeshpaliyal.deepr.ui.resources.settings
 import com.yogeshpaliyal.deepr.util.LanguageUtil
@@ -61,7 +56,6 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.AlertTriangle
 import compose.icons.tablericons.ArrowLeft
 import compose.icons.tablericons.Clipboard
-import compose.icons.tablericons.Download
 import compose.icons.tablericons.ExternalLink
 import compose.icons.tablericons.Folders
 import compose.icons.tablericons.InfoCircle
@@ -69,14 +63,11 @@ import compose.icons.tablericons.Language
 import compose.icons.tablericons.Lock
 import compose.icons.tablericons.Moon
 import compose.icons.tablericons.Photo
-import compose.icons.tablericons.Server
 import compose.icons.tablericons.Settings
 import compose.icons.tablericons.Share
 import compose.icons.tablericons.Star
-import compose.icons.tablericons.Upload
 import org.jetbrains.compose.resources.StringResource
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 object Settings : TopLevelRoute {
     override val icon: ImageVector
@@ -99,7 +90,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val navigatorContext = LocalNavigator.current
-    val reviewManager: ReviewManager = koinInject()
+    val settingsPlatform = LocalSettingsPlatform.current
 
     // Collect the shortcut icon preference state
     val useLinkBasedIcons by viewModel.useLinkBasedIcons.collectAsStateWithLifecycle()
@@ -118,7 +109,6 @@ fun SettingsScreen(
     val showOpenCounter by viewModel.showOpenCounter.collectAsStateWithLifecycle()
     val clipboardLinkDetectionEnabled by viewModel.clipboardLinkDetectionEnabled.collectAsStateWithLifecycle()
     val appLockEnabled by viewModel.appLockEnabled.collectAsStateWithLifecycle()
-    val keyguardManager = remember { context.getSystemService<KeyguardManager>() }
 
     // Collect profiles and silent save profile preference
     val allProfiles by viewModel.allProfiles.collectAsStateWithLifecycle()
@@ -174,36 +164,10 @@ fun SettingsScreen(
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            SettingsSection("Data Management") {
-                SettingsItem(
-                    TablerIcons.Upload,
-                    title = stringResource(R.string.backup),
-                    description = "Export to CSV, Local file sync, Auto backup",
-                    onClick = {
-                        navigatorContext.add(BackupScreen)
-                    },
-                )
-
-                SettingsItem(
-                    TablerIcons.Download,
-                    title = stringResource(R.string.restore),
-                    description = "Import from CSV, Bookmarks, and other formats",
-                    onClick = {
-                        navigatorContext.add(RestoreScreen)
-                    },
-                )
-            }
-
-            DriveSettingsItem()
+            settingsPlatform.topSections?.invoke()
 
             SettingsSection("Others") {
-                SettingsItem(
-                    TablerIcons.Server,
-                    title = stringResource(R.string.local_network_server),
-                    onClick = {
-                        navigatorContext.add(LocalNetworkServer)
-                    },
-                )
+                settingsPlatform.localServerRow?.invoke()
 
                 SettingsItem(
                     TablerIcons.Settings,
@@ -334,109 +298,84 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsSection("Security") {
-                SettingsItem(
-                    TablerIcons.Lock,
-                    title = stringResource(R.string.app_lock),
-                    description = stringResource(R.string.app_lock_description),
-                    onClick = {
-                        if (appLockEnabled || keyguardManager?.isDeviceSecure == true) {
-                            viewModel.setAppLockEnabled(!appLockEnabled)
-                        } else {
-                            Toast
-                                .makeText(
-                                    context,
-                                    context.getString(R.string.app_lock_unavailable),
-                                    Toast.LENGTH_LONG,
-                                ).show()
-                        }
-                    },
-                    trailing = {
-                        Switch(
-                            checked = appLockEnabled,
-                            onCheckedChange = { enabled ->
-                                if (!enabled || keyguardManager?.isDeviceSecure == true) {
-                                    viewModel.setAppLockEnabled(enabled)
-                                } else {
-                                    Toast
-                                        .makeText(
-                                            context,
-                                            context.getString(R.string.app_lock_unavailable),
-                                            Toast.LENGTH_LONG,
-                                        ).show()
-                                }
-                            },
-                        )
-                    },
-                )
+            if (settingsPlatform.isDeviceSecure != null) {
+                SettingsSection("Security") {
+                    SettingsItem(
+                        TablerIcons.Lock,
+                        title = stringResource(R.string.app_lock),
+                        description = stringResource(R.string.app_lock_description),
+                        onClick = {
+                            if (appLockEnabled || settingsPlatform.isDeviceSecure?.invoke() == true) {
+                                viewModel.setAppLockEnabled(!appLockEnabled)
+                            } else {
+                                Toast
+                                    .makeText(
+                                        context,
+                                        context.getString(R.string.app_lock_unavailable),
+                                        Toast.LENGTH_LONG,
+                                    ).show()
+                            }
+                        },
+                        trailing = {
+                            Switch(
+                                checked = appLockEnabled,
+                                onCheckedChange = { enabled ->
+                                    if (!enabled || settingsPlatform.isDeviceSecure?.invoke() == true) {
+                                        viewModel.setAppLockEnabled(enabled)
+                                    } else {
+                                        Toast
+                                            .makeText(
+                                                context,
+                                                context.getString(R.string.app_lock_unavailable),
+                                                Toast.LENGTH_LONG,
+                                            ).show()
+                                    }
+                                },
+                            )
+                        },
+                    )
+                }
             }
 
             SettingsSection("About") {
                 val appName = stringResource(R.string.app_name)
-                // Report a problem or feedback via email on yogeshpaliyal.foss+shelfy@gmail.com
-                SettingsItem(
-                    icon = TablerIcons.AlertTriangle,
-                    title = "Report a Problem / Feedback",
-                    shouldShowLoading = false,
-                    description = "Help us improve by reporting issues or sharing feedback",
-                    onClick = {
-                        val emailIntent =
-                            Intent(Intent.ACTION_SENDTO).apply {
-                                data = "mailto:".toUri()
-                                putExtra(
-                                    Intent.EXTRA_EMAIL,
-                                    arrayOf("yogeshpaliyal.foss+deepr@gmail.com"),
-                                )
-                                putExtra(Intent.EXTRA_SUBJECT, "$appName App Feedback/Issue")
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    "Describe your issue or feedback here:\n App Version : ${BuildConfig.VERSION_NAME}\n",
-                                )
-                            }
-                        context.startActivity(
-                            Intent.createChooser(
-                                emailIntent,
-                                "Send email via...",
-                            ),
-                        )
-                    },
-                )
+                if (settingsPlatform.sendFeedback != null) {
+                    SettingsItem(
+                        icon = TablerIcons.AlertTriangle,
+                        title = "Report a Problem / Feedback",
+                        shouldShowLoading = false,
+                        description = "Help us improve by reporting issues or sharing feedback",
+                        onClick = {
+                            settingsPlatform.sendFeedback?.invoke()
+                        },
+                    )
+                }
 
-                // Rate and review open playstore link
-                SettingsItem(
-                    icon = TablerIcons.Star,
-                    title = "Rate & Review",
-                    description = "Rate us on the Play Store",
-                    shouldShowLoading = false,
-                    onClick = {
-                        reviewManager.requestReview(context as MainActivity)
-                    },
-                )
+                if (settingsPlatform.requestReview != null) {
+                    SettingsItem(
+                        icon = TablerIcons.Star,
+                        title = "Rate & Review",
+                        description = "Rate us on the Play Store",
+                        shouldShowLoading = false,
+                        onClick = {
+                            settingsPlatform.requestReview?.invoke()
+                        },
+                    )
+                }
 
-                // Create share app item
-                SettingsItem(
-                    icon = TablerIcons.Share,
-                    title = "Share $appName",
-                    shouldShowLoading = false,
-                    description = "Share $appName with your friends",
-                    onClick = {
-                        val shareIntent =
-                            Intent().apply {
-                                action = Intent.ACTION_SEND
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    "Check out $appName - Your link organizer and Read Later App! Download it from https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}",
-                                )
-                                type = "text/plain"
-                            }
-                        context.startActivity(
-                            Intent.createChooser(
-                                shareIntent,
-                                "Share via",
-                            ),
-                        )
-                    },
-                )
+                if (settingsPlatform.shareApp != null) {
+                    SettingsItem(
+                        icon = TablerIcons.Share,
+                        title = "Share $appName",
+                        shouldShowLoading = false,
+                        description = "Share $appName with your friends",
+                        onClick = {
+                            settingsPlatform.shareApp?.invoke(
+                                "Check out $appName - Your link organizer and Read Later App! Download it from https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}",
+                            )
+                        },
+                    )
+                }
 
                 SettingsItem(
                     TablerIcons.InfoCircle,
@@ -478,7 +417,7 @@ fun SettingsScreen(
                     viewModel.setLanguageCode(selectedLanguageCode)
                     showLanguageDialog = false
                     // Recreate activity to apply language change
-                    (context as? MainActivity)?.recreate()
+                    settingsPlatform.recreateForLanguage?.invoke()
                 },
                 onDismiss = { showLanguageDialog = false },
             )
