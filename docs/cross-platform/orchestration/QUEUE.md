@@ -22,6 +22,7 @@ Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM comp
 | M2-10b | DeeprItem (+MenuItem) + DeeprItemCompact/Grid/Swipable → `ui` (clipboard, toast, date format, star icons per platform) | 10a | A | ci | openrouter deepseek-v4-flash (fallback) + orchestrator | 1 | | |
 | M2-11 | Screens: TagSelectionScreen, ProfileManagementScreen, ProfileSelectorMenu (+ `lifecycle-runtime-compose` on `:ui`) | 10b | B | ci | openrouter deepseek-v4-flash + orchestrator | 1 | | |
 | M2-12 | Screen: AddLinkScreen (+ nav key; isValidDeeplink → shared expect/actual; QR scan + open-link platform helpers) | 10b | A | ci | openrouter deepseek-v4-flash + orchestrator fix | 1 | | |
-| M2-13 | Screen: Home (+ Splash, Dashboard2) | 11,12 | A | todo | | 0 | | |
-| M2-14 | Screen: Settings + LanguageSelectionDialog (`LanguageUtil` per platform; Android-only rows via platform slot) | 13 | A | todo | | 0 | | |
+| M2-13a | Platform link-actions bridge (share / open-with / shortcuts) wired in Home (still `:app`); SharedLink + LocalSharedText/LocalClipboardLink + ShowQRCodeMenuItem → `ui` | 11,12 | A | running | deepseek-v4.1-flash (→ openrouter fallback) | 1 | | |
+| M2-13b | Home + Dashboard2 + Splash → `ui` (copy/toasts via helpers, BackHandler multiplatform) | 13a | A | todo | | 0 | | |
+| M2-14 | Screen: Settings + LanguageSelectionDialog (`LanguageUtil` per platform; Android-only rows via platform slot) | 13b | A | todo | | 0 | | |
 | M2-15 | `:app` thin host: MainActivity renders `ui` App(); remove now-unused Android duplicates/strings; Android-only screens (Backup/Restore/LocalNetworkServer/TransferLink/Drive, ServerStatusBar) stay in `:app` behind a platform-screens slot | 14 | A | todo | | 0 | | |
