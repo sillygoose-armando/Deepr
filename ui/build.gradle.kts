@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -8,6 +9,16 @@ plugins {
 }
 
 kotlin {
+    // Default template plus a "jvmShared" group (android + jvm) for code using java.*
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    applyDefaultHierarchyTemplate {
+        common {
+            group("jvmShared") {
+                withAndroidTarget()
+                withJvm()
+            }
+        }
+    }
     androidTarget {
         compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
     }
@@ -29,7 +40,12 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.qrose)
             implementation(libs.tabler.icons)
+            implementation(libs.compose.material.icons.extended.mp)
+            implementation(project.dependencies.platform(libs.koin.bom))
+            implementation(libs.koin.compose.mp)
         }
+        // java.text implementation of formatDateTime
+        getByName("jvmSharedMain").kotlin.srcDir("src/jvmShared/kotlin")
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)
         }

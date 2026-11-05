@@ -16,13 +16,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.yogeshpaliyal.deepr.GetLinksAndTags
-import com.yogeshpaliyal.deepr.R
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.delete
+import com.yogeshpaliyal.deepr.ui.resources.edit
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Edit
 import compose.icons.tablericons.Trash
+import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.launch
 
 @Composable
@@ -82,7 +84,7 @@ fun DeeprItemSwipable(
                     ) {
                         Icon(
                             imageVector = TablerIcons.Edit,
-                            contentDescription = stringResource(R.string.edit),
+                            contentDescription = stringResource(Res.string.edit),
                             tint = Color.White,
                             modifier = Modifier.padding(16.dp),
                         )
@@ -103,7 +105,7 @@ fun DeeprItemSwipable(
                     ) {
                         Icon(
                             imageVector = TablerIcons.Trash,
-                            contentDescription = stringResource(R.string.delete),
+                            contentDescription = stringResource(Res.string.delete),
                             tint = Color.White,
                             modifier = Modifier.padding(16.dp),
                         )

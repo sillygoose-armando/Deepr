@@ -8,6 +8,9 @@ Plans and work are also tracked as issues in this repo (`sillygoose-armando/Deep
 ## Models
 Free opencode models first (see MODELS.md). When they run out of credits/quota, `dispatch.sh` automatically re-runs the task on **`openrouter/deepseek/deepseek-v4-flash`** (logged as `fallback` in runs.tsv); review is unchanged.
 
+## Credits
+- 2026-11-05: both exhausted. opencode free tier: `provider.free-limit` 429 ("Free usage limit reached"). OpenRouter: the key's monthly limit; opencode asks for up to 256k output tokens per request, which fails (402) once the remaining budget is smaller, and later requests hang while opencode retries. To resume: wait for the free limit to reset, or raise the OpenRouter key limit. Optionally cap output tokens in the worktree `opencode.json` (`provider.openrouter.models["deepseek/deepseek-v4-flash"].limit.output`), untested while out of credit.
+
 ## Where state lives (all in git on `feature/kmp`, worktree `/workspace/tmp/app-teamlinkr/deepr-kmp`)
 | File | What |
 |---|---|

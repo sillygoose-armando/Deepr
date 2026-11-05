@@ -1,4 +1,6 @@
-# M2 task queue (source of truth: see ORCHESTRATION.md for the lifecycle and resume protocol)
+# M2 task queue
+
+**[!] 2026-11-05: workers out of credit.** opencode free usage limit reached (429 `provider.free-limit`), and the OpenRouter key hit its monthly limit (402). Dispatch is paused until one is restored; see ORCHESTRATION.md "Credits". (source of truth: see ORCHESTRATION.md for the lifecycle and resume protocol)
 
 GitHub issues: epic #16; M2-08b #1, M2-05b #2, M2-09 #3, M2-10 #4, M2-11 #5, M2-12 #6, M2-13 #7, M2-14 #8, M2-15 #9, M3 #10, M4 #11, M5 #12, M6 #13, M7 #14, sync golden vectors #15.
 
@@ -18,8 +20,8 @@ Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM comp
 | M2-08a | AccountViewModel's collaborator interfaces → `shared` (RequestResult, ImportResult, Analytics*, SyncRepository, Export/ImportRepository + BookmarkImporter with `Uri`→`String`, AutoBackupRunner) | 06,07 | A | done | deepseek-v4.1-flash + orchestrator fix | 1 | 6fbcd64, b91a048 | [40481208945](https://github.com/sillygoose-armando/Deepr/actions/runs/40481208945), iOS [40481208962](https://github.com/sillygoose-armando/Deepr/actions/runs/40481208962) |
 | M2-08b | AccountViewModel → `shared` (lifecycle-viewmodel KMP); `requestReview` moves to Settings' call site; then FilterMenu → `ui` | 08a | A | ci | deepseek-v4.1-flash | 2 | | |
 | M2-09 | Navigation → JetBrains Navigation3 1.1.x (`Navigation.kt` → `ui`), `:app` migrated off alpha09 | 05,08b | A | ci | deepseek-v4.1-flash | 1 | | |
-| M2-10a | Screens: FilterMenu, AboutUs (+LocalAppVersion, LocalAppIcon), AppLockScreen → `ui` | 09 | B | ci | glm-5.3-flash | 1 | | |
-| M2-10b | DeeprItem (+MenuItem) + DeeprItemCompact/Grid/Swipable → `ui` (clipboard, toast, date format, star icons per platform) | 10a | A | running | deepseek-v4.1-flash | 1 | | |
+| M2-10a | Screens: FilterMenu, AboutUs (+LocalAppVersion, LocalAppIcon), AppLockScreen → `ui` | 09 | B | ci | glm-5.3-flash | 1 | a86ebe8 | Android [42058899626](https://github.com/sillygoose-armando/Deepr/actions/runs/42058899626) ✓, iOS pending (runner capacity) |
+| M2-10b | DeeprItem (+MenuItem) + DeeprItemCompact/Grid/Swipable → `ui` (clipboard, toast, date format, star icons per platform) | 10a | A | ci | openrouter deepseek-v4-flash (fallback) + orchestrator | 1 | | |
 | M2-11 | Screens: TagSelectionScreen, ProfileManagementScreen, ProfileSelectorMenu (+ `lifecycle-runtime-compose` on `:ui`) | 10b | B | todo | | 0 | | |
 | M2-12 | Screen: AddLinkScreen (Android bits behind interfaces) | 10b | A | todo | | 0 | | |
 | M2-13 | Screen: Home (+ Splash, Dashboard2) | 11,12 | A | todo | | 0 | | |

@@ -37,6 +37,7 @@ orchestrator = "1.4.2"
 [libraries]
 android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "androidDriver" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+compose-material-icons-extended-mp = { module = "org.jetbrains.compose.material:material-icons-extended", version = "1.7.3" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycleRuntimeKtx" }
@@ -69,6 +70,7 @@ koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-core = { module = "io.insert-koin:koin-core" }
 koin-android = { module = "io.insert-koin:koin-android" }
 koin-compose = { module = "io.insert-koin:koin-androidx-compose" }
+koin-compose-mp = { module = "io.insert-koin:koin-compose" }
 ktlint = { module = "io.nlopez.compose.rules:ktlint", version.ref = "ktlint" }
 tabler-icons = { module = "br.com.devsrsouza.compose.icons:tabler-icons", version.ref = "tablerIcons" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "dataStore" }

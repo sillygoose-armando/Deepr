@@ -1,9 +1,5 @@
 package com.yogeshpaliyal.deepr.ui.screens.home
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -37,24 +33,41 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.yogeshpaliyal.deepr.GetLinksAndTags
-import com.yogeshpaliyal.deepr.R
 import com.yogeshpaliyal.deepr.Tags
 import com.yogeshpaliyal.deepr.ui.getDeeprItemBackgroundColor
 import com.yogeshpaliyal.deepr.ui.getDeeprItemTextColor
+import com.yogeshpaliyal.deepr.ui.resources.Res
+import com.yogeshpaliyal.deepr.ui.resources.add_to_favourites
+import com.yogeshpaliyal.deepr.ui.resources.link_copied
+import com.yogeshpaliyal.deepr.ui.resources.load_more_tags
+import com.yogeshpaliyal.deepr.ui.resources.more_options
+import com.yogeshpaliyal.deepr.ui.resources.opened_count
+import com.yogeshpaliyal.deepr.ui.resources.remove_from_favourites
+import com.yogeshpaliyal.deepr.ui.resources.show_less_tags
 import compose.icons.TablerIcons
 import compose.icons.tablericons.DotsVertical
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.TimeZone
+import org.jetbrains.compose.resources.stringResource
+
+/**
+ * Platform-specific copy-link action.
+ * Android: system clipboard via ClipboardManager + Toast.
+ * JVM/iOS: LocalClipboardManager.clipboard.setText(AnnotatedString(text)), no toast.
+ */
+@Composable
+internal expect fun rememberCopyLinkAction(): (label: String, text: String) -> Unit
+
+/**
+ * Formats a date-time string from "yyyy-MM-dd HH:mm:ss" (UTC) into a
+ * locale-friendly display format.
+ * On failure returns the input unchanged.
+ */
+expect fun formatDateTime(dateTimeString: String): String
 
 sealed class MenuItem(
     val item: GetLinksAndTags,
@@ -121,11 +134,12 @@ fun DeeprItem(
     analyticsManager: com.yogeshpaliyal.deepr.analytics.AnalyticsManager = org.koin.compose.koinInject(),
 ) {
     var tagsExpanded by remember { mutableStateOf(false) }
-    val context = LocalContext.current
+
+    val linkCopied = stringResource(Res.string.link_copied)
+    val copyLinkAction = rememberCopyLinkAction()
+
     val selectedTags =
         remember(account.tagsNames) { account.tagsNames?.split(",")?.toMutableList() }
-
-    val linkCopied = stringResource(R.string.link_copied)
 
     DeeprItemSwipable(account, onItemClick, modifier) {
         Card(
@@ -144,11 +158,7 @@ fun DeeprItem(
                                 com.yogeshpaliyal.deepr.analytics.AnalyticsEvents.COPY_LINK,
                                 mapOf(com.yogeshpaliyal.deepr.analytics.AnalyticsParams.LINK_ID to account.id),
                             )
-                            val clipboard =
-                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText(linkCopied, account.link)
-                            clipboard.setPrimaryClip(clip)
-                            Toast.makeText(context, linkCopied, Toast.LENGTH_SHORT).show()
+                            copyLinkAction(linkCopied, account.link)
                         },
                     ),
         ) {
@@ -217,9 +227,9 @@ fun DeeprItem(
                                         },
                                     contentDescription =
                                         if (account.isFavourite == 1L) {
-                                            stringResource(R.string.remove_from_favourites)
+                                            stringResource(Res.string.remove_from_favourites)
                                         } else {
-                                            stringResource(R.string.add_to_favourites)
+                                            stringResource(Res.string.add_to_favourites)
                                         },
                                     tint = getDeeprItemTextColor(account.isFavourite),
                                     modifier = Modifier.size(28.dp),
@@ -235,14 +245,14 @@ fun DeeprItem(
                             }) {
                                 Icon(
                                     TablerIcons.DotsVertical,
-                                    contentDescription = stringResource(R.string.more_options),
+                                    contentDescription = stringResource(Res.string.more_options),
                                 )
                             }
                         }
 
                         if (showOpenCounter) {
                             Text(
-                                text = stringResource(R.string.opened_count, account.openedCount),
+                                text = stringResource(Res.string.opened_count, account.openedCount),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = getDeeprItemTextColor(account.isFavourite),
                             )
@@ -283,9 +293,9 @@ fun DeeprItem(
                             Text(
                                 text =
                                     if (tagsExpanded) {
-                                        stringResource(R.string.show_less_tags)
+                                        stringResource(Res.string.show_less_tags)
                                     } else {
-                                        stringResource(R.string.load_more_tags, hiddenTagsCount)
+                                        stringResource(Res.string.load_more_tags, hiddenTagsCount)
                                     },
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                             )
@@ -294,19 +304,6 @@ fun DeeprItem(
                 }
             }
         }
-    }
-}
-
-fun formatDateTime(dateTimeString: String): String {
-    try {
-        val dbFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        dbFormatter.timeZone = TimeZone.getTimeZone("UTC")
-        val date = dbFormatter.parse(dateTimeString)
-        val displayFormatter =
-            DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.getDefault())
-        return date?.let { displayFormatter.format(it) } ?: dateTimeString
-    } catch (_: Exception) {
-        return dateTimeString // fallback to raw string
     }
 }
 
