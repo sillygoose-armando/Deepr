@@ -28,3 +28,11 @@ Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM comp
 | M2-14a | Settings platform bridge (data-mgmt/Drive + local-server slots, keyguard, feedback, review, share-app, recreate) wired in Settings (still `:app`); LanguageUtil data → `shared` | 13b | A | done | openrouter deepseek-v4-flash + orchestrator fixes | 1 | | Android [42080636765](https://github.com/sillygoose-armando/Deepr/actions/runs/42080636765), iOS [42080636680](https://github.com/sillygoose-armando/Deepr/actions/runs/42080636680) |
 | M2-14b | Settings + LanguageSelectionDialog → `ui` (long toast, server bar via bridge, koinViewModel KMP) | 14a | A | done | openrouter deepseek-v4-flash | 1 | 896179e | Android [42082381582](https://github.com/sillygoose-armando/Deepr/actions/runs/42082381582), iOS [42082381273](https://github.com/sillygoose-armando/Deepr/actions/runs/42082381273) |
 | M2-15 | `:app` thin host (also: drop bridges no longer needed, e.g. LocalDashboardRoute): MainActivity renders `ui` App(); remove now-unused Android duplicates/strings; Android-only screens (Backup/Restore/LocalNetworkServer/TransferLink/Drive, ServerStatusBar) stay in `:app` behind a platform-screens slot | 14 | A | ci | openrouter deepseek-v4-flash | 1 | | |
+
+## M3 — Desktop (issue #10)
+| ID | Task | Deps | Tier | Status | Model | Attempts | Commit | CI run |
+|---|---|---|---|---|---|---|---|---|
+| M3-01 | Common Koin module in `:shared`/`:ui` (DB, repos, prefs, AccountViewModel) + per-platform driver/datastore factories; Android `DeeprApplication` uses it (no behaviour change) | M2-15 | A | todo | | 0 | | |
+| M3-02 | `desktopApp` module (Compose Desktop): `main()` → `Window { DeeprTheme { DeeprApp(...) } }`; SQLite file in OS app-data dir (D5 paths) with schema create/migrate; desktop stubs (no-op backup runner/analytics; export/import via file chooser later) | M3-01 | A | todo | | 0 | | |
+| M3-03 | Desktop UI smoke test (`compose ui-test` on JVM): app starts, the home list renders, add a link via the AddLink screen; runs in CI on ubuntu x64 (skiko has no linux-arm64 runtime locally) | M3-02 | B | todo | | 0 | | |
+| M3-04 | Packaging: `nativeDistributions` (deb/msi/dmg, unsigned per D4) + CI matrix job (path-gated per D3), artifacts uploaded | M3-02 | B | todo | | 0 | | |
