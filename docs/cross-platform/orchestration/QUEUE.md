@@ -33,6 +33,6 @@ Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM comp
 | ID | Task | Deps | Tier | Status | Model | Attempts | Commit | CI run |
 |---|---|---|---|---|---|---|---|---|
 | M3-01 | Common Koin module in `:shared`/`:ui` (DB, repos, prefs, AccountViewModel) + per-platform driver/datastore factories; Android `DeeprApplication` uses it (no behaviour change) | M2-15 | A | ci | openrouter deepseek-v4-flash | 1 | | |
-| M3-02 | `desktopApp` module (Compose Desktop): `main()` → `Window { DeeprTheme { DeeprApp(...) } }`; SQLite file in OS app-data dir (D5 paths) with schema create/migrate; desktop stubs (no-op backup runner/analytics; export/import via file chooser later) | M3-01 | A | running | deepseek-v4.1-flash (→ openrouter fallback) | 1 | | |
+| M3-02 | `desktopApp` module (Compose Desktop): `main()` → `Window { DeeprTheme { DeeprApp(...) } }`; SQLite file in OS app-data dir (D5 paths) with schema create/migrate; desktop stubs (no-op backup runner/analytics; export/import via file chooser later) | M3-01 | A | ci | openrouter deepseek-v4-flash + orchestrator fix | 1 | | |
 | M3-03 | Desktop UI smoke test (`compose ui-test` on JVM): app starts, the home list renders, add a link via the AddLink screen; runs in CI on ubuntu x64 (skiko has no linux-arm64 runtime locally) | M3-02 | B | todo | | 0 | | |
 | M3-04 | Packaging: `nativeDistributions` (deb/msi/dmg, unsigned per D4) + CI matrix job (path-gated per D3), artifacts uploaded | M3-02 | B | todo | | 0 | | |

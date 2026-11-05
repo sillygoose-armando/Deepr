@@ -30,8 +30,8 @@ jobs:
         working-directory: tools/sync-harness
         run: bash ../../gradlew -p . test
 
-      - name: Shared and UI modules (JVM target)
-        run: bash ./gradlew :shared:compileKotlinJvm :shared:jvmTest :ui:compileKotlinJvm :ui:jvmTest
+      - name: Shared, UI, and Desktop modules (JVM target)
+        run: bash ./gradlew :shared:compileKotlinJvm :shared:jvmTest :ui:compileKotlinJvm :ui:jvmTest :desktopApp:compileKotlin :desktopApp:test
 
       - name: Lint
         run: bash ./gradlew lintKotlin

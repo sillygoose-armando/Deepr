@@ -76,3 +76,8 @@ ts	task	model	event	session	detail
 2026-11-05T18:36:48Z	M3-01	openrouter/deepseek/deepseek-v4-flash	fallback		from=opencode/deepseek-v4.1-flash-free
 2026-11-05T18:36:48Z	M3-01	openrouter/deepseek/deepseek-v4-flash	start		.orchestration/logs/M3-01-openrouter_deepseek_deepseek-v4-flash-20261105-183648.jsonl
 2026-11-05T18:41:22Z	M3-01	openrouter/deepseek/deepseek-v4-flash	end	ses_e53002fb4ffeYrBzrVG854wFfL	exit=0 log=.orchestration/logs/M3-01-openrouter_deepseek_deepseek-v4-flash-20261105-183648.jsonl
+2026-11-05T18:42:33Z	M3-02	opencode/deepseek-v4.1-flash-free	start		.orchestration/logs/M3-02-opencode_deepseek-v4.1-flash-free-20261105-184233.jsonl
+2026-11-05T18:42:36Z	M3-02	opencode/deepseek-v4.1-flash-free	end	ses_e52fae7efffeNN8Ll8kAzdtwJ9	exit=1 log=.orchestration/logs/M3-02-opencode_deepseek-v4.1-flash-free-20261105-184233.jsonl
+2026-11-05T18:42:36Z	M3-02	openrouter/deepseek/deepseek-v4-flash	fallback		from=opencode/deepseek-v4.1-flash-free
+2026-11-05T18:42:36Z	M3-02	openrouter/deepseek/deepseek-v4-flash	start		.orchestration/logs/M3-02-openrouter_deepseek_deepseek-v4-flash-20261105-184236.jsonl
+2026-11-05T18:46:51Z	M3-02	openrouter/deepseek/deepseek-v4-flash	end	ses_e52faddbbffeDZWRz0G7CkqB1U	exit=0 log=.orchestration/logs/M3-02-openrouter_deepseek_deepseek-v4-flash-20261105-184236.jsonl
