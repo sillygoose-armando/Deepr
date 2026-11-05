@@ -56,3 +56,6 @@ Escalation: after 2 failed attempts with a model, move to the next model in the 
   `{"$schema":"https://opencode.ai/config.json","permission":{"external_directory":"allow"},"mcp":{"codegraph":{"type":"local","command":["codegraph","serve","--mcp"],"enabled":true}}}`
   `external_directory: allow` matters: headless `opencode run` **ends the session** when it auto-rejects a path outside the repo (e.g. a worker reading a library jar in `~/.gradle`). That killed M2-02 attempts 1–3.
 - Keep `codegraph sync .` current after big moves.
+
+## pi fallback (2026-11-05, user)
+When opencode's free credits run out, workers run through the **pi** CLI (`~/.local/bin/pi`) instead of opencode: `dispatch.sh` falls back to `FALLBACK_MODEL=pi:openrouter/deepseek/deepseek-v4-flash`, and any model can be dispatched through pi directly with a `pi:` prefix (`tools/orchestrate/dispatch.sh M4-03 pi:openrouter/deepseek/deepseek-v4-flash`). pi runs headless as `pi --print --mode json --approve`; the session id is the `id` on the log's first (`"type":"session"`) line, and `--resume <id>` maps to `pi --session <id>`. codegraph comes from the untracked `.pi/mcp.json` (excluded via `.git/info/exclude`); recreate with `pi mcp add codegraph -l -- codegraph serve --mcp`. `--approve` trusts the project for the run, otherwise pi ignores `.pi/mcp.json`.
