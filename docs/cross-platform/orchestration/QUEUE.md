@@ -18,9 +18,10 @@ Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM comp
 | M2-08a | AccountViewModel's collaborator interfaces → `shared` (RequestResult, ImportResult, Analytics*, SyncRepository, Export/ImportRepository + BookmarkImporter with `Uri`→`String`, AutoBackupRunner) | 06,07 | A | done | deepseek-v4.1-flash + orchestrator fix | 1 | 6fbcd64, b91a048 | [40481208945](https://github.com/sillygoose-armando/Deepr/actions/runs/40481208945), iOS [40481208962](https://github.com/sillygoose-armando/Deepr/actions/runs/40481208962) |
 | M2-08b | AccountViewModel → `shared` (lifecycle-viewmodel KMP); `requestReview` moves to Settings' call site; then FilterMenu → `ui` | 08a | A | ci | deepseek-v4.1-flash | 2 | | |
 | M2-09 | Navigation → JetBrains Navigation3 1.1.x (`Navigation.kt` → `ui`), `:app` migrated off alpha09 | 05,08b | A | ci | deepseek-v4.1-flash | 1 | | |
-| M2-10 | Screens: FilterMenu (deferred from 08b), AboutUs, AppLockScreen, Splash, DeeprItem (+`MenuItem`) and the DeeprItemCompact/Grid/Swipable that depend on it (blocked in M2-05), ProfileSelectorMenu | 09 | B | todo | | 0 | | |
-| M2-11 | Screens: TagSelectionScreen, ProfileManagementScreen | 10 | B | todo | | 0 | | |
-| M2-12 | Screen: AddLinkScreen (Android bits behind interfaces) | 10 | A | todo | | 0 | | |
-| M2-13 | Screen: Home | 11,12 | A | todo | | 0 | | |
+| M2-10a | Screens: FilterMenu, AboutUs (+LocalAppVersion), AppLockScreen, ProfileSelectorMenu → `ui` | 09 | B | running | glm-5.3-flash | 1 | | |
+| M2-10b | DeeprItem (+MenuItem) + DeeprItemCompact/Grid/Swipable → `ui` (clipboard, toast, date format, star icons per platform) | 10a | A | todo | | 0 | | |
+| M2-11 | Screens: TagSelectionScreen, ProfileManagementScreen | 10b | B | todo | | 0 | | |
+| M2-12 | Screen: AddLinkScreen (Android bits behind interfaces) | 10b | A | todo | | 0 | | |
+| M2-13 | Screen: Home (+ Splash, Dashboard2) | 11,12 | A | todo | | 0 | | |
 | M2-14 | Screen: Settings + LanguageSelectionDialog (`LanguageUtil` per platform; Android-only rows via platform slot) | 13 | A | todo | | 0 | | |
 | M2-15 | `:app` thin host: MainActivity renders `ui` App(); remove now-unused Android duplicates/strings; Android-only screens (Backup/Restore/LocalNetworkServer/TransferLink/Drive, ServerStatusBar) stay in `:app` behind a platform-screens slot | 14 | A | todo | | 0 | | |
