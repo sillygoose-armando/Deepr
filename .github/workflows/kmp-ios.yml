@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   ios:
-    runs-on: macos-latest
+    runs-on: macos-15  # macos-latest (macOS 26 arm64) repeatedly found no runner within 15 min (2026-11-05)
     steps:
       - uses: actions/checkout@v4
 

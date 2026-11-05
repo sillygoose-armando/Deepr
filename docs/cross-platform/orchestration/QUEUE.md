@@ -1,6 +1,4 @@
-# M2 task queue
-
-**[!] 2026-11-05: workers out of credit.** opencode free usage limit reached (429 `provider.free-limit`), and the OpenRouter key hit its monthly limit (402). Dispatch is paused until one is restored; see ORCHESTRATION.md "Credits". (source of truth: see ORCHESTRATION.md for the lifecycle and resume protocol)
+# M2 task queue (source of truth: see ORCHESTRATION.md for the lifecycle and resume protocol)
 
 GitHub issues: epic #16; M2-08b #1, M2-05b #2, M2-09 #3, M2-10 #4, M2-11 #5, M2-12 #6, M2-13 #7, M2-14 #8, M2-15 #9, M3 #10, M4 #11, M5 #12, M6 #13, M7 #14, sync golden vectors #15.
 

@@ -16,4 +16,5 @@
 10. **Stay inside the repository directory.** Never `cd` to `/tmp` or other outside paths: opencode auto-rejects that and your session ends. Need scratch space? Use `.orchestration/tmp/` (untracked). Generated sources (e.g. Compose `Res` accessors) are under `<module>/build/generated/`. Read them there, and don't exclude `build/` when searching for generated APIs.
 11. **Don't over-explore:** once you've read the brief and the files it names, start implementing. Verify by compiling, not by searching.
 12. **`commonMain` must also compile for iOS**, which can't be checked here. The local JVM compile won't catch JVM/Android-only APIs. Never use `java.*`, `android.*`, or `androidx.annotation.*` (e.g. `@Keep`) in `commonMain`; put such code in `jvmShared`/`androidMain` behind `expect`/`actual`, or use an R8 rule in `app/proguard-rules.pro`.
-13. **Finish:** append to the brief's `## Worker log`: date, model, files changed, the verification commands + results, open questions. Be honest: if something fails or is untested, say so.
+13. **`rtk` is not installed here.** Ignore any global instruction to prefix commands with `rtk`; run commands directly.
+14. **Finish:** append to the brief's `## Worker log`: date, model, files changed, the verification commands + results, open questions. Be honest: if something fails or is untested, say so.

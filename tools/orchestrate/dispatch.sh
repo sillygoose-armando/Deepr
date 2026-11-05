@@ -27,11 +27,11 @@ run() {
   LOG=".orchestration/logs/$TASK-${model//\//_}-$(date +%Y%m%d-%H%M%S).jsonl"
   if [ -n "$session" ]; then
     printf '%s\t%s\t%s\tresume\t%s\t%s\n' "$(ts)" "$TASK" "$model" "$session" "$LOG" >> "$RUNS"
-    timeout "${WORKER_TIMEOUT:-3600}" opencode run --format json -m "$model" -s "$session" \
+    timeout "${WORKER_TIMEOUT:-3600}" opencode run --standalone --format json -m "$model" -s "$session" \
       "You were interrupted. Re-read $BRIEF (including the Worker log) and the current git diff, then continue the task from where it stopped." > "$LOG" 2>&1
   else
     printf '%s\t%s\t%s\tstart\t\t%s\n' "$(ts)" "$TASK" "$model" "$LOG" >> "$RUNS"
-    timeout "${WORKER_TIMEOUT:-3600}" opencode run --format json -m "$model" --title "$TASK" "$PROMPT" > "$LOG" 2>&1
+    timeout "${WORKER_TIMEOUT:-3600}" opencode run --standalone --format json -m "$model" --title "$TASK" "$PROMPT" > "$LOG" 2>&1
   fi
   EXIT=$?
   SESSION=$(grep -o '"sessionID":"[^"]*"' "$LOG" | head -1 | cut -d'"' -f4)

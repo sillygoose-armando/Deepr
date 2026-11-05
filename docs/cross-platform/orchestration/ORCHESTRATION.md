@@ -9,7 +9,10 @@ Plans and work are also tracked as issues in this repo (`sillygoose-armando/Deep
 Free opencode models first (see MODELS.md). When they run out of credits/quota, `dispatch.sh` automatically re-runs the task on **`openrouter/deepseek/deepseek-v4-flash`** (logged as `fallback` in runs.tsv); review is unchanged.
 
 ## Credits
-- 2026-11-05: both exhausted. opencode free tier: `provider.free-limit` 429 ("Free usage limit reached"). OpenRouter: the key's monthly limit; opencode asks for up to 256k output tokens per request, which fails (402) once the remaining budget is smaller, and later requests hang while opencode retries. To resume: wait for the free limit to reset, or raise the OpenRouter key limit. Optionally cap output tokens in the worktree `opencode.json` (`provider.openrouter.models["deepseek/deepseek-v4-flash"].limit.output`), untested while out of credit.
+- 2026-11-05: both exhausted. opencode free tier: `provider.free-limit` 429 ("Free usage limit reached"). OpenRouter: the key's monthly limit; opencode asks for up to 256k output tokens per request, which fails (402) once the remaining budget is smaller, and later requests hang while opencode retries. To resume: wait for the free limit to reset, or raise the OpenRouter key limit. The user added OpenRouter credits (2026-11-05). The worktree `opencode.json` now caps OpenRouter deepseek-v4-flash output at 32k tokens (`provider.openrouter.models["deepseek/deepseek-v4-flash"].limit = {context: 256000, output: 32000}`), so requests stay affordable. Formerly suggested: cap output tokens in the worktree `opencode.json` (`provider.openrouter.models["deepseek/deepseek-v4-flash"].limit.output`), untested while out of credit.
+
+## opencode background service
+opencode v2 routes `opencode run` through a shared background server (`opencode serve --service`), which also serves other projects on this machine. On 2026-11-05 it stopped processing requests (runs hung with no output). `dispatch.sh` therefore uses **`opencode run --standalone`** (a private server per run) and never touches the shared service.
 
 ## Where state lives (all in git on `feature/kmp`, worktree `/workspace/tmp/app-teamlinkr/deepr-kmp`)
 | File | What |
