@@ -1,6 +1,4 @@
-# M2 task queue
-
-**[!] 2026-10-27: dispatch paused. The host disk is full (~40 MB free; another project and opencode's 2.6 GB DB are growing). Resume when `df -h /` shows >1.5 GB free. M2-08b's brief is ready.** (source of truth: see ORCHESTRATION.md for the lifecycle and resume protocol)
+# M2 task queue (source of truth: see ORCHESTRATION.md for the lifecycle and resume protocol)
 
 Statuses: todo · running · review · changes · ci · done · blocked. "Tier" maps to MODELS.md (A = hardest/riskiest).
 Rule for every task: Android behaviour unchanged; local `:shared`/`:ui` JVM compile green; CI (`P2P Sync Build` + `KMP iOS compile`) green before `done`.
