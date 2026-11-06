@@ -8,7 +8,7 @@ import com.yogeshpaliyal.deepr.di.sharedModule
 import com.yogeshpaliyal.deepr.di.unsupportedFeaturesModule
 import com.yogeshpaliyal.deepr.ui.DeeprApp
 import com.yogeshpaliyal.deepr.ui.ProvideNavigationEventOwner
-import com.yogeshpaliyal.deepr.ui.theme.DeeprTheme
+import com.yogeshpaliyal.deepr.ui.theme.DeeprThemeFromPreferences
 import org.koin.core.context.startKoin
 
 fun main() {
@@ -26,7 +26,7 @@ private fun ApplicationScope.DeeprWindow() {
         title = "Deepr",
     ) {
         ProvideNavigationEventOwner {
-            DeeprTheme {
+            DeeprThemeFromPreferences {
                 DeeprApp(
                     sharedText = null,
                     resetSharedText = {},

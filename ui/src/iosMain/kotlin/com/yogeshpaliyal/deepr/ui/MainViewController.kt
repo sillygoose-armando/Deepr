@@ -11,7 +11,7 @@ import com.yogeshpaliyal.deepr.di.sharedModule
 import com.yogeshpaliyal.deepr.di.unsupportedFeaturesModule
 import com.yogeshpaliyal.deepr.preference.AppPreferenceDataStore
 import com.yogeshpaliyal.deepr.preference.PreferenceRepository
-import com.yogeshpaliyal.deepr.ui.theme.DeeprTheme
+import com.yogeshpaliyal.deepr.ui.theme.DeeprThemeFromPreferences
 import okio.Path.Companion.toPath
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -54,7 +54,7 @@ fun initKoin(dataDir: String) {
 fun MainViewController(): UIViewController =
     ComposeUIViewController {
         ProvideNavigationEventOwner {
-            DeeprTheme {
+            DeeprThemeFromPreferences {
                 DeeprApp(
                     sharedText = null,
                     resetSharedText = {},
