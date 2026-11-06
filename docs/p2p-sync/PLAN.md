@@ -133,7 +133,7 @@ Bounded tasks may be delegated to opencode free models. The lead reviews and tes
 
 ## Proposals
 
-### P-1 — Sync over the internet (user request 2026-11-06: "send a friend my code and have them sync with me") — **awaiting user decision**
+### P-1 — Sync over the internet (user request 2026-11-06: "send a friend my code and have them sync with me") — **user chose iroh (D below), 2026-11-06; feasibility spike first**
 Today devices talk HTTP directly, so they must reach each other's IP: same Wi-Fi only. Across the internet (phones behind carrier NAT, home routers) a direct connection almost never works, so something reachable from both sides is needed. Options:
 
 | | What | Code change | Both apps open at once? | Who sees what |
@@ -145,3 +145,6 @@ Today devices talk HTTP directly, so they must reach each other's IP: same Wi-Fi
 
 Hosting for B/C: any small VPS, Fly.io or a similar free/cheap tier, or Cloudflare Workers + Durable Objects (would mean writing the relay in TypeScript). Needs a domain/URL baked into the app or configurable in Sync settings.
 Recommendation: **B now** (small, keeps the audited protocol, reuses Ktor), **C later** if "my friend is rarely online when I am" turns out to matter. A works today with no code for technical users.
+
+**Decision (user, 2026-11-06): option D via [iroh](https://iroh.computer)** — devices dial each other by public key, iroh tries a direct (hole-punched) QUIC connection and falls back to relays (n0's public relays; self-hostable). It replaces only the transport under `HttpPost`/`P2pServer`: pairing, envelope crypto and merge rules stay unchanged; LAN keeps working. Still requires both apps to be online at the same time (no mailbox). Next: spike (bindings for Kotlin/Android, JVM desktop, Swift/iOS; build integration; app size), then tasks.
+
