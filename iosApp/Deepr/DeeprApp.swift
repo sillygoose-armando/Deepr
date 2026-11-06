@@ -20,7 +20,7 @@ struct DeeprApp: App {
         try? FileManager.default.createDirectory(
             at: dataDir, withIntermediateDirectories: true
         )
-        MainViewControllerKt.doInitKoin(dataDir: dataDir.path)
+        MainViewControllerKt.doInitKoin(dataDir: dataDir.path, withP2p: true)
     }
 
     var body: some Scene {
