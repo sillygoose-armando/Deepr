@@ -42,4 +42,12 @@ jobs:
           DEVICE=$(xcrun simctl list devices available | grep -m1 -oE 'iPhone [0-9]+[^(]*' | sed 's/ *$//')
           echo "Simulator: $DEVICE"
           xcodebuild -project iosApp/Deepr.xcodeproj -scheme Deepr -configuration Debug \
-            -destination "platform=iOS Simulator,name=$DEVICE" CODE_SIGNING_ALLOWED=NO test
+            -destination "platform=iOS Simulator,name=$DEVICE" -resultBundlePath build/ui-tests.xcresult CODE_SIGNING_ALLOWED=NO test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ui-tests-xcresult
+          path: build/ui-tests.xcresult
+          retention-days: 7
