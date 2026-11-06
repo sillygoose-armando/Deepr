@@ -18,7 +18,8 @@ import java.io.File
 
 class DesktopModuleTest : KoinTest {
     private val tmpDir: File =
-        File(System.getProperty("java.io.tmpdir"), "deepr-desktop-test-${System.nanoTime()}")
+        // Not deleted in @After: AccountViewModel\'s init coroutine may still write to the DB after the test body (SQLITE_IOERR_DELETE_NOENT). `gradle clean` removes it.
+        File("build/tmp/deepr-desktop-test-${System.nanoTime()}")
 
     private val deeprQueries: DeeprQueries by inject()
     private val preferenceRepository: PreferenceRepository by inject()
@@ -37,7 +38,6 @@ class DesktopModuleTest : KoinTest {
     @After
     fun tearDown() {
         stopKoin()
-        tmpDir.deleteRecursively()
     }
 
     @Test

@@ -1,0 +1,45 @@
+name: KMP iOS UI test
+
+# Separate from "KMP iOS compile": the arm64 macOS pool is often out of capacity (job cancelled after ~15 min
+# without a runner), which must not turn the compile check red. Nightly run retries when pushes were unlucky.
+on:
+  push:
+    branches: [ 'feature/kmp' ]
+    paths: [ 'shared/**', 'ui/**', 'iosApp/**', 'gradle/**', '**.gradle.kts', 'gradle.properties', '.github/workflows/kmp-ios-ui-test.yml' ]
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ios-ui-test:
+    runs-on: macos-15  # arm64 only: Navigation3 publishes no iosX64, so the simulator test can't run on Intel
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true
+
+      - name: Generate Xcode project
+        run: brew install xcodegen && cd iosApp && xcodegen generate
+
+      - name: Run UI tests on the simulator
+        run: |
+          DEVICE=$(xcrun simctl list devices available | grep -m1 -oE 'iPhone [0-9]+[^(]*' | sed 's/ *$//')
+          echo "Simulator: $DEVICE"
+          xcodebuild -project iosApp/Deepr.xcodeproj -scheme Deepr -configuration Debug \
+            -destination "platform=iOS Simulator,name=$DEVICE" CODE_SIGNING_ALLOWED=NO test
