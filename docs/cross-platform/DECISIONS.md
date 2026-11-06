@@ -69,3 +69,8 @@ The host is aarch64 Linux with ~2 GB free disk and no Android SDK (`aapt2` has n
 ## D13 — Minimum iOS 17.2 (2026-11-06, user)
 - Compose Multiplatform's bundled ICU objects inside `DeeprUI.framework` are built for iOS 17.2; with a 16.0 deployment target the linker warns ("built for newer 'iOS-simulator' version (17.2) than being linked (16.0)") and that code could fail on iOS 16 devices.
 - `iosApp/project.yml` `deploymentTarget` is 17.2 for all targets (app, Share Extension, UI tests). Cost: iPhone 8 / X (max iOS 16) can't install the app.
+
+## D14 — Internet sync via iroh 1.2 (2026-11-06, user)
+- Transport for peers that aren't on the same network: [iroh](https://iroh.computer) (QUIC, dial by public key, hole punching, relay fallback). Pairing, envelope crypto and merge rules are unchanged; LAN stays preferred. See `docs/p2p-sync/PLAN.md` P-1.
+- Artifacts (checked on Maven Central): `computer.iroh:iroh:1.2.0` (JVM, JNA; natives for macOS arm64, Linux x64/arm64, Windows x64; **no Intel Mac**; Gradle metadata says JVM 21) and `computer.iroh:iroh-android:1.2.0` (AAR, arm64-v8a/armeabi-v7a/x86/x86_64, minSdk 24). iOS: Swift package `IrohLib` (SPM, `https://github.com/n0-computer/iroh-ffi`), bridged into Kotlin through a Swift-implemented Kotlin interface.
+- User accepted ~+25 MB on the universal APK, and **n0's public relays to start** (rate-limited, meant for development/testing); self-hosting `iroh-relay` decided later.
