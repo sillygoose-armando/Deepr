@@ -40,6 +40,8 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.ktor.client.core)
+            implementation(libs.ktor.server.core)
+            implementation(libs.ktor.server.cio)
             implementation(project.dependencies.platform(libs.koin.bom))
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
@@ -61,6 +63,10 @@ kotlin {
             implementation(libs.sqldelight.sqlite.driver)
             implementation(libs.koin.test)
             implementation(libs.ktor.client.mock)
+        }
+        iosTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.sqldelight.native.driver)
         }
     }
 }

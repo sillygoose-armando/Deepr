@@ -9,7 +9,9 @@ val sharedMain = rootDir.resolve("../../shared/src/commonMain")
 kotlin {
     jvmToolchain(17)
     sourceSets["main"].kotlin.srcDir(rootDir.resolve("../../shared/src/commonMain/kotlin/com/yogeshpaliyal/deepr/p2p"))
+    sourceSets["main"].kotlin.exclude("**/http/**")
     sourceSets["main"].kotlin.srcDir(rootDir.resolve("../../shared/src/jvmShared/kotlin/com/yogeshpaliyal/deepr/p2p"))
+    sourceSets["main"].kotlin.exclude("**/http/**")
 }
 
 sqldelight {

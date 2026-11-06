@@ -34,6 +34,9 @@ jobs:
         with:
           cache-disabled: true
 
+      - name: Kotlin tests on the iOS simulator (P2P server runtime, D7)
+        run: ./gradlew :shared:iosSimulatorArm64Test
+
       - name: Generate Xcode project
         run: brew install xcodegen && cd iosApp && xcodegen generate
 
