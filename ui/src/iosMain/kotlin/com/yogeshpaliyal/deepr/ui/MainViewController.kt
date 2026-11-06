@@ -55,11 +55,12 @@ fun MainViewController(): UIViewController =
     ComposeUIViewController {
         ProvideNavigationEventOwner {
             DeeprThemeFromPreferences {
+                val (clipboardLink, resetClipboardLink) = rememberDetectedClipboardLink()
                 DeeprApp(
                     sharedText = null,
                     resetSharedText = {},
-                    clipboardLink = null,
-                    resetClipboardLink = {},
+                    clipboardLink = clipboardLink,
+                    resetClipboardLink = resetClipboardLink,
                 )
             }
         }

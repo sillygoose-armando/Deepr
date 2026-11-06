@@ -8,6 +8,7 @@ import com.yogeshpaliyal.deepr.di.sharedModule
 import com.yogeshpaliyal.deepr.di.unsupportedFeaturesModule
 import com.yogeshpaliyal.deepr.ui.DeeprApp
 import com.yogeshpaliyal.deepr.ui.ProvideNavigationEventOwner
+import com.yogeshpaliyal.deepr.ui.rememberDetectedClipboardLink
 import com.yogeshpaliyal.deepr.ui.theme.DeeprThemeFromPreferences
 import org.koin.core.context.startKoin
 
@@ -27,11 +28,12 @@ private fun ApplicationScope.DeeprWindow() {
     ) {
         ProvideNavigationEventOwner {
             DeeprThemeFromPreferences {
+                val (clipboardLink, resetClipboardLink) = rememberDetectedClipboardLink()
                 DeeprApp(
                     sharedText = null,
                     resetSharedText = {},
-                    clipboardLink = null,
-                    resetClipboardLink = {},
+                    clipboardLink = clipboardLink,
+                    resetClipboardLink = resetClipboardLink,
                 )
             }
         }
