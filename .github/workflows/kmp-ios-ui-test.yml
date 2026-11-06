@@ -41,6 +41,9 @@ jobs:
         run: |
           DEVICE=$(xcrun simctl list devices available | grep -m1 -oE 'iPhone [0-9]+[^(]*' | sed 's/ *$//')
           echo "Simulator: $DEVICE"
+          # Boot first: launching into a cold simulator flakes with "Failed to get background assertion for target app".
+          xcrun simctl boot "$DEVICE" || true
+          xcrun simctl bootstatus "$DEVICE" -b
           xcodebuild -project iosApp/Deepr.xcodeproj -scheme Deepr -configuration Debug \
             -destination "platform=iOS Simulator,name=$DEVICE" -resultBundlePath build/ui-tests.xcresult CODE_SIGNING_ALLOWED=NO test
 
