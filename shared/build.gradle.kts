@@ -14,6 +14,9 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
+    // iroh's Gradle metadata requires JVM 21; Android keeps its Java 11 bytecode target.
+    jvmToolchain(21)
+
     // Default template plus a "jvmShared" group (android + jvm) for code using java.* / javax.crypto.
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     applyDefaultHierarchyTemplate {
@@ -27,7 +30,9 @@ kotlin {
     androidTarget {
         compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
     }
-    jvm()
+    jvm {
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_21) }
+    }
     iosArm64()
     iosSimulatorArm64()
 
@@ -49,11 +54,25 @@ kotlin {
         // javax.crypto implementation of P2pCrypto; the sync track keeps it in src/jvmShared.
         getByName("jvmSharedMain").kotlin.srcDir("src/jvmShared/kotlin")
         getByName("jvmSharedMain").dependencies {
+            // Exclude the plain JNA jar: Android needs the @aar artifact (added in androidMain),
+            // and the JVM target gets the plain jar in jvmMain.
+            implementation("computer.iroh:iroh:${libs.versions.iroh.get()}") {
+                exclude(group = "net.java.dev.jna", module = "jna")
+            }
             implementation(libs.ktor.client.cio)
             implementation(libs.jsoup)
         }
+        jvmMain.dependencies {
+            implementation(libs.jna)
+        }
         androidMain.dependencies {
             implementation(libs.androidx.datastore.preferences)
+            // iroh's Android AAR ships libiroh_ffi.so per ABI; JNA must be the @aar so libjnidispatch.so
+            // is packaged per ABI too (the plain jar's desktop natives do not work on Android).
+            implementation("computer.iroh:iroh-android:${libs.versions.iroh.get()}") {
+                exclude(group = "net.java.dev.jna", module = "jna")
+            }
+            implementation("net.java.dev.jna:jna:${libs.versions.jna.get()}@aar")
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

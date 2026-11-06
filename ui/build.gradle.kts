@@ -23,7 +23,11 @@ kotlin {
     androidTarget {
         compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
     }
-    jvm()
+    // iroh (via :shared) is published for JVM 21 (DECISIONS D14).
+    jvmToolchain(21)
+    jvm {
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_21) }
+    }
     iosArm64()
     iosSimulatorArm64()
 

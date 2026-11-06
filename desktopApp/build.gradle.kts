@@ -1,4 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -6,6 +7,12 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+
+// iroh's Gradle metadata requires JVM 21.
+kotlin {
+    jvmToolchain(21)
+    compilerOptions { jvmTarget.set(JvmTarget.JVM_21) }
+}
 
 dependencies {
     implementation(project(":ui"))

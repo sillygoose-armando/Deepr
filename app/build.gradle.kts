@@ -103,6 +103,13 @@ android {
     packaging {
         resources {
             excludes += "META-INF/DEPENDENCIES"
+            // iroh's JVM jar carries desktop natives; Android uses the iroh-android AAR instead.
+            excludes += listOf(
+                "darwin-aarch64/**",
+                "linux-x86-64/**",
+                "linux-aarch64/**",
+                "win32-x86-64/**",
+            )
         }
     }
 }
