@@ -193,10 +193,11 @@ class P2pHttpLoopbackTest {
     @Test
     fun localIpv4AddressesReturnsNonLoopback() = runBlocking {
         val addrs = localIpv4Addresses()
+        assertTrue(addrs.isNotEmpty(), "this host and CI runners have a non-loopback interface")
+        val quad = Regex("^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$")
         for (addr in addrs) {
-            // Check it looks like a dotted-quad IPv4 address
-            assertTrue(addr.indexOf('.') > 0, "should be a dotted IP: $addr")
-            assertTrue(!addr.startsWith("127."), "should not contain loopback: $addr")
+            assertTrue(quad.matches(addr), "plain dotted quad (no '/' prefix): $addr")
+            assertTrue(!addr.startsWith("127.") && !addr.startsWith("169.254."), "no loopback/link-local: $addr")
         }
     }
 }

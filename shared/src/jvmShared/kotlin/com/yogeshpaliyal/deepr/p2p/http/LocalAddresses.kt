@@ -1,24 +1,13 @@
 package com.yogeshpaliyal.deepr.p2p.http
 
+import java.net.Inet4Address
 import java.net.NetworkInterface
-import java.util.ArrayList
 
-actual fun localIpv4Addresses(): List<String> {
-    val result = ArrayList<String>()
-    val ifaces = NetworkInterface.networkInterfaces()
-    val iter = ifaces.iterator()
-    while (iter.hasNext()) {
-        val iface = iter.next()
-        if (iface.isLoopback || !iface.isUp) continue
-        val inets = iface.inetAddresses.iterator()
-        while (inets.hasNext()) {
-            val addr = inets.next()
-            if (addr is java.net.Inet4Address) {
-                val bytes = addr.address
-                if (bytes.size == 4 && bytes[0] == 127.toByte()) continue  // skip 127.0.0.0/8
-                result.add(addr.toString())
-            }
-        }
-    }
-    return result
-}
+// getNetworkInterfaces() (an Enumeration) exists on Android API 24; networkInterfaces() (a Stream) doesn't.
+actual fun localIpv4Addresses(): List<String> =
+    (NetworkInterface.getNetworkInterfaces()?.toList() ?: emptyList())
+        .filter { it.isUp && !it.isLoopback }
+        .flatMap { it.inetAddresses.toList() }
+        .filterIsInstance<Inet4Address>()
+        .filter { !it.isLoopbackAddress && !it.isLinkLocalAddress }
+        .mapNotNull { it.hostAddress }
