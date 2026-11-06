@@ -1,0 +1,45 @@
+{
+  "description": "Golden crypto test vectors for P2P sync. Every platform's P2pCrypto must pass these.",
+  "source": "Computed with JvmP2pCrypto (javax.crypto reference) and published NIST/RFC vectors.",
+  "vectors": {
+    "hkdf_sha256_rfc5869_case1": {
+      "description": "RFC 5869 Appendix A.1 (test case 1)",
+      "ikm": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+      "salt": "000102030405060708090a0b0c",
+      "info": "f0f1f2f3f4f5f6f7f8f9",
+      "length": 42,
+      "okm": "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865"
+    },
+    "hmac_sha256_rfc4231_case2": {
+      "description": "RFC 4231 test case 2 (key=\"Jefe\")",
+      "key": "4a656665",
+      "data": "7768617420646f2079612077616e7420666f72206e6f7468696e673f",
+      "mac": "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"
+    },
+    "aes256_gcm_mcgrew_viega_case16": {
+      "description": "McGrew & Viega, The Galois/Counter Mode of Operation, Test Case 16 (256-bit key, with AAD); ciphertext_tag = C || T",
+      "key": "feffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f9467308308",
+      "nonce": "cafebabefacedbaddecaf888",
+      "plaintext": "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39",
+      "aad": "feedfacedeadbeeffeedfacedeadbeefabaddad2",
+      "ciphertext_tag": "522dc1f099567d07f47f37a32a84427d643a8cdcbfe5c0c97598a2bd2555d1aa8cb08e48590dbb3da7b08b1056828838c5f61e6393ba7a0abcc9f66276fc6ece0f4e1768cddf8853bb2d551b"
+    },
+    "ecdh_p256_nist_cavp_count0": {
+      "description": "NIST CAVP KAS ECC CDH primitive vectors, [P-256] COUNT = 0 (dIUT, 04||QCAVSx||QCAVSy \u2192 ZIUT)",
+      "privateKey": "7d7dc5f71eb29ddaf80d6214632eeae03d9058af1fb6d22ed80badb62bc1a534",
+      "peerPublicKey": "04700c48f77f56584c5cc632ca65640db91b6bacce3a4df6b42ce7cc838833d287db71e509e3fd9b060ddb20ba5c51dcc5948d46fbf640dfe0441782cab85fa4ac",
+      "sharedSecret": "46fc62106420ff012e54a434fbdd2d25ccc5852060561e68040dd7778997bd7b"
+    },
+    "protocol_vector": {
+      "description": "Full protocol chain: ECDH + HKDF, as used by Pairing.kt",
+      "privA": "0b2638446f75dde912addb27474ac717891a70be52949011f5d741b52b4d64ac",
+      "pubA": "04285702a8b372cf38199936f4a14595b3e230ea7496d373bcfe4b09f60e19acf67b89ef982e49eecb96a032b550ebeb49d04239f4edfc653074ab3adb82959c0d",
+      "privB": "fca6a4b654cf48faad81fa8485ba77e0b69544b25293d221796ef6a3e09a7a16",
+      "pubB": "040461ae08fb5670fdd55398181a9f1e1a8247ef1a16df3f302f8cabb7e28d19518ebe28a4ce68367e9169ff998933d79af7997d5470d89d04b6d2f5f2f45bd743",
+      "sharedSecret": "d7152cba5ddea1a340485d6d60896a26291601d6c1c6fe81476eeff23fed8cb5",
+      "protocolSalt": "0101010101010101010101010101010101010101010101010101010101010101",
+      "protocolInfo": "deepr-p2p-v1|A|B",
+      "protocolKey": "235149f6736a8ebed9b68ea338d9b86c02a1b7cae85e4a9f429ea890e44053bd"
+    }
+  }
+}

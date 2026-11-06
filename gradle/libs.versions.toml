@@ -33,6 +33,8 @@ googleServices = "4.4.3"
 firebaseCrashlytics = "3.0.6"
 playCore = "2.0.2"
 orchestrator = "1.4.2"
+cryptography-core = "0.6.0"
+cryptography-provider-cryptokit = "0.6.0"
 
 [libraries]
 android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "androidDriver" }
@@ -113,6 +115,8 @@ androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 haze-materials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "haze" }
 orchestrator = { group = "androidx.test", name = "orchestrator", version.ref = "orchestrator" }
+cryptography-core = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cryptography-core" }
+cryptography-provider-cryptokit = { module = "dev.whyoleg.cryptography:cryptography-provider-cryptokit", version.ref = "cryptography-provider-cryptokit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

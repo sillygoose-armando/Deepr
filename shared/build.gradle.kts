@@ -57,12 +57,17 @@ kotlin {
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.cryptography.core)
+            implementation(libs.cryptography.provider.cryptokit)
         }
         jvmTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.sqldelight.sqlite.driver)
             implementation(libs.koin.test)
             implementation(libs.ktor.client.mock)
+        }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
         }
         iosTest.dependencies {
             implementation(kotlin("test"))
