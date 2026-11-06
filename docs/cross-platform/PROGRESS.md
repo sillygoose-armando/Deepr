@@ -20,7 +20,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done (with verifying command / 
 ### M2 `:ui`
 - [x] Screens/theme/navigation/strings in Compose Multiplatform `commonMain` (2026-11-05, QUEUE.md M2-01..15)
 - [x] Android-specific UI behind interfaces; `:app` thin host (M2-15, 4f0cf1e)
-- [ ] Android UI unchanged (screenshot spot-checks): **not done yet**. Compile and code-review parity only; needs the APK from run 42084308366 on a device or emulator (asked the user).
+- [x] Android UI unchanged: user tested the debug APK from run 42188422056 (`7851069`) on their phone on 2026-11-06, everything works, including sharing a link ("Deepr Debug" / "Save silently" in the share sheet).
 
 ### M3 Desktop
 - [x] `desktopApp` builds and its UI test renders + navigates the real `DeeprApp` on CI (3/3 UI tests executed, 0 skipped). **Not yet launched on a real display** (asked the user).
