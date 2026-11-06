@@ -64,3 +64,7 @@ The host is aarch64 Linux with ~2 GB free disk and no Android SDK (`aapt2` has n
 - Why not an OS keychain: there is no KMP/JVM keychain library that works without native dependencies across all three desktop targets (Linux, macOS, Windows). Storing it in a file with 0600 is the same threat model as the SQLite DB itself (anyone with the user's account can read either).
 - Risk: password managers or keychain-backed storage would be more secure but are not practically available in KMP today.
 - Revisit: if a zero-dependency KMP keychain wrapper appears.
+
+## D13 — Minimum iOS 17.2 (2026-11-06, user)
+- Compose Multiplatform's bundled ICU objects inside `DeeprUI.framework` are built for iOS 17.2; with a 16.0 deployment target the linker warns ("built for newer 'iOS-simulator' version (17.2) than being linked (16.0)") and that code could fail on iOS 16 devices.
+- `iosApp/project.yml` `deploymentTarget` is 17.2 for all targets (app, Share Extension, UI tests). Cost: iPhone 8 / X (max iOS 16) can't install the app.
