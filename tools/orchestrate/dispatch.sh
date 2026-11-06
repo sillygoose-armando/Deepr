@@ -10,7 +10,7 @@
 set -u
 cd "$(git rev-parse --show-toplevel)" || exit 1
 TASK="$1"; MODEL="$2"; RESUME="${4:-}"
-FALLBACK_MODEL="${FALLBACK_MODEL:-pi:openrouter/deepseek/deepseek-v4-flash}"
+FALLBACK_MODEL="${FALLBACK_MODEL:-pi:openrouter/deepseek/deepseek-v4.1-flash}"  # user 2026-11-06: routes per their OpenRouter pricing/guardrail settings
 BRIEF="docs/cross-platform/tasks/$TASK.md"
 [ -f "$BRIEF" ] || { echo "no brief $BRIEF"; exit 2; }
 RUNS=docs/cross-platform/orchestration/runs.tsv

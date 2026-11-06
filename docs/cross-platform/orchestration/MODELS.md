@@ -8,7 +8,7 @@ Chosen from **public ratings** (user instruction 2026-10-22: no trials). Sources
 | B | Mechanical moves of components/screens (M2-03–05, 10–11) | `opencode/glm-5.3-flash-free` | `opencode/deepseek-v4.1-flash-free` |
 | C | Bulk text transforms (big resource files), long-context reading | ~~`opencode/beam-free`~~ → `opencode/glm-5.3-flash-free` | orchestrator script |
 
-**Paid fallback for any tier when free credits run out:** `openrouter/deepseek/deepseek-v4-flash` (automatic in dispatch.sh; user instruction 2026-11-05).
+**Paid fallback for any tier when free credits run out:** `pi:openrouter/deepseek/deepseek-v4.1-flash` via the pi CLI (automatic in dispatch.sh; user instructions 2026-11-05/06 — this exact model id routes per the user's OpenRouter pricing and guardrail preferences; earlier runs used `deepseek-v4-flash`)
 
 **2026-11-05 catalog change:** `nemotron-3-ultra-free` and `minimax-m3.1-flash-free` are no longer offered; new unrated `crouton-alpha-free` and `pulse-alpha-free` appeared (not used).
 
