@@ -27,8 +27,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done (with verifying command / 
 - [ ] `packageDistributionForCurrentOS` works
 
 ### M4 iOS
-- [ ] `iosApp` via XcodeGen (app + Share Extension), DB in App Group
-- [ ] Full UX on the simulator
+- [x] `iosApp` via XcodeGen (app + Share Extension), DB in App Group (M4-01..03; unsigned builds fall back to Application Support, so app and extension share the DB only when signed)
+- [~] Full UX on the simulator: CI XCUITest launches the app and finds Home (run 42188422094, `7851069`); full click-through pending (user has a Mac)
 - [!] blocked: distribution needs an Apple Developer account (D2)
 
 ### M5 P2P on every platform
@@ -50,3 +50,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done (with verifying command / 
 - 2026-11-05: **M2 complete.** All shared UI is in `:ui` (Compose Multiplatform), state and data in `:shared`; `:app` is a thin Android host (`MainActivity` → `DeeprApp`) plus Android-only features behind bridges. Kotlin 2.3.21 (D11). Android + iOS CI green on 4f0cf1e. Task-level detail: orchestration/QUEUE.md.
 - 2026-11-05: M3-01..03 done: common Koin module, `desktopApp` runs `DeeprApp` on the shared schema, desktop UI smoke test. Upstream unit tests now fail 3 (not 4): BookmarkImporterTest passes since M2-08a's Uri→String.
 - 2026-11-05: M3-04 done: unsigned installers built by CI (deb 118 MB, msi 126 MB, dmg 271 MB x86_64/Rosetta), run 42092693733. Open: a real desktop launch (headless here) + the Android on-device spot-check.
+- 2026-11-06: **M4 done in CI.** iOS entry point + DeeprUI framework, XcodeGen `iosApp` (unsigned simulator build), Share Extension (silent-save logic now shared with Android as `SilentSaver`), simulator XCUITest green in its own workflow (`kmp-ios-ui-test.yml`, arm64 only: Navigation3 has no iosX64; arm64 pool often full, nightly retry). The simulator exposed a launch crash (`LocalHostDefaultProvider not present`, navigationevent) also likely on desktop → `ProvideNavigationEventOwner` in both hosts. Workers now fall back to the pi CLI when opencode's free credits run out. Next: M5 (P2P actuals per platform).
