@@ -4,7 +4,6 @@ SHELL := /bin/bash
 .PHONY: help setup ios ios-open ios-test desktop apk
 
 REPO := sillygoose-armando/Deepr
-BUNDLE_ID := com.yogeshpaliyal.deepr
 # First available iPhone simulator, e.g. "iPhone 17".
 DEVICE = ${shell xcrun simctl list devices available 2>/dev/null | grep -m1 -oE 'iPhone [0-9]+[^(]*' | sed 's/ *$$//'}
 # Gradle (also run by Xcode) needs JDK 21.
@@ -24,15 +23,12 @@ setup: ## One-time Mac setup: xcodegen, JDK 21, point the tools at Xcode, iOS si
 iosApp/Deepr.xcodeproj: iosApp/project.yml
 	cd iosApp && xcodegen generate
 
-ios: iosApp/Deepr.xcodeproj ## Build the iOS app and start it in the simulator
-	@test -n "$(DEVICE)" || { echo "No iPhone simulator found: run 'make setup'."; exit 1; }
-	@echo "Simulator: $(DEVICE)"
-	xcrun simctl boot "$(DEVICE)" 2>/dev/null || true
-	-open "$$(xcode-select -p)/Applications/Simulator.app"
-	xcodebuild -project iosApp/Deepr.xcodeproj -scheme Deepr -configuration Debug \
-	  -destination "platform=iOS Simulator,name=$(DEVICE)" -derivedDataPath iosApp/build -quiet build
-	xcrun simctl install "$(DEVICE)" iosApp/build/Build/Products/Debug-iphonesimulator/Deepr.app
-	xcrun simctl launch "$(DEVICE)" $(BUNDLE_ID)
+ios: iosApp/Deepr.xcodeproj ## Regenerate the Xcode project (after each git pull), then build/run it in Xcode
+	@echo ""
+	@echo "Xcode project is up to date: iosApp/Deepr.xcodeproj"
+	@echo "  1. Open it in Xcode (double-click it, or: make ios-open)"
+	@echo "  2. At the top of the window, pick the 'Deepr' scheme and an iPhone simulator"
+	@echo "  3. Press Run (the ▶ button, or Cmd+R): Xcode builds the app, starts the simulator and launches Deepr"
 
 ios-open: iosApp/Deepr.xcodeproj ## Open the iOS project in Xcode (then press Run, the ▶ button)
 	open iosApp/Deepr.xcodeproj
