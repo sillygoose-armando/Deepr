@@ -43,7 +43,8 @@ ios-test: iosApp/Deepr.xcodeproj ## Run the iOS UI test on the simulator
 desktop: ## Run the desktop app
 	./gradlew :desktopApp:run
 
-apk: ## Download the newest green Android debug APK from CI and install it on a USB-connected phone
+apk: ## Print the download link for the newest green Android debug APK (open it signed in to GitHub)
 	@id=$$(gh run list -R $(REPO) --workflow p2p-build.yml --branch feature/kmp --status success --limit 1 --json databaseId --jq '.[0].databaseId'); \
-	  echo "CI run $$id"; rm -rf build/apk; \
-	  gh run download $$id -R $(REPO) -n deepr-p2p-debug-apk -D build/apk && adb install -r build/apk/*.apk
+	  art=$$(gh api repos/$(REPO)/actions/runs/$$id/artifacts --jq '.artifacts[] | select(.name=="deepr-p2p-debug-apk") | .id'); \
+	  echo "Newest green Android build: https://github.com/$(REPO)/actions/runs/$$id"; \
+	  echo "APK download (a zip with the .apk inside): https://github.com/$(REPO)/actions/runs/$$id/artifacts/$$art"
