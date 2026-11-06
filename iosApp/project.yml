@@ -2,7 +2,7 @@ name: Deepr
 options:
   bundleIdPrefix: com.yogeshpaliyal
   deploymentTarget:
-    iOS: "16.0"
+    iOS: "17.2" # Compose's bundled ICU objects are built for 17.2; lower targets get linker warnings and may crash on iOS 16
 targets:
   Deepr:
     type: application
