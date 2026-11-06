@@ -23,12 +23,12 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done (with verifying command / 
 - [x] Android UI unchanged: user tested the debug APK from run 42188422056 (`7851069`) on their phone on 2026-11-06, everything works, including sharing a link ("Deepr Debug" / "Save silently" in the share sheet).
 
 ### M3 Desktop
-- [x] `desktopApp` builds and its UI test renders + navigates the real `DeeprApp` on CI (3/3 UI tests executed, 0 skipped). **Not yet launched on a real display** (asked the user).
+- [x] `desktopApp` builds and its UI test renders + navigates the real `DeeprApp` on CI (3/3 UI tests executed, 0 skipped); launched on the user's Mac 2026-11-06 (`make desktop`), works.
 - [ ] `packageDistributionForCurrentOS` works
 
 ### M4 iOS
 - [x] `iosApp` via XcodeGen (app + Share Extension), DB in App Group (M4-01..03; unsigned builds fall back to Application Support, so app and extension share the DB only when signed)
-- [~] Full UX on the simulator: CI XCUITest launches the app and finds Home (run 42188422094, `7851069`); also passes locally on the user's Mac (iOS 27.2 simulator, 2026-11-06, after pulling the launch-crash fix); manual click-through pending
+- [x] Full UX on the simulator: CI XCUITest launches the app and finds Home (run 42188422094, `7851069`); also passes locally on the user's Mac (iOS 27.2 simulator, 2026-11-06, after pulling the launch-crash fix); manual click-through by the user 2026-11-06: works after fixes for the Profiles back arrow (a481c20), theme setting (6f47e9b) and clipboard link detection (08730df)
 - [!] blocked: distribution needs an Apple Developer account (D2)
 
 ### M5 P2P on every platform
@@ -51,3 +51,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done (with verifying command / 
 - 2026-11-05: M3-01..03 done: common Koin module, `desktopApp` runs `DeeprApp` on the shared schema, desktop UI smoke test. Upstream unit tests now fail 3 (not 4): BookmarkImporterTest passes since M2-08a's Uri→String.
 - 2026-11-05: M3-04 done: unsigned installers built by CI (deb 118 MB, msi 126 MB, dmg 271 MB x86_64/Rosetta), run 42092693733. Open: a real desktop launch (headless here) + the Android on-device spot-check.
 - 2026-11-06: **M4 done in CI.** iOS entry point + DeeprUI framework, XcodeGen `iosApp` (unsigned simulator build), Share Extension (silent-save logic now shared with Android as `SilentSaver`), simulator XCUITest green in its own workflow (`kmp-ios-ui-test.yml`, arm64 only: Navigation3 has no iosX64; arm64 pool often full, nightly retry). The simulator exposed a launch crash (`LocalHostDefaultProvider not present`, navigationevent) also likely on desktop → `ProvideNavigationEventOwner` in both hosts. Workers now fall back to the pi CLI when opencode's free credits run out. Next: M5 (P2P actuals per platform).
+- 2026-11-06: user tested on device/Mac: Android APK, iOS simulator and desktop all work. Fixed along the way (iOS/desktop hosts lacked what Android's MainActivity does): Profiles back arrow, saved theme applied, clipboard link detection. Added a Makefile (`make ios|ios-test|desktop|apk|setup`). Next: M5.
