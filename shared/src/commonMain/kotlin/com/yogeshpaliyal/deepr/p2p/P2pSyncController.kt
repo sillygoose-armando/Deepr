@@ -108,13 +108,17 @@ class P2pSyncController(
     }
 
     /** True when this device has peers or a pairing in progress (otherwise no port is opened). */
-    fun hasPeersOrInvite(): Boolean = q.countPeers().executeAsOne() > 0L || node.pendingPairing.value != null
+    fun hasPeersOrInvite(): Boolean =
+        q.countPeers().executeAsOne() > 0L || node.inviteActive || node.pendingPairing.value != null
 
     /**
      * Called when the app goes to the background.
      * Stops the server if it was running.
      */
     fun onBackground() {
+        // Keep serving while an invite is open: the user typically switches to a messenger to send the code.
+        // (iOS suspends backgrounded apps anyway, so there the inviter has to stay in the app.)
+        if (node.inviteActive || node.pendingPairing.value != null) return
         scope.launch { stop() }
     }
 

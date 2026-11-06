@@ -6,8 +6,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import com.yogeshpaliyal.deepr.di.p2pModule
 import com.yogeshpaliyal.deepr.di.sharedModule
 import com.yogeshpaliyal.deepr.di.unsupportedFeaturesModule
+import com.yogeshpaliyal.deepr.p2p.jvm.JvmP2pCrypto
+import com.yogeshpaliyal.deepr.p2p.node.InMemorySecretStore
 import com.yogeshpaliyal.deepr.ui.DeeprApp
 import com.yogeshpaliyal.deepr.ui.ProvideNavigationEventOwner
 import com.yogeshpaliyal.deepr.ui.theme.DeeprTheme
@@ -57,7 +60,12 @@ class DeeprAppUiTest {
         tmpDir.mkdirs()
         stopKoin()
         startKoin {
-            modules(sharedModule, desktopModule(tmpDir), unsupportedFeaturesModule("desktop"))
+            modules(
+                sharedModule,
+                desktopModule(tmpDir),
+                unsupportedFeaturesModule("desktop"),
+                p2pModule(JvmP2pCrypto(), InMemorySecretStore(JvmP2pCrypto())),
+            )
         }
     }
 
@@ -110,6 +118,20 @@ class DeeprAppUiTest {
         composeRule.waitForIdle()
 
         composeRule.onNodeWithText("Theme").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun clickingDeviceSyncOpensSyncSettings() {
+        setAppContent()
+
+        composeRule.onNodeWithText("Settings").performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Device sync").performScrollTo().performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Share a profile").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Join a shared profile").performScrollTo().assertIsDisplayed()
     }
 
     @Test

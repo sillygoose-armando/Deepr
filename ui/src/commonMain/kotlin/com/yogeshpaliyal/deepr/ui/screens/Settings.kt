@@ -44,6 +44,7 @@ import com.yogeshpaliyal.deepr.ui.components.SettingsItem
 import com.yogeshpaliyal.deepr.ui.components.SettingsSection
 import com.yogeshpaliyal.deepr.ui.components.ThemeSelectionDialog
 import com.yogeshpaliyal.deepr.ui.platform.LocalSettingsPlatform
+import com.yogeshpaliyal.deepr.ui.screens.sync.SyncSettings
 import com.yogeshpaliyal.deepr.ui.platform.rememberShowToast
 import com.yogeshpaliyal.deepr.ui.resources.Res
 import com.yogeshpaliyal.deepr.ui.resources.about_us
@@ -58,6 +59,8 @@ import com.yogeshpaliyal.deepr.ui.resources.clipboard_link_detection_description
 import com.yogeshpaliyal.deepr.ui.resources.default_page
 import com.yogeshpaliyal.deepr.ui.resources.default_page_all
 import com.yogeshpaliyal.deepr.ui.resources.default_page_favourites
+import com.yogeshpaliyal.deepr.ui.resources.device_sync
+import com.yogeshpaliyal.deepr.ui.resources.device_sync_description
 import com.yogeshpaliyal.deepr.ui.resources.language
 import com.yogeshpaliyal.deepr.ui.resources.made_with_love
 import com.yogeshpaliyal.deepr.ui.resources.settings
@@ -78,6 +81,7 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.AlertTriangle
 import compose.icons.tablericons.ArrowLeft
 import compose.icons.tablericons.Clipboard
+import compose.icons.tablericons.DeviceMobile
 import compose.icons.tablericons.ExternalLink
 import compose.icons.tablericons.Folders
 import compose.icons.tablericons.InfoCircle
@@ -313,6 +317,15 @@ fun SettingsScreen(
                             checked = clipboardLinkDetectionEnabled,
                             onCheckedChange = { viewModel.setClipboardLinkDetectionEnabled(it) },
                         )
+                    },
+                )
+
+                SettingsItem(
+                    TablerIcons.DeviceMobile,
+                    title = stringResource(Res.string.device_sync),
+                    description = stringResource(Res.string.device_sync_description),
+                    onClick = {
+                        navigatorContext.add(SyncSettings)
                     },
                 )
             }

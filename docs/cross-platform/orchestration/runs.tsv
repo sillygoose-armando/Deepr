@@ -120,3 +120,5 @@ ts	task	model	event	session	detail
 2026-11-06T14:03:33Z	M5-04	pi:openrouter/deepseek/deepseek-v4-flash	end	01a1b125-033e-7696-9463-aa5ca28a6bc0	exit=0 log=.orchestration/logs/M5-04-pi_openrouter_deepseek_deepseek-v4-flash-20261106-135555.jsonl
 2026-11-06T14:52:32Z	M5-05	pi:openrouter/deepseek/deepseek-v4-flash	start		.orchestration/logs/M5-05-pi_openrouter_deepseek_deepseek-v4-flash-20261106-145232.jsonl
 2026-11-06T15:00:12Z	M5-05	pi:openrouter/deepseek/deepseek-v4-flash	end	01a1b158-dba3-76e5-a192-2840563399f6	exit=0 log=.orchestration/logs/M5-05-pi_openrouter_deepseek_deepseek-v4-flash-20261106-145232.jsonl
+2026-11-06T16:04:28Z	M5-06	pi:openrouter/deepseek/deepseek-v4.1-flash	start		.orchestration/logs/M5-06-pi_openrouter_deepseek_deepseek-v4.1-flash-20261106-160428.jsonl
+2026-11-06T16:19:32Z	M5-06	pi:openrouter/deepseek/deepseek-v4.1-flash	end	01a1b19a-b6ec-7193-90bf-d36bf129fbc5	exit=0 log=.orchestration/logs/M5-06-pi_openrouter_deepseek_deepseek-v4.1-flash-20261106-160428.jsonl

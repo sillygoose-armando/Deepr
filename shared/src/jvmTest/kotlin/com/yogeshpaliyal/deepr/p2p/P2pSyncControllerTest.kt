@@ -207,6 +207,27 @@ class P2pSyncControllerTest {
         f.ctrlB.stop()
     }
 
+    @Test
+    fun backgroundKeepsServingWhileInviteIsOpen() = runBlocking {
+        val crypto = JvmP2pCrypto()
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY, Properties().apply { put("foreign_keys", "true") })
+        DeeprDB.Schema.create(driver)
+        val db = DeeprDB(driver)
+        db.deeprQueries.insertProfile("Default")
+        val node = P2pNode(db, crypto, InMemorySecretStore(crypto), KtorHttpPost(), { java.lang.System.currentTimeMillis() })
+        val ctrl = P2pSyncController(db, node, P2pServer(node), CoroutineScope(SupervisorJob() + Dispatchers.Default))
+
+        ctrl.startInvite(1L)
+        ctrl.onBackground() // user switches to a messenger to send the code
+        delay(300)
+        assertTrue(ctrl.running.value, "server must keep running while the invite is open")
+
+        node.cancelInvite()
+        ctrl.onBackground()
+        delay(300)
+        assertTrue(!ctrl.running.value, "without an invite, background stops the server")
+    }
+
     // ── Test 4: stop frees the port ────────────────────────────────────
 
     @Test

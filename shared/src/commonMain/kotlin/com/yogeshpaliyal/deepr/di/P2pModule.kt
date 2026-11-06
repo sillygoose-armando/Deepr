@@ -6,9 +6,11 @@ import com.yogeshpaliyal.deepr.p2p.http.P2pServer
 import com.yogeshpaliyal.deepr.p2p.node.P2pNode
 import com.yogeshpaliyal.deepr.p2p.node.SecretStore
 import com.yogeshpaliyal.deepr.p2p.core.P2pCrypto
+import com.yogeshpaliyal.deepr.viewmodel.SyncViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
@@ -27,4 +29,5 @@ fun p2pModule(crypto: P2pCrypto, secrets: SecretStore) = module {
             CoroutineScope(SupervisorJob() + Dispatchers.Default),
         )
     }
+    viewModelOf(::SyncViewModel)
 }

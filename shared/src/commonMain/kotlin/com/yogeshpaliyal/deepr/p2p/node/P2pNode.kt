@@ -144,6 +144,9 @@ class P2pNode(
         return encodeInvite(invite)
     }
 
+    /** True while an invite is open (shown to the user, not yet confirmed, rejected or cancelled). */
+    val inviteActive: Boolean get() = inviter != null
+
     /** Cancels the active invite (also clears the pending pairing state). */
     fun cancelInvite() {
         inviter = null

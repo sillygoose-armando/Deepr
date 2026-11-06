@@ -33,11 +33,14 @@ import com.yogeshpaliyal.deepr.ui.LocalNavigator
 import com.yogeshpaliyal.deepr.ui.resources.Res
 import com.yogeshpaliyal.deepr.ui.resources.manage_profiles
 import com.yogeshpaliyal.deepr.ui.resources.profiles
+import com.yogeshpaliyal.deepr.ui.resources.share_this_profile
 import com.yogeshpaliyal.deepr.ui.resources.switch_profile
+import com.yogeshpaliyal.deepr.ui.screens.sync.ShareProfile
 import com.yogeshpaliyal.deepr.viewmodel.AccountViewModel
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Check
 import compose.icons.tablericons.Settings
+import compose.icons.tablericons.Share
 import compose.icons.tablericons.User
 import org.jetbrains.compose.resources.stringResource
 
@@ -92,6 +95,29 @@ fun ProfileSelectorMenu(
             if (allProfiles.isNotEmpty()) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             }
+
+            // Share the current profile
+            DropdownMenuItem(
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = TablerIcons.Share,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = stringResource(Res.string.share_this_profile),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                },
+                onClick = {
+                    expanded = false
+                    navigator.add(ShareProfile(currentProfile?.id))
+                },
+            )
 
             // Manage profiles option
             DropdownMenuItem(
