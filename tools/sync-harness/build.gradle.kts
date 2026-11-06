@@ -14,6 +14,8 @@ kotlin {
     sourceSets["main"].kotlin.exclude("**/P2pSyncController*")
     sourceSets["main"].kotlin.srcDir(rootDir.resolve("../../shared/src/jvmShared/kotlin/com/yogeshpaliyal/deepr/p2p"))
     sourceSets["main"].kotlin.exclude("**/http/**")
+    // iroh is a network transport with native deps the harness does not need; the harness tests sync core only.
+    sourceSets["main"].kotlin.exclude("**/iroh/**")
 }
 
 sqldelight {
