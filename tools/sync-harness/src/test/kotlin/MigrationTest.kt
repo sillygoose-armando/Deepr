@@ -2,6 +2,7 @@ import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.yogeshpaliyal.deepr.DeeprDB
 import java.util.Properties
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -14,7 +15,7 @@ class MigrationTest {
         driver.execute(null, "INSERT INTO Profile (id, name) VALUES (1, 'Default')", 0)
         driver.execute(null, "INSERT INTO Deepr (link, profileId) VALUES ('https://a', 1), ('https://b', 1)", 0)
 
-        assertEquals(11L, DeeprDB.Schema.version - 1)
+        assertEquals(12L, DeeprDB.Schema.version - 1)
         DeeprDB.Schema.migrate(driver, 11, DeeprDB.Schema.version)
 
         val q = DeeprDB(driver).deeprQueries
@@ -28,5 +29,12 @@ class MigrationTest {
         q.insertShare("s", 1, 0)
         q.insertDeepr("https://c", "", 0, "", "", 1)
         assertEquals(1, q.deltaPage("s", 0, 10).executeAsList().size)
+
+        // M5-09 columns are present after the migration.
+        q.insertPeer("peer", "Peer", ByteArray(0), "", 0L, 0L)
+        q.updatePeerIroh("ticket", "peer")
+        assertEquals("ticket", q.getPeer("peer").executeAsOne().irohTicket)
+        q.setIrohKey(byteArrayOf(1, 2, 3))
+        assertContentEquals(byteArrayOf(1, 2, 3), q.getIrohKey().executeAsOne().irohKeyEnc)
     }
 }

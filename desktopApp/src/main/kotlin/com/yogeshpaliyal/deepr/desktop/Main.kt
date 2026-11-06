@@ -8,6 +8,7 @@ import com.yogeshpaliyal.deepr.di.p2pModule
 import com.yogeshpaliyal.deepr.di.sharedModule
 import com.yogeshpaliyal.deepr.di.unsupportedFeaturesModule
 import com.yogeshpaliyal.deepr.p2p.P2pSyncController
+import com.yogeshpaliyal.deepr.p2p.iroh.IrohTransport
 import com.yogeshpaliyal.deepr.p2p.jvm.JvmP2pCrypto
 import com.yogeshpaliyal.deepr.p2p.node.FileKeySecretStore
 import com.yogeshpaliyal.deepr.ui.DeeprApp
@@ -30,7 +31,9 @@ fun main() {
             p2pModule(
                 JvmP2pCrypto(),
                 FileKeySecretStore(File(dir, "p2p-secret.key"), JvmP2pCrypto()),
-            ),
+            ) { node, keyStore, scope ->
+                IrohTransport(node, keyStore::load, keyStore::save, scope)
+            },
         )
     }
     val controller = KoinPlatform.getKoin().get<P2pSyncController>()

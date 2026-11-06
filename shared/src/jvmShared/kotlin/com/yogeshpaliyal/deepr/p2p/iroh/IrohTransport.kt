@@ -1,6 +1,7 @@
 package com.yogeshpaliyal.deepr.p2p.iroh
 
 import com.yogeshpaliyal.deepr.p2p.node.HttpReply
+import com.yogeshpaliyal.deepr.p2p.node.IrohLink
 import com.yogeshpaliyal.deepr.p2p.node.P2pNode
 import computer.iroh.BiStream
 import computer.iroh.Connection
@@ -37,7 +38,7 @@ class IrohTransport(
     private val scope: CoroutineScope,
     private val connectTimeoutMs: Long = 10_000L,
     private val requestTimeoutMs: Long = 30_000L,
-) {
+) : IrohLink {
 
     private val endpointLock = Mutex()
     private var endpoint: Endpoint? = null
@@ -47,7 +48,7 @@ class IrohTransport(
     private val connections = mutableMapOf<String, Connection>()
 
     /** This endpoint's ticket while running, `null` when stopped. */
-    val ticket: String?
+    override val ticket: String?
         get() {
             val ep = endpoint ?: return null
             return try {
@@ -68,7 +69,7 @@ class IrohTransport(
         }
 
     /** Binds the endpoint and starts the accept loop. Idempotent. */
-    suspend fun start() {
+    override suspend fun start() {
         endpointLock.withLock {
             if (endpoint != null) return
             val stored = secretKey()
@@ -101,7 +102,7 @@ class IrohTransport(
     }
 
     /** Stops the accept loop and shuts the endpoint down. */
-    suspend fun stop() {
+    override suspend fun stop() {
         val ep = endpointLock.withLock {
             val current = endpoint
             endpoint = null
@@ -121,7 +122,7 @@ class IrohTransport(
      * Connects to [ticket] and performs one request. A cached connection per remote id is
      * reused; a failed exchange drops it and reconnects once.
      */
-    suspend fun post(ticket: String, path: String, body: String): HttpReply {
+    override suspend fun post(ticket: String, path: String, body: String): HttpReply {
         val parsed = EndpointTicket.fromString(ticket)
         val addr = parsed.endpointAddr()
         try {

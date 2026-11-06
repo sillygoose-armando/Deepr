@@ -26,6 +26,8 @@ data class Invite(
     val pn: String,
     /** Expiry, epoch seconds. */
     val exp: Long,
+    /** Inviter's iroh endpoint ticket. Not part of the transcript/MAC; old apps ignore it. */
+    val i: String? = null,
 )
 
 @Serializable
@@ -36,6 +38,8 @@ data class JoinRequest(
     val k: String,
     /** base64url join MAC. */
     val mac: String,
+    /** Joiner's iroh endpoint ticket, so the inviter can dial back later. */
+    val i: String? = null,
 )
 
 @Serializable
@@ -174,6 +178,7 @@ class PairingInviter(
         shareId: String,
         profileName: String,
         nowEpochSec: Long,
+        irohTicket: String? = null,
         ttlSec: Long = 600,
     ): Invite {
         if (!DEVICE_ID.matches(deviceId)) throw PairingException("bad device id")
@@ -200,6 +205,7 @@ class PairingInviter(
             s = shareId,
             pn = profileName,
             exp = nowEpochSec + ttlSec,
+            i = irohTicket,
         )
     }
 
@@ -236,6 +242,7 @@ class PairingJoiner(
     private val deviceId: String,
     private val deviceName: String,
     private val invite: Invite,
+    private val irohTicket: String? = null,
 ) {
     private val ephemeral: EcdhKeyPair = crypto.generateEcdhKeyPair()
     private val token: ByteArray
@@ -258,6 +265,7 @@ class PairingJoiner(
             n = deviceName,
             k = b64Encode(ephemeral.publicKey),
             mac = b64Encode(joinMac(crypto, token, transcript)),
+            i = irohTicket,
         )
     }
 

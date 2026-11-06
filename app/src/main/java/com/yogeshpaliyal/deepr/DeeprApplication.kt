@@ -24,6 +24,7 @@ import com.yogeshpaliyal.deepr.di.sharedModule
 import com.yogeshpaliyal.deepr.gdrive.DriveSyncManager
 import com.yogeshpaliyal.deepr.gdrive.DriveSyncManagerFactoryImpl
 import com.yogeshpaliyal.deepr.p2p.P2pSyncController
+import com.yogeshpaliyal.deepr.p2p.iroh.IrohTransport
 import com.yogeshpaliyal.deepr.p2p.jvm.JvmP2pCrypto
 import com.yogeshpaliyal.deepr.p2p.node.KeystoreSecretStore
 import com.yogeshpaliyal.deepr.preference.AppPreferenceDataStore
@@ -176,7 +177,13 @@ class DeeprApplication : Application() {
             // Provide Android context to Koin
             androidContext(this@DeeprApplication)
 
-            modules(sharedModule, appModule, p2pModule(JvmP2pCrypto(), KeystoreSecretStore()))
+            modules(
+                sharedModule,
+                appModule,
+                p2pModule(JvmP2pCrypto(), KeystoreSecretStore()) { node, keyStore, scope ->
+                    IrohTransport(node, keyStore::load, keyStore::save, scope)
+                },
+            )
         }
 
         // Schedule periodic P2P sync in the background

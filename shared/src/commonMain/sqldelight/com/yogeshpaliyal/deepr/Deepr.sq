@@ -55,7 +55,8 @@ deviceId TEXT NOT NULL,
 deviceName TEXT NOT NULL DEFAULT '',
 hlc INTEGER NOT NULL DEFAULT 0,
 applying INTEGER NOT NULL DEFAULT 0,
-maxPeers INTEGER NOT NULL DEFAULT 5
+maxPeers INTEGER NOT NULL DEFAULT 5,
+irohKeyEnc BLOB
 );
 
 INSERT INTO SyncDevice (id, deviceId) VALUES (1, lower(hex(randomblob(16))));
@@ -88,6 +89,7 @@ name TEXT NOT NULL,
 keyEnc BLOB NOT NULL,
 lastHost TEXT NOT NULL DEFAULT '',
 lastPort INTEGER NOT NULL DEFAULT 0,
+irohTicket TEXT NOT NULL DEFAULT '',
 addedAt INTEGER NOT NULL,
 lastSyncAt INTEGER NOT NULL DEFAULT 0,
 lastError TEXT NOT NULL DEFAULT '',
@@ -580,6 +582,15 @@ UPDATE SyncPeer SET lastHost = ?, lastPort = ? WHERE peerId = ?;
 
 updatePeerKey:
 UPDATE SyncPeer SET keyEnc = ? WHERE peerId = ?;
+
+updatePeerIroh:
+UPDATE SyncPeer SET irohTicket = ? WHERE peerId = ?;
+
+getIrohKey:
+SELECT irohKeyEnc FROM SyncDevice WHERE id = 1;
+
+setIrohKey:
+UPDATE SyncDevice SET irohKeyEnc = ? WHERE id = 1;
 
 updatePeerSyncStatus:
 UPDATE SyncPeer SET lastSyncAt = ?, lastError = ? WHERE peerId = ?;

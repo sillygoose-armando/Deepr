@@ -66,6 +66,11 @@ class P2pSyncController(
         } catch (_: Exception) {
             server.start(0)
         }
+        // iroh failures must not take the LAN server down with them.
+        try {
+            node.iroh?.start()
+        } catch (_: Exception) {
+        }
         mutableRunning.value = true
 
         // Sync all peers once, without making callers (e.g. an invite) wait for unreachable peers.
@@ -95,6 +100,10 @@ class P2pSyncController(
         watcher?.cancel()
         watcher = null
         server.stop()
+        try {
+            node.iroh?.stop()
+        } catch (_: Exception) {
+        }
     }
 
     /**

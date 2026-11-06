@@ -21,6 +21,8 @@ import com.yogeshpaliyal.deepr.p2p.core.encodeInvite
 import com.yogeshpaliyal.deepr.p2p.core.decodeInvite
 import com.yogeshpaliyal.deepr.p2p.core.seal
 import com.yogeshpaliyal.deepr.p2p.core.open
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,6 +55,9 @@ private data class HelloResponse(val shares: List<String>)
 @Serializable
 private data class UnshareBody(val shareId: String)
 
+@Serializable
+private data class HelloBody(val i: String? = null)
+
 private val SyncRequestJson = Json { ignoreUnknownKeys = true }
 private val SyncResponseJson = Json { ignoreUnknownKeys = true }
 private val EnvelopeJson = Json { ignoreUnknownKeys = true }
@@ -60,6 +65,8 @@ private val HelloResponseJson = Json { ignoreUnknownKeys = true }
 private val UnshareBodyJson = Json { ignoreUnknownKeys = true }
 private val JoinRequestJson = Json { ignoreUnknownKeys = true }
 private val JoinResponseJson = Json { ignoreUnknownKeys = true }
+private val HelloBodyJson = Json { ignoreUnknownKeys = true }
+
 
 /**
  * Service that ties together the sync core ([PairingInviter]/[PairingJoiner], [SyncEngine],
@@ -80,6 +87,12 @@ class P2pNode(
     private val q = db.deeprQueries
     private val guard = ReplayGuard()
 
+    /**
+     * iroh transport, set after construction: the transport needs this node for [handle], so it
+     * cannot be a constructor parameter.
+     */
+    var iroh: IrohLink? = null
+
     // ── Pending pairing (inviter side) ──
     private val mutablePendingPairing = MutableStateFlow<PendingPairing?>(null)
 
@@ -88,6 +101,7 @@ class P2pNode(
 
     private var inviter: PairingInviter? = null
     private var pendingPairResult: PairingResult? = null
+    private var pendingJoinIroh: String? = null
     private var pendingProfileId: Long? = null
     private var pendingShareId: String? = null
 
@@ -138,7 +152,7 @@ class P2pNode(
         val dev = q.getSyncDevice().executeAsOne()
         val pairing = PairingInviter(crypto, dev.deviceId, dev.deviceName)
         val profileName = q.getProfileById(profileId).executeAsOneOrNull()?.name ?: ""
-        val invite = pairing.createInvite(hosts, port, shareId, profileName, nowSec)
+        val invite = pairing.createInvite(hosts, port, shareId, profileName, nowSec, iroh?.ticket)
         inviter = pairing
         pendingProfileId = profileId
         pendingShareId = shareId
@@ -158,6 +172,7 @@ class P2pNode(
     private fun clearInviteState() {
         inviter = null
         pendingPairResult = null
+        pendingJoinIroh = null
         pendingProfileId = null
         pendingShareId = null
         mutablePendingPairing.value = null
@@ -199,6 +214,7 @@ class P2pNode(
             }
             val result = inv.accept(joinRequest)
             pendingPairResult = result
+            pendingJoinIroh = joinRequest.i
             mutablePendingPairing.value = PendingPairing(result.peerName, result.sas)
             return HttpReply(200, JoinResponseJson.encodeToString(JoinResponse.serializer(), result.response))
         }
@@ -232,13 +248,20 @@ class P2pNode(
             return HttpReply(401, "")
         }
 
-        // Update the peer's last known address
-        if (remoteHost != null && !remoteHost.isEmpty()) {
+        // Update the peer's last known LAN address; iroh ids live in their own column (see the hello branch).
+        if (remoteHost != null && !remoteHost.isEmpty() && !remoteHost.startsWith("iroh:")) {
             q.updatePeerAddress(remoteHost, peer.lastPort, envelope.peer)
         }
 
         return when (path) {
             "/p2p/v1/hello" -> {
+                // A peer whose relay changed sends its current ticket; keep it for inviter-initiated sync.
+                val hello = try {
+                    HelloBodyJson.decodeFromString(HelloBody.serializer(), plain)
+                } catch (e: Exception) {
+                    HelloBody()
+                }
+                if (!hello.i.isNullOrEmpty()) q.updatePeerIroh(hello.i, envelope.peer)
                 val shares = q.getPeerShares(envelope.peer).executeAsList().map { it.shareId }
                 val helloBody = HelloResponseJson.encodeToString(HelloResponse.serializer(), HelloResponse(shares))
                 val sealedBody = seal(crypto, pairKey, deviceId, path, helloBody, nowMs)
@@ -290,9 +313,11 @@ class P2pNode(
         } else {
             q.updatePeerKey(keyEnc, result.peerId)
         }
+        pendingJoinIroh?.takeIf { it.isNotEmpty() }?.let { q.updatePeerIroh(it, result.peerId) }
         q.linkPeerShare(result.peerId, shareId)
         inviter = null
         pendingPairResult = null
+        pendingJoinIroh = null
         pendingProfileId = null
         pendingShareId = null
         mutablePendingPairing.value = null
@@ -324,24 +349,44 @@ class P2pNode(
         }
         checkMaxPeers()
         val dev = q.getSyncDevice().executeAsOne()
-        val joiner = PairingJoiner(crypto, dev.deviceId, dev.deviceName, invite)
+        val joiner = PairingJoiner(crypto, dev.deviceId, dev.deviceName, invite, iroh?.ticket)
         val joinJson = JoinRequestJson.encodeToString(JoinRequest.serializer(), joiner.request)
 
         var lastError: Exception? = null
-        for (host in invite.h) {
-            try {
-                val reply = http.post(host, invite.p, "/p2p/v1/pair", joinJson)
-                if (reply.status == 200) {
+
+        suspend fun tryPair(block: suspend () -> HttpReply): PendingJoin? {
+            return try {
+                val reply = block()
+                if (reply.status != 200) {
+                    null
+                } else {
                     val resp = JoinResponseJson.decodeFromString(JoinResponse.serializer(), reply.body)
                     val result = joiner.finish(resp)
                     joinPairKey = result.pairKey
                     joinInvite = invite
                     joinTarget = target
-                    return PendingJoin(result.sas, result.peerName)
+                    PendingJoin(result.sas, result.peerName)
                 }
+            } catch (e: TimeoutCancellationException) {
+                lastError = e
+                null
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 lastError = e
+                null
             }
+        }
+
+        for (host in invite.h) {
+            // An off-network LAN host fails fast through the HTTP client's 3 s connect timeout (KtorHttpPost).
+            tryPair { http.post(host, invite.p, "/p2p/v1/pair", joinJson) }
+                ?.let { return it }
+        }
+        val irohTicket = invite.i
+        val link = iroh
+        if (!irohTicket.isNullOrEmpty() && link != null) {
+            tryPair { link.post(irohTicket, "/p2p/v1/pair", joinJson) }?.let { return it }
         }
         throw lastError ?: PairingException("no host reachable")
     }
@@ -365,10 +410,12 @@ class P2pNode(
         val helloGuard = ReplayGuard()
         while (clock() < deadlineMs) {
             try {
-                val helloBody = "{}"
+                // Include our ticket so the inviter can dial us back (inviter-initiated sync).
+                val helloBody = HelloBodyJson.encodeToString(HelloBody.serializer(), HelloBody(iroh?.ticket))
                 val envelope = seal(crypto, pairKey, dev.deviceId, "/p2p/v1/hello", helloBody, clock())
                 val envelopeJson = EnvelopeJson.encodeToString(Envelope.serializer(), envelope)
-                val reply = http.post(invite.h.first(), invite.p, "/p2p/v1/hello", envelopeJson)
+                val reply =
+                    postToPeer(invite.h.firstOrNull() ?: "", invite.p, invite.i ?: "", "/p2p/v1/hello", envelopeJson)
                 if (reply.status == 200) {
                     // Authenticate the reply: open the envelope with the pair key
                     val respEnvelope = try {
@@ -405,12 +452,20 @@ class P2pNode(
                     }
                     if (q.getPeer(invite.d).executeAsOneOrNull() == null) {
                         val keyEnc = secrets.seal(pairKey)
-                        q.insertPeer(invite.d, invite.n, keyEnc, invite.h.first(), invite.p.toLong(), clock() / 1000L)
+                        q.insertPeer(
+                            invite.d,
+                            invite.n,
+                            keyEnc,
+                            invite.h.firstOrNull() ?: "",
+                            invite.p.toLong(),
+                            clock() / 1000L,
+                        )
                     } else {
                         // Re-pairing derived a new key; the inviter stores it too (confirmPairing).
                         q.updatePeerKey(secrets.seal(pairKey), invite.d)
-                        q.updatePeerAddress(invite.h.first(), invite.p.toLong(), invite.d)
+                        q.updatePeerAddress(invite.h.firstOrNull() ?: "", invite.p.toLong(), invite.d)
                     }
+                    invite.i?.takeIf { it.isNotEmpty() }?.let { q.updatePeerIroh(it, invite.d) }
                     q.linkPeerShare(invite.d, invite.s)
 
                     try {
@@ -440,12 +495,11 @@ class P2pNode(
      * Syncs every share linked to [peerId].  Errors are recorded in the peer's
      * [SyncPeer.lastError].
      *
-     * Skips peers with an unknown port (== 0); inviter-initiated sync requires a discovery
-     * mechanism (M5-07). Push+pull from the joiner already syncs both directions.
+     * Skips peers reachable over neither LAN (host + port) nor iroh.
      */
     suspend fun syncPeer(peerId: String) {
         val peer = q.getPeer(peerId).executeAsOneOrNull() ?: return
-        if (peer.lastHost.isEmpty() || peer.lastPort == 0L) return
+        if ((peer.lastHost.isEmpty() || peer.lastPort == 0L) && peer.irohTicket.isEmpty()) return
         val pairKey = secrets.open(peer.keyEnc) ?: return
         val shares = q.getPeerShares(peerId).executeAsList()
 
@@ -463,13 +517,13 @@ class P2pNode(
     }
 
     /**
-     * Syncs every peer that has a known host and port.
-     * Skips peers with `lastPort == 0` (see [syncPeer]).
+     * Syncs every peer reachable over LAN or iroh.
+     * Skips peers with neither (see [syncPeer]).
      */
     suspend fun syncAll() {
         val peers = q.getAllPeers().executeAsList()
         for (p in peers) {
-            if (!p.lastHost.isEmpty() && p.lastPort != 0L) syncPeer(p.peerId)
+            if ((!p.lastHost.isEmpty() && p.lastPort != 0L) || p.irohTicket.isNotEmpty()) syncPeer(p.peerId)
         }
     }
 
@@ -504,18 +558,61 @@ class P2pNode(
     }
 
     /**
-     * Best-effort sealed notification to [peerId].  Skips peers whose port is unknown
-     * (== 0, see [syncPeer]).
+     * Best-effort sealed notification to [peerId].  Skips peers reachable over neither LAN nor iroh
+     * (see [syncPeer]).
      */
     private suspend fun notifyPeer(peerId: String, path: String, body: String) {
         val peer = q.getPeer(peerId).executeAsOneOrNull() ?: return
-        if (peer.lastHost.isEmpty() || peer.lastPort == 0L) return
+        if ((peer.lastHost.isEmpty() || peer.lastPort == 0L) && peer.irohTicket.isEmpty()) return
         val pairKey = secrets.open(peer.keyEnc) ?: return
         val envelope = seal(crypto, pairKey, deviceId, path, body, clock())
         val envelopeJson = EnvelopeJson.encodeToString(Envelope.serializer(), envelope)
         try {
-            http.post(peer.lastHost, peer.lastPort.toInt(), path, envelopeJson)
+            postToPeer(peer.lastHost, peer.lastPort.toInt(), peer.irohTicket, path, envelopeJson)
         } catch (e: Exception) { }
+    }
+
+    /**
+     * Tries LAN first (an off-network peer fails within the HTTP client's short connect timeout), then iroh when a ticket is known. Returns the last non-200 reply, or throws the
+     * last error when neither transport answered at all.
+     */
+    private suspend fun postToPeer(
+        host: String,
+        port: Int,
+        irohTicket: String,
+        path: String,
+        body: String,
+    ): HttpReply {
+        var lastError: Exception? = null
+        var lastReply: HttpReply? = null
+        if (host.isNotEmpty() && port > 0) {
+            try {
+                // Only the connect is short (KtorHttpPost: 3 s); a large sync page may take longer.
+                val reply = http.post(host, port, path, body)
+                if (reply.status == 200) return reply
+                lastReply = reply
+            } catch (e: TimeoutCancellationException) {
+                lastError = e
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                lastError = e
+            }
+        }
+        val link = iroh
+        if (irohTicket.isNotEmpty() && link != null) {
+            try {
+                val reply = link.post(irohTicket, path, body)
+                if (reply.status == 200) return reply
+                lastReply = reply
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                lastError = e
+            }
+        }
+        lastReply?.let { return it }
+        throw lastError ?: SyncProtocolException("peer not reachable")
     }
 
     private fun hasPeers(shareId: String): Boolean = q.getSharePeers(shareId).executeAsList().isNotEmpty()
@@ -539,13 +636,12 @@ class P2pNode(
         override suspend fun exchange(pid: String, request: SyncRequest): SyncResponse {
             val peer = q.getPeer(pid).executeAsOneOrNull() ?: throw SyncProtocolException("unknown peer")
             val pairKey = secrets.open(peer.keyEnc) ?: throw SyncProtocolException("can't decrypt key")
-            if (peer.lastHost.isEmpty() || peer.lastPort == 0L) throw SyncProtocolException("peer not reachable")
             val path = "/p2p/v1/sync"
             val nowMs = this@P2pNode.clock()
             val body = SyncRequestJson.encodeToString(SyncRequest.serializer(), request)
             val envelope = seal(crypto, pairKey, this@P2pNode.deviceId, path, body, nowMs)
             val envelopeJson = EnvelopeJson.encodeToString(Envelope.serializer(), envelope)
-            val reply = http.post(peer.lastHost, peer.lastPort.toInt(), path, envelopeJson)
+            val reply = postToPeer(peer.lastHost, peer.lastPort.toInt(), peer.irohTicket, path, envelopeJson)
             if (reply.status != 200) throw SyncProtocolException("peer returned ${reply.status}")
             val respEnvelope = try {
                 EnvelopeJson.decodeFromString(Envelope.serializer(), reply.body)

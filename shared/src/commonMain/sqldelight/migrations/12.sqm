@@ -1,0 +1,4 @@
+-- iroh P2P transport (M5-09): per-peer endpoint ticket and this device's sealed iroh key.
+ALTER TABLE SyncPeer ADD COLUMN irohTicket TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE SyncDevice ADD COLUMN irohKeyEnc BLOB;

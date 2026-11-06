@@ -322,4 +322,7 @@
     <string name="invite_failed">Could not create the invite</string>
     <string name="device_sync_failed">Sync failed</string>
     <string name="operation_failed">Something went wrong</string>
+    <string name="reachable_wifi">Wi-Fi</string>
+    <string name="reachable_internet">Internet</string>
+    <string name="reachable_wifi_and_internet">Wi-Fi and Internet</string>
 </resources>

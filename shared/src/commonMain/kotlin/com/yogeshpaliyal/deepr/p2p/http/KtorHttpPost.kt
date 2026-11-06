@@ -15,7 +15,8 @@ import io.ktor.client.statement.bodyAsText
  * so an unreachable or stalled peer fails fast instead of hanging a sync.
  */
 class KtorHttpPost(
-    connectTimeoutMs: Long = 5_000L,
+    // Short: P2pNode tries LAN first and must fall through to iroh quickly when the peer is on another network.
+    connectTimeoutMs: Long = 3_000L,
     requestTimeoutMs: Long = 30_000L,
     baseClient: HttpClient = defaultHttpClient(),
 ) : HttpPost {

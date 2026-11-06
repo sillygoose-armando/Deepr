@@ -72,6 +72,9 @@ import com.yogeshpaliyal.deepr.ui.resources.needs_repair
 import com.yogeshpaliyal.deepr.ui.resources.no_paired_devices
 import com.yogeshpaliyal.deepr.ui.resources.no_paired_devices_description
 import com.yogeshpaliyal.deepr.ui.resources.paired_devices
+import com.yogeshpaliyal.deepr.ui.resources.reachable_internet
+import com.yogeshpaliyal.deepr.ui.resources.reachable_wifi
+import com.yogeshpaliyal.deepr.ui.resources.reachable_wifi_and_internet
 import com.yogeshpaliyal.deepr.ui.resources.remove_all_devices
 import com.yogeshpaliyal.deepr.ui.resources.remove_all_devices_confirm_message
 import com.yogeshpaliyal.deepr.ui.resources.remove_all_devices_confirm_title
@@ -355,6 +358,20 @@ private fun PeerRow(
                     Text(
                         text = peer.sharedProfiles.joinToString(", "),
                         style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                val reachability = when {
+                    peer.irohTicket.isNotEmpty() && peer.lastPort > 0L ->
+                        stringResource(Res.string.reachable_wifi_and_internet)
+                    peer.irohTicket.isNotEmpty() -> stringResource(Res.string.reachable_internet)
+                    peer.lastPort > 0L -> stringResource(Res.string.reachable_wifi)
+                    else -> null
+                }
+                if (reachability != null) {
+                    Text(
+                        text = reachability,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

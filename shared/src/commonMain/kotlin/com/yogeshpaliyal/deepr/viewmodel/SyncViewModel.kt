@@ -46,6 +46,8 @@ data class PeerState(
     val lastSyncAt: Long,
     val lastError: String,
     val needsRepair: Boolean,
+    val lastPort: Long,
+    val irohTicket: String,
 ) {
     val sharedProfiles: List<String> get() = sharedShares.map { it.profileName }
 }
@@ -166,6 +168,8 @@ class SyncViewModel(
                 lastSyncAt = peer.lastSyncAt,
                 lastError = peer.lastError,
                 needsRepair = peer.needsRepair != 0L,
+                lastPort = peer.lastPort,
+                irohTicket = peer.irohTicket,
             )
         }
 
