@@ -429,4 +429,31 @@ class P2pNodeTest {
         for (p in f.dbA.deeprQueries.getAllPeers().executeAsList()) { peerIdA = p.peerId }
         f.a.syncPeer(peerIdA)
     }
+
+    @Test
+    fun cancelledInviteLeavesNoShareBehind() = runBlocking {
+        val f = createFixture()
+        f.a.startInvite(1L, listOf("A"), 9999)
+        assertNotNull(f.dbA.deeprQueries.getShareByProfile(1L).executeAsOneOrNull())
+        f.a.cancelInvite()
+        assertEquals(null, f.dbA.deeprQueries.getShareByProfile(1L).executeAsOneOrNull(), "unused share removed")
+        assertEquals(1L, f.dbA.deeprQueries.getProfileById(1L).executeAsList().size.toLong(), "profile itself kept")
+    }
+
+    @Test
+    fun mergeIntoProfileWithLeftoverShareWorks() = runBlocking {
+        val f = createFixture()
+        // B has a leftover share on profile 1 (e.g. from an invite made before this fix) and a link in it.
+        f.dbB.deeprQueries.insertDeepr("https://kept-on-b.example", "Kept", 0L, "", "", 1L)
+        com.yogeshpaliyal.deepr.p2p.core.SyncStore(f.dbB).shareProfile(1L, "ffeeddccbbaa99887766554433221100", 0L)
+
+        val code = f.a.startInvite(1L, listOf("A"), 9999)
+        val pending = f.b.join(code, JoinTarget.MergeInto(1L))
+        f.a.confirmPairing()
+        assertTrue(f.b.completeJoin(pending), "merge must succeed despite the unused leftover share")
+
+        val peerOnB = f.dbB.deeprQueries.getAllPeers().executeAsList().single().peerId
+        f.b.syncPeer(peerOnB)
+        assertTrue(f.dbA.deeprQueries.listDeeprAsc().executeAsList().any { it.link == "https://kept-on-b.example" }, "B's link reached A")
+    }
 }

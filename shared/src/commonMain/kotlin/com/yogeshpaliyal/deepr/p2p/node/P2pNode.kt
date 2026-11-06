@@ -127,7 +127,8 @@ class P2pNode(
      * messenger). The profile is automatically shared if it wasn't yet.
      */
     fun startInvite(profileId: Long, hosts: List<String>, port: Int): String {
-        cancelInvite()
+        // Re-inviting the same profile keeps its share (its id may already be in a pasted code).
+        if (pendingProfileId == profileId) clearInviteState() else cancelInvite()
         val nowSec = clock() / 1000L
         val existingShare = q.getShareByProfile(profileId).executeAsOneOrNull()
         val shareId = existingShare?.shareId ?: newShareId()
@@ -149,6 +150,12 @@ class P2pNode(
 
     /** Cancels the active invite (also clears the pending pairing state). */
     fun cancelInvite() {
+        // A share nobody joined is meaningless; leaving it would block a later "merge into this profile".
+        pendingShareId?.let { dropShareIfUnused(it) }
+        clearInviteState()
+    }
+
+    private fun clearInviteState() {
         inviter = null
         pendingPairResult = null
         pendingProfileId = null
@@ -311,7 +318,7 @@ class P2pNode(
         val invite = decodeInvite(code, nowSec)
         if (target is JoinTarget.MergeInto) {
             val existingShare = q.getShareByProfile(target.profileId).executeAsOneOrNull()
-            if (existingShare != null && existingShare.shareId != invite.s) {
+            if (existingShare != null && existingShare.shareId != invite.s && hasPeers(existingShare.shareId)) {
                 throw PairingException("profile already shared")
             }
         }
@@ -384,6 +391,13 @@ class P2pNode(
                             }
                         is JoinTarget.MergeInto -> pendingTarget.profileId
                         else -> throw PairingException("no join target")
+                    }
+                    // Merging into a profile whose share no device uses: replace that leftover share.
+                    q.getShareByProfile(profileId).executeAsOneOrNull()?.let { old ->
+                        if (old.shareId != invite.s) {
+                            if (hasPeers(old.shareId)) throw PairingException("profile already shared")
+                            q.deleteShare(old.shareId)
+                        }
                     }
                     // Insert the share (if not present) and seed it with existing profile data
                     if (q.getShareById(invite.s).executeAsOneOrNull() == null) {
@@ -502,6 +516,13 @@ class P2pNode(
         try {
             http.post(peer.lastHost, peer.lastPort.toInt(), path, envelopeJson)
         } catch (e: Exception) { }
+    }
+
+    private fun hasPeers(shareId: String): Boolean = q.getSharePeers(shareId).executeAsList().isNotEmpty()
+
+    /** Removes the share marker (never the links) when no device is connected to it. */
+    private fun dropShareIfUnused(shareId: String) {
+        if (!hasPeers(shareId)) q.deleteShare(shareId)
     }
 
     private fun checkMaxPeers() {
