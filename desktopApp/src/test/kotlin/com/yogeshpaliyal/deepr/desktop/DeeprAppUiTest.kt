@@ -1,19 +1,15 @@
 package com.yogeshpaliyal.deepr.desktop
 
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.navigationevent.NavigationEventDispatcher
-import androidx.navigationevent.NavigationEventDispatcherOwner
-import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.yogeshpaliyal.deepr.di.sharedModule
 import com.yogeshpaliyal.deepr.di.unsupportedFeaturesModule
 import com.yogeshpaliyal.deepr.ui.DeeprApp
+import com.yogeshpaliyal.deepr.ui.ProvideNavigationEventOwner
 import com.yogeshpaliyal.deepr.ui.theme.DeeprTheme
 import org.junit.After
 import org.junit.Assume
@@ -34,8 +30,8 @@ import java.io.File
  *
  * Note: the CMP desktop test scene does not install the host-default provider
  * (`LocalHostDefaultProvider`) that navigation3's `NavigationBackHandler`
- * requires for `LocalNavigationEventDispatcherOwner`. We provide it here
- * explicitly so that pre-navigation3 screen content can compose.
+ * requires for `LocalNavigationEventDispatcherOwner`; `ProvideNavigationEventOwner`
+ * (same as the real desktop/iOS hosts) supplies it.
  */
 @OptIn(ExperimentalTestApi::class)
 class DeeprAppUiTest {
@@ -83,15 +79,7 @@ class DeeprAppUiTest {
 
     private fun setAppContent() {
         composeRule.setContent {
-            val dispatcherOwner = remember {
-                object : NavigationEventDispatcherOwner {
-                    override val navigationEventDispatcher: NavigationEventDispatcher
-                        get() = NavigationEventDispatcher()
-                }
-            }
-            CompositionLocalProvider(
-                LocalNavigationEventDispatcherOwner provides dispatcherOwner,
-            ) {
+            ProvideNavigationEventOwner {
                 DeeprTheme {
                     DeeprApp(
                         sharedText = null,

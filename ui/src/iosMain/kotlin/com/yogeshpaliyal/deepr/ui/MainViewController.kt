@@ -53,12 +53,14 @@ fun initKoin(dataDir: String) {
 /** The Compose root view controller for the Xcode app, mirroring desktop `Main.kt`. */
 fun MainViewController(): UIViewController =
     ComposeUIViewController {
-        DeeprTheme {
-            DeeprApp(
-                sharedText = null,
-                resetSharedText = {},
-                clipboardLink = null,
-                resetClipboardLink = {},
-            )
+        ProvideNavigationEventOwner {
+            DeeprTheme {
+                DeeprApp(
+                    sharedText = null,
+                    resetSharedText = {},
+                    clipboardLink = null,
+                    resetClipboardLink = {},
+                )
+            }
         }
     }
