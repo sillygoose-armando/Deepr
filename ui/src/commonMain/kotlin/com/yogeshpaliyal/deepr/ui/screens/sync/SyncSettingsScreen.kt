@@ -79,7 +79,11 @@ import com.yogeshpaliyal.deepr.ui.resources.remove_all_devices
 import com.yogeshpaliyal.deepr.ui.resources.remove_all_devices_confirm_message
 import com.yogeshpaliyal.deepr.ui.resources.remove_all_devices_confirm_title
 import com.yogeshpaliyal.deepr.ui.resources.remove_device
-import com.yogeshpaliyal.deepr.ui.resources.same_network_hint
+import com.yogeshpaliyal.deepr.ui.resources.sync_status_idle
+import com.yogeshpaliyal.deepr.ui.resources.sync_status_internet_failed
+import com.yogeshpaliyal.deepr.ui.resources.sync_status_internet_ready
+import com.yogeshpaliyal.deepr.ui.resources.sync_status_internet_unsupported
+import com.yogeshpaliyal.deepr.ui.resources.sync_status_wifi
 import com.yogeshpaliyal.deepr.ui.resources.save
 import com.yogeshpaliyal.deepr.ui.resources.share_a_profile
 import com.yogeshpaliyal.deepr.ui.resources.sync_now
@@ -173,11 +177,32 @@ fun SyncSettingsScreen(
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
-                    Text(
-                        text = stringResource(Res.string.same_network_hint),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    )
+                    val status by viewModel.localStatus.collectAsStateWithLifecycle()
+                    Column {
+                        val lines =
+                            if (!status.running) {
+                                listOf(stringResource(Res.string.sync_status_idle))
+                            } else {
+                                listOf(
+                                    stringResource(
+                                        Res.string.sync_status_wifi,
+                                        status.wifiAddresses.joinToString().ifEmpty { "—" },
+                                    ),
+                                    when {
+                                        !status.internetSupported -> stringResource(Res.string.sync_status_internet_unsupported)
+                                        status.internetReady -> stringResource(Res.string.sync_status_internet_ready)
+                                        else -> stringResource(Res.string.sync_status_internet_failed, status.internetError ?: "—")
+                                    },
+                                )
+                            }
+                        lines.forEach {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            )
+                        }
+                    }
                 }
             }
 

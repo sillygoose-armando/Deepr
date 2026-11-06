@@ -262,6 +262,7 @@ class P2pNode(
                     HelloBody()
                 }
                 if (!hello.i.isNullOrEmpty()) q.updatePeerIroh(hello.i, envelope.peer)
+                q.updatePeerSyncStatus(clock(), "", envelope.peer)
                 val shares = q.getPeerShares(envelope.peer).executeAsList().map { it.shareId }
                 val helloBody = HelloResponseJson.encodeToString(HelloResponse.serializer(), HelloResponse(shares))
                 val sealedBody = seal(crypto, pairKey, deviceId, path, helloBody, nowMs)
@@ -273,6 +274,8 @@ class P2pNode(
                     return HttpReply(403, "")
                 }
                 val response = engine.handle(envelope.peer, request)
+                // The peer synced with us: record it here too (otherwise only the side that dials shows a time).
+                q.updatePeerSyncStatus(clock(), "", envelope.peer)
                 val respBody = SyncResponseJson.encodeToString(SyncResponse.serializer(), response)
                 val sealedBody = seal(crypto, pairKey, deviceId, path, respBody, nowMs)
                 HttpReply(200, EnvelopeJson.encodeToString(Envelope.serializer(), sealedBody))

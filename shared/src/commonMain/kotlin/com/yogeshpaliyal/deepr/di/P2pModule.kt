@@ -10,6 +10,7 @@ import com.yogeshpaliyal.deepr.p2p.node.P2pNode
 import com.yogeshpaliyal.deepr.p2p.node.SecretStore
 import com.yogeshpaliyal.deepr.p2p.core.P2pCrypto
 import com.yogeshpaliyal.deepr.viewmodel.SyncViewModel
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -30,7 +31,11 @@ fun p2pModule(
     irohFactory: ((P2pNode, IrohKeyStore, CoroutineScope) -> IrohLink)? = null,
 ) = module {
     val clock: () -> Long = { kotlin.time.Clock.System.now().toEpochMilliseconds() }
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    // Last resort: nothing launched for sync (debounced syncs, iroh accept loops) may crash the app.
+    val scope =
+        CoroutineScope(
+            SupervisorJob() + Dispatchers.Default + CoroutineExceptionHandler { _, e -> println("Deepr sync: ${e::class.simpleName}") },
+        )
     single {
         val db = get<DeeprDB>()
         val node = P2pNode(db, crypto, secrets, KtorHttpPost(), clock)

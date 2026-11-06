@@ -456,4 +456,19 @@ class P2pNodeTest {
         f.b.syncPeer(peerOnB)
         assertTrue(f.dbA.deeprQueries.listDeeprAsc().executeAsList().any { it.link == "https://kept-on-b.example" }, "B's link reached A")
     }
+
+    @Test
+    fun inviterRecordsSyncsStartedByThePeer() = runBlocking {
+        val f = createFixture()
+        val code = f.a.startInvite(1L, listOf("A"), 9999)
+        val pending = f.b.join(code, JoinTarget.NewProfile("Work"))
+        f.a.confirmPairing()
+        assertTrue(f.b.completeJoin(pending))
+        val peerOnB = f.dbB.deeprQueries.getAllPeers().executeAsList().single().peerId
+        f.b.syncPeer(peerOnB) // B dials A; A only serves
+
+        val bOnA = f.dbA.deeprQueries.getAllPeers().executeAsList().single()
+        assertTrue(bOnA.lastSyncAt > 0L, "the serving side must show a last-sync time too")
+        assertEquals("", bOnA.lastError)
+    }
 }

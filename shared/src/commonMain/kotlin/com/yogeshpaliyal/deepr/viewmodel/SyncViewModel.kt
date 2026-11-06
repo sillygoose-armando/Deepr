@@ -52,6 +52,17 @@ data class PeerState(
     val sharedProfiles: List<String> get() = sharedShares.map { it.profileName }
 }
 
+/** This device's own reachability, shown at the top of Sync settings. */
+data class LocalSyncStatus(
+    val running: Boolean,
+    /** "ip:port" for each local address while running. */
+    val wifiAddresses: List<String>,
+    val internetSupported: Boolean,
+    val internetReady: Boolean,
+    /** Why internet sync couldn't start (class + message), if it failed. */
+    val internetError: String?,
+)
+
 /** The currently displayed invite (inviter side). */
 data class InviteState(
     val profileId: Long,
@@ -119,6 +130,17 @@ class SyncViewModel(
 
     private val deviceFlow: Flow<com.yogeshpaliyal.deepr.SyncDevice> =
         queries.getSyncDevice().asFlow().mapToOne(Dispatchers.Default)
+
+    val localStatus: StateFlow<LocalSyncStatus> =
+        combine(controller.running, controller.irohError) { running, irohError ->
+            LocalSyncStatus(
+                running = running,
+                wifiAddresses = if (running) controller.inviteHosts().map { "$it:${controller.port}" } else emptyList(),
+                internetSupported = controller.internetSupported,
+                internetReady = running && controller.internetReady,
+                internetError = irohError,
+            )
+        }.stateIn(flowScope, SharingStarted.WhileSubscribed(5_000), LocalSyncStatus(false, emptyList(), false, false, null))
 
     val deviceName: StateFlow<String> =
         deviceFlow
@@ -234,6 +256,9 @@ class SyncViewModel(
             viewModelScope.launch(Dispatchers.Default) {
                 mutableJoin.value = JoinState.Connecting
                 try {
+                    // Start sync first: the joiner needs its own server and iroh endpoint (to dial the inviter
+                    // over the internet, and so its ticket goes into the join request).
+                    controller.start()
                     val pending = controller.node.join(code, target)
                     mutableJoin.value = JoinState.WaitingForConfirm(pending.sas, pending.peerName)
                     val ok = controller.node.completeJoin(pending)

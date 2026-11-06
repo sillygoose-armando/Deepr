@@ -6,6 +6,7 @@ import com.yogeshpaliyal.deepr.p2p.http.localIpv4Addresses
 import com.yogeshpaliyal.deepr.p2p.node.P2pNode
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -66,15 +67,20 @@ class P2pSyncController(
         } catch (_: Exception) {
             server.start(0)
         }
-        // iroh failures must not take the LAN server down with them.
-        try {
-            node.iroh?.start()
-        } catch (_: Exception) {
-        }
+        // iroh failures must not take the LAN server down with them, but they must be visible (Sync settings).
+        mutableIrohError.value =
+            try {
+                node.iroh?.start()
+                null
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                e::class.simpleName + (e.message?.let { ": $it" } ?: "")
+            }
         mutableRunning.value = true
 
         // Sync all peers once, without making callers (e.g. an invite) wait for unreachable peers.
-        scope.launch { node.syncAll() }
+        scope.launch { syncAllSafely() }
 
         // Observe local changes and sync after a 5-second debounce (one watcher; cancelled in stop()).
         watcher?.cancel()
@@ -83,12 +89,39 @@ class P2pSyncController(
                 .mapToOneOrNull(Dispatchers.Default)
                 .debounce(debounceMs)
                 .collect {
-                    if (mutableRunning.value) {
-                        node.syncAll()
-                    }
+                    if (mutableRunning.value) syncAllSafely()
                 }
         }
     }
+
+    /**
+     * A failing peer must never crash the app: these coroutines have no caller to report to
+     * (an uncaught exception aborts the process on iOS and Android). Per-peer errors are stored by the node.
+     */
+    private suspend fun syncAllSafely() {
+        try {
+            node.syncAll()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            lastBackgroundError = e::class.simpleName
+        }
+    }
+
+    /** Class name of the last unexpected background sync failure (diagnostics). */
+    var lastBackgroundError: String? = null
+        private set
+
+    private val mutableIrohError = MutableStateFlow<String?>(null)
+
+    /** Why internet sync (iroh) couldn't start, or null when it started (or isn't configured). */
+    val irohError: StateFlow<String?> = mutableIrohError.asStateFlow()
+
+    /** True while this device can be reached over the internet (iroh endpoint running). */
+    val internetReady: Boolean get() = node.iroh?.ticket != null
+
+    /** True when this platform has an internet transport at all (false on iOS until M5-10). */
+    val internetSupported: Boolean get() = node.iroh != null
 
     /**
      * Stops the server and prevents further debounced syncs.

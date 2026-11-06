@@ -266,7 +266,11 @@
     <!-- P2P device sync -->
     <string name="device_sync">Device sync</string>
     <string name="device_sync_description">Share profiles and sync links between your devices</string>
-    <string name="same_network_hint">Both devices must be on the same Wi-Fi network.</string>
+    <string name="sync_status_idle">Sync starts when you share or join a profile.</string>
+    <string name="sync_status_wifi">Wi-Fi: %1$s</string>
+    <string name="sync_status_internet_ready">Internet: ready</string>
+    <string name="sync_status_internet_unsupported">Internet: not available on this device yet (Wi-Fi only)</string>
+    <string name="sync_status_internet_failed">Internet: unavailable (%1$s)</string>
     <string name="device_name">Device name</string>
     <string name="device_name_description">The name other devices see when pairing</string>
     <string name="max_devices">Maximum devices</string>
