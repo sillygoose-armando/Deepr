@@ -578,6 +578,9 @@ DELETE FROM SyncPeer;
 updatePeerAddress:
 UPDATE SyncPeer SET lastHost = ?, lastPort = ? WHERE peerId = ?;
 
+updatePeerKey:
+UPDATE SyncPeer SET keyEnc = ? WHERE peerId = ?;
+
 updatePeerSyncStatus:
 UPDATE SyncPeer SET lastSyncAt = ?, lastError = ? WHERE peerId = ?;
 
