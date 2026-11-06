@@ -16,6 +16,7 @@ targets:
         CADisableMinimumFrameDurationOnPhone: true
         UILaunchScreen: {}
         CFBundleDisplayName: Deepr
+        NSLocalNetworkUsageDescription: "Deepr syncs your links with your other devices on the same Wi-Fi network."
     entitlements:
       path: Deepr/Deepr.entitlements
       properties:

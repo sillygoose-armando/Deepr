@@ -20,7 +20,7 @@ import org.koin.mp.KoinPlatform
 fun saveSharedLink(dataDir: String, text: String, title: String?, onResult: (String) -> Unit) {
     // Start Koin only if it hasn't been started yet (standalone extension process)
     if (KoinPlatform.getKoinOrNull() == null) {
-        initKoin(dataDir)
+        initKoin(dataDir, withP2p = false)
     }
 
     MainScope().launch {

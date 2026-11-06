@@ -606,3 +606,6 @@ SELECT * FROM SyncPeerShare WHERE shareId = ?;
 
 setCursors:
 UPDATE SyncPeerShare SET pushedUpTo = ?, pulledUpTo = ? WHERE peerId = ? AND shareId = ?;
+
+maxSyncSeq:
+SELECT MAX(seq) FROM SyncMeta;

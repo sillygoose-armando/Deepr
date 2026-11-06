@@ -19,9 +19,13 @@ import com.yogeshpaliyal.deepr.backup.ImportRepository
 import com.yogeshpaliyal.deepr.backup.ImportRepositoryImpl
 import com.yogeshpaliyal.deepr.data.LinkRepository
 import com.yogeshpaliyal.deepr.data.LinkRepositoryImpl
+import com.yogeshpaliyal.deepr.di.p2pModule
 import com.yogeshpaliyal.deepr.di.sharedModule
 import com.yogeshpaliyal.deepr.gdrive.DriveSyncManager
 import com.yogeshpaliyal.deepr.gdrive.DriveSyncManagerFactoryImpl
+import com.yogeshpaliyal.deepr.p2p.P2pSyncController
+import com.yogeshpaliyal.deepr.p2p.jvm.JvmP2pCrypto
+import com.yogeshpaliyal.deepr.p2p.node.KeystoreSecretStore
 import com.yogeshpaliyal.deepr.preference.AppPreferenceDataStore
 import com.yogeshpaliyal.deepr.preference.PreferenceRepository
 import com.yogeshpaliyal.deepr.preference.appDataStore
@@ -31,6 +35,7 @@ import com.yogeshpaliyal.deepr.security.AppLockState
 import com.yogeshpaliyal.deepr.server.LocalServerRepository
 import com.yogeshpaliyal.deepr.server.LocalServerRepositoryImpl
 import com.yogeshpaliyal.deepr.server.LocalServerTransferLink
+import com.yogeshpaliyal.deepr.sync.P2pSyncWorker
 import com.yogeshpaliyal.deepr.sync.SyncRepository
 import com.yogeshpaliyal.deepr.sync.SyncRepositoryImpl
 import com.yogeshpaliyal.deepr.viewmodel.LocalServerViewModel
@@ -45,6 +50,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.binds
 import org.koin.dsl.module
+import org.koin.mp.KoinPlatform
 
 class DeeprApplication : Application() {
     override fun onCreate() {
@@ -52,10 +58,16 @@ class DeeprApplication : Application() {
 
         // Re-lock the app whenever it leaves the foreground, so app-lock (when enabled)
         // requires re-authentication each time the app is brought back.
+        // Also start/stop P2P sync when the app enters/leaves the foreground.
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             object : DefaultLifecycleObserver {
+                override fun onStart(owner: LifecycleOwner) {
+                    KoinPlatform.getKoin().get<P2pSyncController>().onForeground()
+                }
+
                 override fun onStop(owner: LifecycleOwner) {
                     AppLockState.isUnlocked.value = false
+                    KoinPlatform.getKoin().get<P2pSyncController>().onBackground()
                 }
             },
         )
@@ -164,7 +176,10 @@ class DeeprApplication : Application() {
             // Provide Android context to Koin
             androidContext(this@DeeprApplication)
 
-            modules(sharedModule, appModule)
+            modules(sharedModule, appModule, p2pModule(JvmP2pCrypto(), KeystoreSecretStore()))
         }
+
+        // Schedule periodic P2P sync in the background
+        P2pSyncWorker.schedule(this)
     }
 }
