@@ -130,3 +130,18 @@ Bounded tasks may be delegated to opencode free models. The lead reviews and tes
 - **Join shared profile**: scan QR (where a camera exists) or paste a text code → choose "new profile" (default name from the invite) or "merge into existing profile" → SAS shown → wait for confirmation.
 - **Sync settings**: enable sync, device name, max peers (1–10, default 5), peers list (name, shared profiles, last sync, last error, "needs re-pair"), per peer: Sync now / Unshare profile / Remove peer; **Remove all peers** (confirm dialog). Removing never deletes local links: say so in the confirm text.
 - Restore/"replace all" import detaches shares: warn in the restore confirm dialog when shares exist.
+
+## Proposals
+
+### P-1 — Sync over the internet (user request 2026-11-06: "send a friend my code and have them sync with me") — **awaiting user decision**
+Today devices talk HTTP directly, so they must reach each other's IP: same Wi-Fi only. Across the internet (phones behind carrier NAT, home routers) a direct connection almost never works, so something reachable from both sides is needed. Options:
+
+| | What | Code change | Both apps open at once? | Who sees what |
+|---|---|---|---|---|
+| **A. Overlay VPN (Tailscale/ZeroTier)** | Both install it; the invite already lists every local IPv4, including the VPN's 100.x address | none (verify) | yes | VPN vendor sees metadata; content is still end-to-end encrypted by our envelope |
+| **B. Rendezvous relay** (recommended first step) | A tiny Ktor server we host: each device keeps a WebSocket open while the app runs; the relay forwards the existing `/p2p/v1/*` requests between two connected device ids. The invite carries the relay URL + inviter id instead of (or as well as) LAN IPs; LAN stays preferred when reachable. | transport only: protocol messages, pairing, crypto and merge rules unchanged | yes | relay sees device ids, timing and sizes; never content or keys (every body is already AES-GCM sealed with the pair key; pairing is protected by the token MAC + SAS) |
+| **C. Mailbox relay** (store-and-forward) | The relay also stores sealed sync messages until the peer fetches them | larger: sync becomes asynchronous (new message flow, retention, quotas) | **no** — works when the friend opens the app later | same as B, plus stored ciphertext |
+| D. NAT hole punching (WebRTC/libp2p) | Direct connection negotiated through a signalling server, relay fallback | large; still needs a server | yes | — |
+
+Hosting for B/C: any small VPS, Fly.io or a similar free/cheap tier, or Cloudflare Workers + Durable Objects (would mean writing the relay in TypeScript). Needs a domain/URL baked into the app or configurable in Sync settings.
+Recommendation: **B now** (small, keeps the audited protocol, reuses Ktor), **C later** if "my friend is rarely online when I am" turns out to matter. A works today with no code for technical users.
