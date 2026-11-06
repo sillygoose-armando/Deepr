@@ -28,7 +28,7 @@ ios: iosApp/Deepr.xcodeproj ## Build the iOS app and start it in the simulator
 	@test -n "$(DEVICE)" || { echo "No iPhone simulator found: run 'make setup'."; exit 1; }
 	@echo "Simulator: $(DEVICE)"
 	xcrun simctl boot "$(DEVICE)" 2>/dev/null || true
-	open -a Simulator
+	-open "$$(xcode-select -p)/Applications/Simulator.app"
 	xcodebuild -project iosApp/Deepr.xcodeproj -scheme Deepr -configuration Debug \
 	  -destination "platform=iOS Simulator,name=$(DEVICE)" -derivedDataPath iosApp/build -quiet build
 	xcrun simctl install "$(DEVICE)" iosApp/build/Build/Products/Debug-iphonesimulator/Deepr.app
