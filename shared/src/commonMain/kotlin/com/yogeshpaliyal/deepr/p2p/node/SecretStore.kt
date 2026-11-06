@@ -15,10 +15,13 @@ interface SecretStore {
     fun open(sealed: ByteArray): ByteArray?
 }
 
-/** Test-only store that keeps a random AES-256 key in memory. Uses [P2pCrypto.aesGcmEncrypt] with a 12-byte random nonce prefix. */
-class InMemorySecretStore(private val crypto: P2pCrypto) : SecretStore {
-    private val key: ByteArray = crypto.randomBytes(32)
-
+/**
+ * AES-256-GCM secret store with a caller-provided key.  The key is typically loaded from a
+ * platform keychain (Android Keystore, iOS keychain) or a file ([FileKeySecretStore]).
+ * Uses [P2pCrypto.aesGcmEncrypt] with a 12-byte random nonce prefix, same format as the
+ * deprecated [InMemorySecretStore].
+ */
+open class AesKeySecretStore(private val crypto: P2pCrypto, private val key: ByteArray) : SecretStore {
     override fun seal(plain: ByteArray): ByteArray {
         val nonce = crypto.randomBytes(12)
         val ct = crypto.aesGcmEncrypt(key, nonce, plain, ByteArray(0))
@@ -32,3 +35,6 @@ class InMemorySecretStore(private val crypto: P2pCrypto) : SecretStore {
         return try { crypto.aesGcmDecrypt(key, nonce, ct, ByteArray(0)) } catch (e: Exception) { null }
     }
 }
+
+/** Test-only store that keeps a random AES-256 key in memory. */
+class InMemorySecretStore(crypto: P2pCrypto) : AesKeySecretStore(crypto, crypto.randomBytes(32))

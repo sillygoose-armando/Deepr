@@ -107,6 +107,9 @@ class P2pNode(
     // ── Pending join target ──
     private var joinTarget: JoinTarget? = null
 
+    // ── Clone detection ────────────────────────────────────────────────
+    private var cloneHandled = false
+
     // ── Identity ─────────────────────────────────────────────────────────
 
     val deviceId: String get() = store.deviceId()
@@ -201,6 +204,15 @@ class P2pNode(
         val pairKey = secrets.open(peer.keyEnc)
         if (pairKey == null) {
             q.markAllPeersNeedRepair()
+            if (!cloneHandled) {
+                cloneHandled = true
+                val peers = q.getAllPeers().executeAsList()
+                if (peers.isNotEmpty() && peers.all { secrets.open(it.keyEnc) == null }) {
+                    val raw = crypto.randomBytes(16)
+                    val newId = raw.map { it.toInt().and(0xFF).toString(16).padStart(2, '0') }.joinToString("")
+                    q.setDeviceId(newId)
+                }
+            }
             return HttpReply(401, "")
         }
         val nowMs = clock()

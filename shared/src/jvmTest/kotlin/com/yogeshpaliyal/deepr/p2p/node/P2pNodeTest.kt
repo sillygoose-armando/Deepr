@@ -234,6 +234,8 @@ class P2pNodeTest {
         val cloned = P2pNode(f.dbA, crypto, clonedSecrets, http, clock)
         cloned.helloPollTimeoutMs = TEST_POLL_MS
 
+        val origDeviceId = cloned.deviceId
+
         // The cloned node can't decrypt the stored keyEnc → 401 + markAllPeersNeedRepair
         val env = seal(crypto, crypto.randomBytes(32), peerId, "/p2p/v1/hello", "{}", clock())
         val envStr = """{"peer":"${peerId}","nonce":"${env.nonce}","ct":"${env.ct}"}"""
@@ -245,6 +247,9 @@ class P2pNodeTest {
             if (p.needsRepair == 1L) markedCount++
         }
         assertEquals(1, markedCount)
+
+        // Clone detection also regenerates the deviceId
+        assertTrue(cloned.deviceId != origDeviceId, "deviceId should change after clone detection")
     }
 
     // ── Test 6: second invite of another profile to the same peer ───────

@@ -58,3 +58,9 @@ The host is aarch64 Linux with ~2 GB free disk and no Android SDK (`aapt2` has n
 - Decision: **upgrade the project to Kotlin 2.3.x** (target 2.3.21) instead of pinning an alpha navigation API. This also relaxes D10 (newer qrose / cryptography-kotlin become possible later). Checks: AGP 8.11.1, SQLDelight 2.1.0, CMP 1.10.3, kotlinter.
 - Lesson for library checks: for native targets, read the klib `manifest` (`compiler_version`, `abi_version`), not just the POM.
 - Done 2026-11-05: `kotlin = "2.3.21"` (catalog + sync harness). The only build change needed: `:app` migrated `kotlinOptions { jvmTarget }` (now an error) to `kotlin { compilerOptions { jvmTarget.set(JVM_11) } }`, and `packagingOptions` → `packaging { resources.excludes }`. AGP 8.11.1, SQLDelight 2.1.0, CMP 1.10.3 and kotlinter all work locally (JVM compiles, tests, `:app` lint, harness); Android/iOS are confirmed by CI.
+
+## D12 — Desktop secret key in a 0600 file (2026-11-16)
+- The per-device AES-256 key for p2p clone detection is stored in a plain file at `<appDataDir>/p2p-secret.key` with owner-only permissions (0600 on POSIX).
+- Why not an OS keychain: there is no KMP/JVM keychain library that works without native dependencies across all three desktop targets (Linux, macOS, Windows). Storing it in a file with 0600 is the same threat model as the SQLite DB itself (anyone with the user's account can read either).
+- Risk: password managers or keychain-backed storage would be more secure but are not practically available in KMP today.
+- Revisit: if a zero-dependency KMP keychain wrapper appears.
