@@ -28,7 +28,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done (with verifying command / 
 
 ### M4 iOS
 - [x] `iosApp` via XcodeGen (app + Share Extension), DB in App Group (M4-01..03; unsigned builds fall back to Application Support, so app and extension share the DB only when signed)
-- [~] Full UX on the simulator: CI XCUITest launches the app and finds Home (run 42188422094, `7851069`); full click-through pending (user has a Mac)
+- [~] Full UX on the simulator: CI XCUITest launches the app and finds Home (run 42188422094, `7851069`); also passes locally on the user's Mac (iOS 27.2 simulator, 2026-11-06, after pulling the launch-crash fix); manual click-through pending
 - [!] blocked: distribution needs an Apple Developer account (D2)
 
 ### M5 P2P on every platform
