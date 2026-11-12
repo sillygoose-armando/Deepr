@@ -47,8 +47,11 @@ jobs:
           # Boot first: launching into a cold simulator flakes with "Failed to get background assertion for target app".
           xcrun simctl boot "$DEVICE" || true
           xcrun simctl bootstatus "$DEVICE" -b
+          # Ad-hoc signing ("-"): unsigned builds get no entitlements, and the keychain then refuses writes
+          # (SecItemAdd -34018, the app crashes at launch). No Apple account needed.
           xcodebuild -project iosApp/Deepr.xcodeproj -scheme Deepr -configuration Debug \
-            -destination "platform=iOS Simulator,name=$DEVICE" -resultBundlePath build/ui-tests.xcresult CODE_SIGNING_ALLOWED=NO test
+            -destination "platform=iOS Simulator,name=$DEVICE" -resultBundlePath build/ui-tests.xcresult \
+            CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= test
 
       - name: Upload test results
         if: always()
